@@ -1,8 +1,5 @@
 #include "header.h"
 
-static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
-static int active = 1;	/*active=1表示开启, active=0表示关闭*/
-
 struct RULER_ST{		/*通用规则结构定义*/
 	u_int32_t saddr;	/*源地址*/
 	u_int32_t smask;	/*目的地址*/
@@ -20,6 +17,9 @@ struct RULER_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表lis
 
 struct RULER_LIST_ST rulers_head;	/*定义规则链表头结点*/
 unsigned int ruler_num = 0;				/*当前的规则条数*/
+
+static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
+static int active = 1;	/*active=1表示开启, active=0表示关闭*/
 
 
 /*插入规则链表节点*/
