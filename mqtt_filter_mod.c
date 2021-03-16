@@ -1,29 +1,45 @@
 #include "header.h"
 
-struct RULER_ST{		/*通用规则结构定义*/
-	u_int32_t saddr;	/*源地址*/
-	u_int32_t smask;	/*目的地址*/
-	u_int32_t daddr;	/*源端口*/
-	u_int32_t dmask;	/*目的端口*/
-	u_int8_t type;		/*指MQTT报文的类型*/
-	u_int8_t log;		/*是否记录日志*/
-	u_int8_t action;	/*动作*/
-};
-
-struct RULER_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/
-	struct list_head list;	/*内核链表结构*/
-	struct RULER_ST ruler;		/*表示一条规则*/
-};
 
 struct RULER_LIST_ST rulers_head;	/*定义规则链表头结点*/
-unsigned int ruler_num = 0;				/*当前的规则条数*/
+unsigned int ruler_num;				/*当前的规则条数*/
 
 static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
 static int active = 1;	/*active=1表示开启, active=0表示关闭*/
 
+void test(void){
+	struct RULER_ST test;
+	
+	test.saddr = 0x831fa8c0; /*192.168.33.131*/
+	test.smask = 0xffffffff;
+	test.daddr = 0x851fa8c0; /*192.168.33.133*/
+	test.dmask = 0xffffffff;
+	test.type = CONNECT;
+	test.log = YES;
+	test.action = NF_ACCEPT;
+	add_node(&test, 1);
+	
+	test.saddr = 0x851fa8c0; /*192.168.33.133*/
+	test.smask = 0xffffffff;
+	test.daddr = 0x831fa8c0; /*192.168.33.131*/
+	test.dmask = 0xffffffff;
+	test.type = CONNACK;
+	test.log = YES;
+	test.action = NF_ACCEPT;
+	add_node(&test, 2);
+	
+	test.saddr = 0x831fa8c0; /*192.168.33.131*/
+	test.smask = 0xffffffff;
+	test.daddr = 0x851fa8c0; /*192.168.33.133*/
+	test.dmask = 0xffffffff;
+	test.type = DISCONNECT;
+	test.log = YES;
+	test.action = NF_DROP;
+	add_node(&test, 3);
+}
 
 /*插入规则链表节点*/
-static int add_node(struct RULER_ST ruler, unsigned int N)
+static int add_node(struct RULER_ST *ruler, unsigned int N)
 {
 	struct RULER_LIST_ST *newNode;
 	struct list_head *pos;
@@ -40,11 +56,13 @@ static int add_node(struct RULER_ST ruler, unsigned int N)
 	
 	/*申请新的规则节点*/
 	newNode = (struct RULER_LIST_ST *)kmalloc(sizeof(struct RULER_LIST_ST), GFP_KERNEL);
-	newNode->ruler.saddr = ruler.saddr;
-	newNode->ruler.smask = ruler.smask;
-	newNode->ruler.daddr = ruler.daddr;
-	newNode->ruler.dmask = ruler.dmask;
-	newNode->ruler.type = ruler.type;
+	newNode->ruler.saddr = ruler->saddr;
+	newNode->ruler.smask = ruler->smask;
+	newNode->ruler.daddr = ruler->daddr;
+	newNode->ruler.dmask = ruler->dmask;
+	newNode->ruler.type = ruler->type;
+	newNode->ruler.log = ruler->log;
+	newNode->ruler.action = ruler->action;
 	list_add_tail(&newNode->list, pos);
 	ruler_num++;
 	
@@ -52,7 +70,7 @@ static int add_node(struct RULER_ST ruler, unsigned int N)
 }
 
 /*删除规则链表节点*/
-static int del_node(struct RULER_ST ruler, unsigned int N)
+static int del_node(unsigned int N)
 {
 	struct RULER_LIST_ST *node;
 	struct list_head *pos;
@@ -119,20 +137,23 @@ static unsigned int check(struct sk_buff *skb)
 		tcph = tcp_hdr(skb);	/*获取TCP头*/
 				
 		//printk("tcp-%p	tail-%p	len-%d\n",tcph , tail, tcph -> doff * 4);
-		printk("Packet port: src-%d dest-%d\n", ntohs(tcph->source), ntohs(tcph->dest));
+		//printk("Packet port: src-%d dest-%d\n", ntohs(tcph->source), ntohs(tcph->dest));
+		
+		/*若是不包含应用层信息，则当做普通的TCP报文，不进行过滤*/
+		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
+			return NF_ACCEPT;
 		
 		/*通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 			
-			/*若是不包含应用层信息，则当做普通的TCP报文，不进行过滤*/
-			if((u_int8_t *)tcph + tcph->doff * 4 == tail)
-				return NF_ACCEPT;
-			mqtth = (char *)tcph + tcph -> doff * 4;	/*获取MQTT头*/
+			printk("direct: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
+			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT头*/
 			ptr = (u_int8_t *)mqtth;
 			printk("MQTT Type: %x\n", *ptr);
 			list_for_each(tmp, &rulers_head.list) {
 				node = list_entry(tmp, struct RULER_LIST_ST, list);
 				if(ip_check(&node->ruler, iph) && mqtt_check(&node->ruler, mqtth)){
+					printk("action: %d\n", node->ruler.action);
 					return node->ruler.action;
 				}
 			}
@@ -161,6 +182,9 @@ static int myfilter_init(void)
 	/*初始化规则链表*/
 	ruler_num = 0;
 	INIT_LIST_HEAD(&rulers_head.list);
+	printk("ruler_num before test()：%d\n", ruler_num);
+	test();
+	printk("ruler_num after test()：%d\n", ruler_num);
 
 	/* 在hook点注册相应的hook函数 */  
 	nfho[0].hook = mqtt_filter;
@@ -206,3 +230,4 @@ module_init(myfilter_init);
 module_exit(myfilter_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("lrz");
+

@@ -36,7 +36,7 @@
 
 /*MQTT报文的14种定义*/
 #define CONNECT 0x10U
-#define CCONNACK 0x20U
+#define CONNACK 0x20U
 #define PUBLISH 0x30U
 #define PUBACK 0x40U
 #define PUBREC 0x50U
@@ -56,12 +56,43 @@
 #define UNKNOWN 0xFEFEFEFE
 #define ANY 0x3F3F3F3F
 #define ANY_PORT 0x3F3F
-#define PERMIT 0x1
-#define DENY 0x0
-#define OK 0x1
-#define ERR 0x0
-#define YES 0x1
-#define NO 0x0
+#define PERMIT 1
+#define DENY 0
+#define OK 1
+#define ERR 0
+#define YES 1
+#define NO 0
 #define DEFAULT NF_ACCEPT  /*默认策略*/
+
+struct RULER_ST{		/*通用规则结构定义*/
+	u_int32_t saddr;	/*源地址*/
+	u_int32_t smask;	/*目的地址*/
+	u_int32_t daddr;	/*源端口*/
+	u_int32_t dmask;	/*目的端口*/
+	u_int8_t type;		/*指MQTT报文的类型*/
+	u_int8_t log;		/*是否记录日志*/
+	u_int8_t action;	/*动作*/
+};
+
+struct RULER_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/
+	struct list_head list;	/*内核链表结构*/
+	struct RULER_ST ruler;		/*表示一条规则*/
+};
+
+
+
+/*插入规则链表节点*/
+static int add_node(struct RULER_ST *ruler, unsigned int N);
+/*删除规则链表节点*/
+static int del_node(unsigned int N);
+/*mqtt_check函数*/
+static int mqtt_check(struct RULER_ST *ruler, char *mqtth);
+/*ip_check函数*/
+static int ip_check(struct RULER_ST *ruler, struct iphdr *iph);
+/*规则check函数*/
+static unsigned int check(struct sk_buff *skb);
+
+
+
 
 
