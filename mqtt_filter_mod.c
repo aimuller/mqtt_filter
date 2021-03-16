@@ -111,12 +111,20 @@ static unsigned int check(struct sk_buff *skb)
 	char *mqtth;
 	struct list_head *tmp;
 	struct RULER_LIST_ST *node;
+	u_int8_t *ptr, *tail;
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
+	tail = (u_int8_t *)skb->tail;
 	if(iph -> protocol == IPPROTO_TCP){
 		tcph = tcp_hdr(skb);	/*获取TCP头*/
+		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
+			return NF_ACCEPT;
+		//printk("tcp-%p	tail-%p	len-%d\n",tcph , tail, tcph -> doff * 4);
+		printk("Packet port: src-%d dest-%d\n", ntohs(tcph->source), ntohs(tcph->dest));
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 			mqtth = (char *)tcph + tcph -> doff * 4;	/*获取MQTT头*/
+			ptr = (u_int8_t *)mqtth;
+			printk("MQTT Type: %x\n", *ptr);
 			list_for_each(tmp, &rulers_head.list) {
 				node = list_entry(tmp, struct RULER_LIST_ST, list);
 				if(ip_check(&node->ruler, iph) && mqtt_check(&node->ruler, mqtth)){
