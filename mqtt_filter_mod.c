@@ -108,20 +108,25 @@ static unsigned int check(struct sk_buff *skb)
 {
 	struct iphdr *iph;
 	struct tcphdr *tcph;
-	char *mqtth;
 	struct list_head *tmp;
 	struct RULER_LIST_ST *node;
-	u_int8_t *ptr, *tail;
+	u_int8_t *mqtth, *ptr, *tail;
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
-	tail = (u_int8_t *)skb->tail;
+	tail = (u_int8_t *)skb->tail;	/*tail指向数据区结束的位置，数据区包括各层协议头和*/
+									/*用户数据，应用层协议和用户数据不一定会有*/
 	if(iph -> protocol == IPPROTO_TCP){
 		tcph = tcp_hdr(skb);	/*获取TCP头*/
-		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
-			return NF_ACCEPT;
+				
 		//printk("tcp-%p	tail-%p	len-%d\n",tcph , tail, tcph -> doff * 4);
 		printk("Packet port: src-%d dest-%d\n", ntohs(tcph->source), ntohs(tcph->dest));
+		
+		/*通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
+			
+			/*若是不包含应用层信息，则当做普通的TCP报文，不进行过滤*/
+			if((u_int8_t *)tcph + tcph->doff * 4 == tail)
+				return NF_ACCEPT;
 			mqtth = (char *)tcph + tcph -> doff * 4;	/*获取MQTT头*/
 			ptr = (u_int8_t *)mqtth;
 			printk("MQTT Type: %x\n", *ptr);
