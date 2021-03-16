@@ -19,7 +19,7 @@ struct RULER_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表lis
 };
 
 struct RULER_LIST_ST rulers_head;	/*定义规则链表头结点*/
-unsigned int ruler_num = 0;		/*目前的规则条数*/
+unsigned int ruler_num;				/*当前的规则条数*/
 
 
 /*插入规则链表节点*/
