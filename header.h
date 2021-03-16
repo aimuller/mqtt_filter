@@ -34,7 +34,7 @@
 #include <linux/timex.h>
 #include <linux/rtc.h>
 
-/*14种类型的MQTT报文定义*/
+/*MQTT报文的14种定义*/
 #define CONNECT 0x10U
 #define CCONNACK 0x20U
 #define PUBLISH 0x30U
