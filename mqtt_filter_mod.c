@@ -40,9 +40,11 @@ static int add_node(struct RULER_ST ruler, unsigned int N)
 	
 	/*申请新的规则节点*/
 	newNode = (struct RULER_LIST_ST *)kmalloc(sizeof(struct RULER_LIST_ST), GFP_KERNEL);
-	newNode.ruler.saddr = ruler.saddr;
-	newNode.ruler.daddr = ruler.daddr;
-	newNode.ruler.type = ruler.type;
+	newNode->ruler.saddr = ruler.saddr;
+	newNode->ruler.smask = ruler.smask;
+	newNode->ruler.daddr = ruler.daddr;
+	newNode->ruler.dmask = ruler.dmask;
+	newNode->ruler.type = ruler.type;
 	list_add_tail(&newNode->list, pos);
 	ruler_num++;
 	
@@ -52,7 +54,7 @@ static int add_node(struct RULER_ST ruler, unsigned int N)
 /*删除规则链表节点*/
 static int del_node(struct RULER_ST ruler, unsigned int N)
 {
-	struct RULER_LIST_ST *newNode;
+	struct RULER_LIST_ST *node;
 	struct list_head *pos;
 	int i;
 	
@@ -67,12 +69,12 @@ static int del_node(struct RULER_ST ruler, unsigned int N)
 	}
 	
 	pos = &rulers_head.list;
-    for (i = 0; i < N; i++)	/*找到要删除节点的list指针*/
+	for (i = 0; i < N; i++)	/*找到要删除节点的list指针*/
 		pos = pos -> next;
 	
 	list_del(pos);	/*删除list节点链表关系*/
-	p = list_entry(pos, struct RULER_LIST_ST, list);
-	kfree(p); 		/*释放该结点所占空间*/
+	node = list_entry(pos, struct RULER_LIST_ST, list);
+	kfree(node); 		/*释放该结点所占空间*/
 	ruler_num--;
 	
 	return OK;
@@ -82,7 +84,7 @@ static int del_node(struct RULER_ST ruler, unsigned int N)
 static int mqtt_check(struct RULER_ST *ruler, char *mqtth){
 	u_int8_t *ptr = (u_int8_t *)mqtth;
 	
-	if(ruler->type == (*ptr)&ruler->type) /* MQTT报文类型定义的值恰好可以作为其"掩码" */
+	if(ruler->type == (*ptr & ruler->type)) /* MQTT报文类型define值恰好可以作为其"掩码" */
 		return YES;
 	
 	return NO;
@@ -93,8 +95,8 @@ static int ip_check(struct RULER_ST *ruler, struct iphdr *iph){
 	u_int32_t *saddr = (u_int32_t *)&iph->saddr;
 	u_int32_t *daddr = (u_int32_t *)&iph->daddr;
 
-	if( (ruler->saddr == ANY || (ruler->saddr & ruler->smask) == (*saddr & ruler->ruler)) &&
-		(ruler->daddr == ANY || (ruler->daddr & ruler->dmask) == (*daddr & ruler->dmask)) )
+	if( (ruler->saddr == ANY || (ruler->saddr & ruler->smask) == (*saddr & ruler->smask)) &&
+	    (ruler->daddr == ANY || (ruler->daddr & ruler->dmask) == (*daddr & ruler->dmask)) )
 		return YES;
 	//printk("src_ip: %x, %x\n", node->src_ip, *src_ip);
 	//printk("dest_ip: %x, %x\n", node->dest_ip, *dest_ip);
@@ -113,7 +115,7 @@ static unsigned int check(struct sk_buff *skb)
 	iph = ip_hdr(skb);	/*获取IP头*/
 	if(iph -> protocol == IPPROTO_TCP){
 		tcph = tcp_hdr(skb);	/*获取TCP头*/
-		if(tcph -> dest == MQTT_PORT || tcph -> source == MQTT_PORT){
+		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 			mqtth = (char *)tcph + tcph -> doff * 4;	/*获取MQTT头*/
 			list_for_each(tmp, &rulers_head.list) {
 				node = list_entry(tmp, struct RULER_LIST_ST, list);
@@ -170,14 +172,14 @@ static int myfilter_init(void)
 static void myfilter_exit(void)
 {
 	struct RULER_LIST_ST *node;
-    struct list_head *pos, *tmp;
+	struct list_head *pos, *tmp;
 	
 	/*清理规则链表，释放节点空间*/
-    list_for_each_safe(pos, tmp, &rulers_head.list) {
-        list_del(pos);
-        node = list_entry(pos, struct RULER_LIST_ST, llist);
-        kfree(node);
-    }
+	list_for_each_safe(pos, tmp, &rulers_head.list) {
+		list_del(pos);
+		node = list_entry(pos, struct RULER_LIST_ST, list);
+		kfree(node);
+	}
 	ruler_num = 0;
 	
 	printk(KERN_INFO "正在注销MQTT过滤模块...\n");

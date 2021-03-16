@@ -60,6 +60,8 @@
 #define DENY 0x0
 #define OK 0x1
 #define ERR 0x0
+#define YES 0x1
+#define NO 0x0
 #define DEFAULT NF_ACCEPT  /*默认策略*/
 
 
