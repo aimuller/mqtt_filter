@@ -1,120 +1,257 @@
 #include "header.h"
 
-
-struct RULER_LIST_ST rulers_head;	/*定义规则链表头结点*/
-unsigned int ruler_num;				/*当前的规则条数*/
+struct RULE_LIST_ST rules_head;	/*定义规则链表头结点*/
+unsigned int rule_num;				/*当前的规则条数*/
 
 static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
-static int active = 1;	/*active=1表示开启, active=0表示关闭*/
+static int active = 0;	/*active=1表示开启, active=0表示关闭*/
 
+dev_t devid;		/*字符设备号*/
+struct cdev mf_dev;	/*描述字符设备*/
+
+char buf[2048];
+
+/*通过file_operations结构来定义字符设备驱动提供的接口函数*/
+static struct file_operations mf_fops = {  
+	.owner = THIS_MODULE,
+	.open = mf_open,
+	.unlocked_ioctl = mf_ioctl,
+	.release = mf_release, 
+};
+
+
+/*
+static struct RULE_LIST_ST *byte2node(char *ptr){
+	ptr = (struct RULE_LIST_ST *)ptr;
+	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST));
+	memcpy(node, ptr, sizeof(struct RULE_LIST_ST));
+	return node;
+}
+*/
+
+/*规则测试函数*/
 void test(void){
-	struct RULER_ST test;
+	struct RULE_LIST_ST *test;
 	
-	test.saddr = 0x831fa8c0; /*192.168.33.131*/
-	test.smask = 0xffffffff;
-	test.daddr = 0x851fa8c0; /*192.168.33.133*/
-	test.dmask = 0xffffffff;
-	test.type = CONNECT;
-	test.log = YES;
-	test.action = NF_ACCEPT;
-	add_node(&test, 1);
+	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
+	test->rule.saddr = 0x831fa8c0; /*192.168.33.131*/
+	test->rule.smask = 0xffffffff;
+	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
+	test->rule.dmask = 0xffffffff;
+	test->rule.type  = CONNECT;
+	test->rule.log   = YES;
+	test->rule.action = NF_ACCEPT;
+	add_node(test, 1);
 	
-	test.saddr = 0x851fa8c0; /*192.168.33.133*/
-	test.smask = 0xffffffff;
-	test.daddr = 0x831fa8c0; /*192.168.33.131*/
-	test.dmask = 0xffffffff;
-	test.type = CONNACK;
-	test.log = YES;
-	test.action = NF_ACCEPT;
-	add_node(&test, 2);
+	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
+	test->rule.saddr = 0x851fa8c0; /*192.168.33.133*/
+	test->rule.smask = 0xffffffff;
+	test->rule.daddr = 0x831fa8c0; /*192.168.33.131*/
+	test->rule.dmask = 0xffffffff;
+	test->rule.type  = CONNACK;
+	test->rule.log   = YES;
+	test->rule.action = NF_ACCEPT;
+	add_node(test, 2);
 	
-	test.saddr = 0x831fa8c0; /*192.168.33.131*/
-	test.smask = 0xffffffff;
-	test.daddr = 0x851fa8c0; /*192.168.33.133*/
-	test.dmask = 0xffffffff;
-	test.type = DISCONNECT;
-	test.log = YES;
-	test.action = NF_DROP;
-	add_node(&test, 3);
+	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
+	test->rule.saddr = 0x831fa8c0; /*192.168.33.131*/
+	test->rule.smask = 0xffffffff;
+	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
+	test->rule.dmask = 0xffffffff;
+	test->rule.type  = DISCONNECT;
+	test->rule.log   = YES;
+	test->rule.action = NF_DROP;
+	add_node(test, 3);
 }
 
+
+
+/*字符设备驱动open函数*/
+static int mf_open(struct inode *inode, struct file *file)  
+{  
+	printk(KERN_INFO "MF: 成功打开字符设备%s\n", MF_DEV_NAME);
+	return 0;  
+}  
+ 
+/*字符设备驱动release函数*/ 
+static int mf_release(struct inode *inode, struct file *file)  
+{  
+	printk(KERN_INFO "MF: 成功关闭字符设备%s\n", MF_DEV_NAME);
+	return 0;  
+}
+
+
 /*插入规则链表节点*/
-static int add_node(struct RULER_ST *ruler, unsigned int N)
+static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 {
-	struct RULER_LIST_ST *newNode;
 	struct list_head *pos;
 	int i;
 	
-	if(N <= 0 || N > ruler_num + 1){
-		printk("插入位置违法! \n");
+	if(N <= 0 || N > rule_num + 1){
+		printk("MF: 插入位置违法! \n");
 		return ERR;
 	}
 	
-	pos = &rulers_head.list;
-    for (i = 1; i < N; i++)	/*将节点插入第N个位置*/
-		pos = pos -> next;
+	pos = &rules_head.list;
 	
-	/*申请新的规则节点*/
-	newNode = (struct RULER_LIST_ST *)kmalloc(sizeof(struct RULER_LIST_ST), GFP_KERNEL);
-	newNode->ruler.saddr = ruler->saddr;
-	newNode->ruler.smask = ruler->smask;
-	newNode->ruler.daddr = ruler->daddr;
-	newNode->ruler.dmask = ruler->dmask;
-	newNode->ruler.type = ruler->type;
-	newNode->ruler.log = ruler->log;
-	newNode->ruler.action = ruler->action;
-	list_add_tail(&newNode->list, pos);
-	ruler_num++;
+	if(N == rule_num + 1)	/*若是插入位置在末尾，则直接通过head->prev找到插入位置*/
+		pos = pos -> prev;
+	
+	else{
+		for (i = 1; i < N; i++)	/*将节点插入第N个位置*/
+			pos = pos -> next;
+	}
+	
+	list_add_tail(&node->list, pos);
+	rule_num++;
 	
 	return OK;
 }
 
+
+
 /*删除规则链表节点*/
-static int del_node(unsigned int N)
+static int del_node(unsigned long N)
 {
-	struct RULER_LIST_ST *node;
+	struct RULE_LIST_ST *node;
 	struct list_head *pos;
 	int i;
 	
-	if(N <= 0 || N > ruler_num){
-		printk("删除位置违法! \n");
+	if(N <= 0 || N > rule_num){
+		printk("MF: 删除位置违法! \n");
 		return ERR;
 	}
 	
-	if(list_empty(&rulers_head.list)){
-		printk("规则链表为空! \n");
+	if(list_empty(&rules_head.list)){
+		printk("MF: 规则链表为空! \n");
 		return ERR;
 	}
 	
-	pos = &rulers_head.list;
+	pos = &rules_head.list;
 	for (i = 0; i < N; i++)	/*找到要删除节点的list指针*/
 		pos = pos -> next;
 	
 	list_del(pos);	/*删除list节点链表关系*/
-	node = list_entry(pos, struct RULER_LIST_ST, list);
+	node = list_entry(pos, struct RULE_LIST_ST, list);
 	kfree(node); 		/*释放该结点所占空间*/
-	ruler_num--;
+	rule_num--;
 	
 	return OK;
 }
 
+
+static int add_rule(unsigned long arg){
+	struct RULE_LIST_ST *node;
+	unsigned int pos;
+	char *pchar = buf;
+	
+	/*从用户空间接收数据*/
+	copy_from_user(buf, (char *)arg, sizeof(buf));
+	
+	/*提取插入位置*/
+	pos = *((unsigned int *)pchar);
+	pchar = pchar + 4;
+	
+	/*生成并填充新的规则链表节点*/
+	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
+	memcpy(&node->rule, pchar, sizeof(struct RULE_ST));
+	
+	/*将新节点插入*/
+	add_node(node, pos);
+	
+	return 0;
+}
+
+static int add_rule_list(unsigned long arg){
+	struct RULE_LIST_ST *node;
+	unsigned int len;
+	char *pchar = buf;
+	
+	copy_from_user(buf, (char *)arg, sizeof(buf));	/*从用户空间接收数据*/
+	len = *((unsigned int *)pchar);	/*提取规则数量*/
+	pchar = pchar + 4;
+	
+	while(len--){
+		/*生成并填充新的规则链表节点*/
+		node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
+		memcpy(&node->rule, pchar, sizeof(struct RULE_ST));
+		add_node(node, rule_num + 1);	/*将新节点插入*/
+	}
+	
+	return 0;
+}
+
+static void clear_rule_list(void){
+	struct RULE_LIST_ST *node;
+	struct list_head *pos, *tmp;
+	/*清理规则链表，释放节点空间*/
+	list_for_each_safe(pos, tmp, &rules_head.list) {
+		list_del(pos);
+		node = list_entry(pos, struct RULE_LIST_ST, list);
+		kfree(node);
+	}
+	rule_num = 0;
+}
+
+
+/*字符设备驱动ioctl函数*/
+static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)  
+{  
+	int ret = 0;
+	
+	switch (cmd) {  
+	case MF_SYS_OPEN:  
+		active = 1;
+ 		break;
+ 		
+	case MF_SYS_CLOSE:
+		active = 0;
+		break;  
+		
+	case MF_ADD_RULE:
+		add_rule(arg);
+		break;  
+		
+	case MF_DELETE_RULE:
+		del_node(arg);
+		break;
+		
+	case MF_CLEAR_RULE:
+		clear_rule_list();
+		break;  
+		
+	case MF_GET_RULE: 
+		
+		break; 
+		
+	case MF_GET_LOG: 
+		
+		break; 
+ 
+	default:  
+	  	break;  
+   	};  
+	
+   	return ret;  
+}  
+
 /*mqtt_check函数*/
-static int mqtt_check(struct RULER_ST *ruler, char *mqtth){
+static int mqtt_check(struct RULE_ST *rule, char *mqtth){
 	u_int8_t *ptr = (u_int8_t *)mqtth;
 	
-	if(ruler->type == (*ptr & ruler->type)) /* MQTT报文类型define值恰好可以作为其"掩码" */
+	if(rule->type == (*ptr & rule->type)) /* MQTT报文类型define值恰好可以作为其"掩码" */
 		return YES;
 	
 	return NO;
 }
 
 /*ip_check函数*/
-static int ip_check(struct RULER_ST *ruler, struct iphdr *iph){
+static int ip_check(struct RULE_ST *rule, struct iphdr *iph){
 	u_int32_t *saddr = (u_int32_t *)&iph->saddr;
 	u_int32_t *daddr = (u_int32_t *)&iph->daddr;
 
-	if( (ruler->saddr == ANY || (ruler->saddr & ruler->smask) == (*saddr & ruler->smask)) &&
-	    (ruler->daddr == ANY || (ruler->daddr & ruler->dmask) == (*daddr & ruler->dmask)) )
+	if( (rule->saddr == ANY || (rule->saddr & rule->smask) == (*saddr & rule->smask)) &&
+	    (rule->daddr == ANY || (rule->daddr & rule->dmask) == (*daddr & rule->dmask)) )
 		return YES;
 	//printk("src_ip: %x, %x\n", node->src_ip, *src_ip);
 	//printk("dest_ip: %x, %x\n", node->dest_ip, *dest_ip);
@@ -127,7 +264,7 @@ static unsigned int check(struct sk_buff *skb)
 	struct iphdr *iph;
 	struct tcphdr *tcph;
 	struct list_head *tmp;
-	struct RULER_LIST_ST *node;
+	struct RULE_LIST_ST *node;
 	u_int8_t *mqtth, *ptr, *tail;
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
@@ -146,17 +283,20 @@ static unsigned int check(struct sk_buff *skb)
 		/*通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 			
-			printk("direct: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
-			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT头*/
+			printk("MF: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
+			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
 			ptr = (u_int8_t *)mqtth;
-			printk("MQTT Type: %x\n", *ptr);
-			list_for_each(tmp, &rulers_head.list) {
-				node = list_entry(tmp, struct RULER_LIST_ST, list);
-				if(ip_check(&node->ruler, iph) && mqtt_check(&node->ruler, mqtth)){
-					printk("action: %d\n", node->ruler.action);
-					return node->ruler.action;
+			printk("MF: MQTT Type = %x\n", *ptr);
+			
+			/*将当前报文与规则链表进行匹配*/
+			list_for_each(tmp, &rules_head.list) {
+				node = list_entry(tmp, struct RULE_LIST_ST, list);
+				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, mqtth)){
+					printk("MF: action = %d\n", node->rule.action);
+					return node->rule.action;
 				}
 			}
+			
 			return DEFAULT; /*默认策略*/
 		}
 		return NF_ACCEPT;
@@ -180,13 +320,22 @@ unsigned int mqtt_filter(void *priv,
 static int myfilter_init(void)
 { 
 	/*初始化规则链表*/
-	ruler_num = 0;
-	INIT_LIST_HEAD(&rulers_head.list);
-	printk("ruler_num before test()：%d\n", ruler_num);
+	rule_num = 0;
+	INIT_LIST_HEAD(&rules_head.list);
+	printk("MF: rule_num before test()：%d\n", rule_num);
 	test();
-	printk("ruler_num after test()：%d\n", ruler_num);
+	printk("MF: rule_num after test()：%d\n", rule_num);
+	
+	/*注册字符设备*/
+	printk(KERN_INFO "MF: 正在注册字符设备驱动...\n");
+	cdev_init(&mf_dev, &mf_fops);
+	alloc_chrdev_region(&devid, 0, 10, MF_DEV_NAME);
+	printk(KERN_INFO "MF: MAJOR Number is %d\n",MAJOR(devid));
+	printk(KERN_INFO "MF: MINOR Number is %d\n",MINOR(devid));
+	cdev_add(&mf_dev, devid, 10);
+	
 
-	/* 在hook点注册相应的hook函数 */  
+	/* 填充nf_hook_ops结构，在hook点挂钩相应的处理函数 */  
 	nfho[0].hook = mqtt_filter;
 	nfho[0].pf = PF_INET;
 	nfho[0].hooknum = NF_INET_PRE_ROUTING;
@@ -196,38 +345,37 @@ static int myfilter_init(void)
 	nfho[1].pf = PF_INET;
 	nfho[1].hooknum = NF_INET_POST_ROUTING;
 	nfho[1].priority = NF_IP_PRI_FIRST;
-
-	printk(KERN_INFO "正在注册MQTT过滤模块...\n");
+	
+	/*注册MOQTT过滤模块*/
+	printk(KERN_INFO "MF: 正在注册MQTT过滤模块...\n");
 	nf_register_hook(&nfho[0]);
 	nf_register_hook(&nfho[1]);
-	printk(KERN_INFO "模块注册成功.\n");
+	printk(KERN_INFO "MF: 模块注册成功.\n");
 
 	return 0;
 }
 
 /*mqtt过滤模块注销函数*/
-static void myfilter_exit(void)
-{
-	struct RULER_LIST_ST *node;
-	struct list_head *pos, *tmp;
+static void myfilter_exit(void){
 	
-	/*清理规则链表，释放节点空间*/
-	list_for_each_safe(pos, tmp, &rulers_head.list) {
-		list_del(pos);
-		node = list_entry(pos, struct RULER_LIST_ST, list);
-		kfree(node);
-	}
-	ruler_num = 0;
+	clear_rule_list();
 	
-	printk(KERN_INFO "正在注销MQTT过滤模块...\n");
+	/*注销MOQTT过滤模块*/
+	printk(KERN_INFO "MF: 正在注销MQTT过滤模块...\n");
 	nf_unregister_hook(&nfho[0]);
 	nf_unregister_hook(&nfho[1]);
-	printk(KERN_INFO "模块注销成功.\n");
+	printk(KERN_INFO "MF: 模块注销成功.\n");
+	
+	/*注销字符设备*/	
+	printk(KERN_INFO "MF: 正在注销字符设备驱动...\n");
+	cdev_del(&mf_dev);
+	unregister_chrdev_region(devid, 10);
+	printk(KERN_INFO "MF: 字符设备驱动注销成功.\n");
 }
-
 
 module_init(myfilter_init);
 module_exit(myfilter_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("lrz");
+
 
