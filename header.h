@@ -58,10 +58,11 @@
 #define PERMIT 1
 #define DENY 0
 #define OK 1
-#define ERR 0
+#define ERR -1
 #define YES 1
 #define NO 0
 #define DEFAULT NF_ACCEPT  /*默认策略*/
+#define MAX_COPY_NUM 32
 #define MF_DEV_NAME "/dev/mf_dev" 
 
 /*IOCTL控制命令定义*/
@@ -70,7 +71,7 @@
 #define MF_SYS_OPEN		_IO(MF_MAGIC, 1)
 #define MF_SYS_CLOSE 	_IO(MF_MAGIC, 2)
 #define MF_ADD_RULE 	_IO(MF_MAGIC, 3)
-#define MF_DELETE_RULE _IO(MF_MAGIC, 4)
+#define MF_DELETE_RULE 	_IO(MF_MAGIC, 4)
 #define MF_CLEAR_RULE 	_IO(MF_MAGIC, 5)
 #define MF_GET_RULE 	_IO(MF_MAGIC, 6)
 #define MF_GET_LOG 		_IO(MF_MAGIC, 7)

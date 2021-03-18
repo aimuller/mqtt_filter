@@ -102,7 +102,7 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 			pos = pos -> next;
 	}
 	
-	list_add_tail(&node->list, pos);
+	list_add(&node->list, pos);
 	rule_num++;
 	
 	return OK;
@@ -139,7 +139,7 @@ static int del_node(unsigned long N)
 	return OK;
 }
 
-
+/*插入新的规则*/
 static int add_rule(unsigned long arg){
 	struct RULE_LIST_ST *node;
 	unsigned int pos;
@@ -150,7 +150,7 @@ static int add_rule(unsigned long arg){
 	
 	/*提取插入位置*/
 	pos = *((unsigned int *)pchar);
-	pchar = pchar + 4;
+	pchar = pchar + sizeof(unsigned int);
 	
 	/*生成并填充新的规则链表节点*/
 	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
@@ -159,9 +159,10 @@ static int add_rule(unsigned long arg){
 	/*将新节点插入*/
 	add_node(node, pos);
 	
-	return 0;
+	return OK;
 }
 
+/*将大量规则插入*/
 static int add_rule_list(unsigned long arg){
 	struct RULE_LIST_ST *node;
 	unsigned int len;
@@ -171,6 +172,9 @@ static int add_rule_list(unsigned long arg){
 	len = *((unsigned int *)pchar);	/*提取规则数量*/
 	pchar = pchar + 4;
 	
+	if(len > MAX_COPY_NUM)
+		return ERR;
+	
 	while(len--){
 		/*生成并填充新的规则链表节点*/
 		node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
@@ -178,21 +182,42 @@ static int add_rule_list(unsigned long arg){
 		add_node(node, rule_num + 1);	/*将新节点插入*/
 	}
 	
-	return 0;
+	return OK;
 }
 
+/*清除规则链表*/
 static void clear_rule_list(void){
 	struct RULE_LIST_ST *node;
 	struct list_head *pos, *tmp;
+	
 	/*清理规则链表，释放节点空间*/
 	list_for_each_safe(pos, tmp, &rules_head.list) {
 		list_del(pos);
 		node = list_entry(pos, struct RULE_LIST_ST, list);
+		//printk(KERN_INFO "MF: clear: %x\n", node->rule.saddr);
 		kfree(node);
 	}
 	rule_num = 0;
 }
 
+/*将内核规则链表拷贝到用户空间*/
+static void get_rule_list(unsigned long arg){
+	struct RULE_LIST_ST *node;
+	struct list_head *tmp;
+	char *pchar = buf;
+	
+	/*将规则数量填充在前四个字节*/
+	*((unsigned int *)pchar) = rule_num;
+	pchar = pchar + sizeof(unsigned int);
+	
+	list_for_each(tmp, &rules_head.list) {
+		node = list_entry(tmp, struct RULE_LIST_ST, list);
+		memcpy(pchar, &node->rule, sizeof(struct RULE_ST));
+		pchar = pchar + sizeof(struct RULE_ST);
+	}
+	
+	copy_to_user((void *)arg, buf, sizeof(unsigned int) + rule_num * sizeof(struct RULE_ST));
+}
 
 /*字符设备驱动ioctl函数*/
 static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)  
@@ -221,7 +246,7 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;  
 		
 	case MF_GET_RULE: 
-		
+		get_rule_list(arg);
 		break; 
 		
 	case MF_GET_LOG: 
@@ -276,11 +301,11 @@ static unsigned int check(struct sk_buff *skb)
 		//printk("tcp-%p	tail-%p	len-%d\n",tcph , tail, tcph -> doff * 4);
 		//printk("Packet port: src-%d dest-%d\n", ntohs(tcph->source), ntohs(tcph->dest));
 		
-		/*若是不包含应用层信息，则当做普通的TCP报文，不进行过滤*/
+		/*若是不包含应用层，则当做普通的TCP报文，不进行过滤*/
 		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
 			return NF_ACCEPT;
 		
-		/*通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
+		/*若是包含应用层，则通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 			
 			printk("MF: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
@@ -319,12 +344,22 @@ unsigned int mqtt_filter(void *priv,
 /*mqtt过滤模块注册函数*/
 static int myfilter_init(void)
 { 
+	struct RULE_LIST_ST *node;
+	struct list_head *tmp;
+	
 	/*初始化规则链表*/
 	rule_num = 0;
 	INIT_LIST_HEAD(&rules_head.list);
-	printk("MF: rule_num before test()：%d\n", rule_num);
+	//printk(KERN_INFO "MF: rule_num before test()：%d\n", rule_num);
 	test();
-	printk("MF: rule_num after test()：%d\n", rule_num);
+	//printk(KERN_INFO "MF: rule_num after test()：%d\n", rule_num);
+	
+	list_for_each(tmp, &rules_head.list) {
+		node = list_entry(tmp, struct RULE_LIST_ST, list);
+		printk(KERN_INFO "MF: rule_type: %d\n", node->rule.type);
+	}
+	
+	
 	
 	/*注册字符设备*/
 	printk(KERN_INFO "MF: 正在注册字符设备驱动...\n");
@@ -370,7 +405,7 @@ static void myfilter_exit(void){
 	printk(KERN_INFO "MF: 正在注销字符设备驱动...\n");
 	cdev_del(&mf_dev);
 	unregister_chrdev_region(devid, 10);
-	printk(KERN_INFO "MF: 字符设备驱动注销成功.\n");
+	printk(KERN_INFO "MF: 字符设备驱动注销成功.\n\n\n");
 }
 
 module_init(myfilter_init);
