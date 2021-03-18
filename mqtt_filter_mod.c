@@ -4,7 +4,7 @@ struct RULE_LIST_ST rules_head;	/*定义规则链表头结点*/
 unsigned int rule_num;				/*当前的规则条数*/
 
 static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
-static int active = 0;	/*active=1表示开启, active=0表示关闭*/
+static int active = 1;	/*active=1表示开启, active=0表示关闭, 默认开启*/
 
 dev_t devid;		/*字符设备号*/
 struct cdev mf_dev;	/*描述字符设备*/
@@ -34,7 +34,7 @@ void test(void){
 	struct RULE_LIST_ST *test;
 	
 	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-	test->rule.saddr = 0x831fa8c0; /*192.168.33.131*/
+	test->rule.saddr = 0x841fa8c0; /*192.168.33.131*/
 	test->rule.smask = 0xffffffff;
 	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
 	test->rule.dmask = 0xffffffff;
@@ -210,6 +210,7 @@ static void get_rule_list(unsigned long arg){
 	*((unsigned int *)pchar) = rule_num;
 	pchar = pchar + sizeof(unsigned int);
 	
+	
 	list_for_each(tmp, &rules_head.list) {
 		node = list_entry(tmp, struct RULE_LIST_ST, list);
 		memcpy(pchar, &node->rule, sizeof(struct RULE_ST));
@@ -291,6 +292,7 @@ static unsigned int check(struct sk_buff *skb)
 	struct list_head *tmp;
 	struct RULE_LIST_ST *node;
 	u_int8_t *mqtth, *ptr, *tail;
+	//printk("CHECK\n");
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
 	tail = (u_int8_t *)skb->tail;	/*tail指向数据区结束的位置，数据区包括各层协议头和*/
@@ -304,7 +306,7 @@ static unsigned int check(struct sk_buff *skb)
 		/*若是不包含应用层，则当做普通的TCP报文，不进行过滤*/
 		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
 			return NF_ACCEPT;
-		
+
 		/*若是包含应用层，则通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 			
