@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CommonRuleDialog</class>
+ <widget class="QDialog" name="CommonRuleDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>590</width>
+    <height>357</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>270</y>
+     <width>341</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   </property>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>551</width>
+     <height>131</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="3" column="2">
+     <widget class="QComboBox" name="comboBox_common_action">
+      <item>
+       <property name="text">
+        <string>允许</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>拒绝</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QComboBox" name="comboBox_common_log">
+      <item>
+       <property name="text">
+        <string>是</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>否</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="lineEdit_common_smask"/>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="lineEdit_common_daddr"/>
+    </item>
+    <item row="3" column="0">
+     <widget class="QComboBox" name="comboBox_common_mtype">
+      <item>
+       <property name="text">
+        <string>CONNECT</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>CONNACK </string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PUBLISH</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PUBACK</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PUBREC</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PUBREL</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PUBCOMP</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SUBSCRIBE </string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SUBACK</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>UNSUBSCRIBE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>UNSUBACK </string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PINGREQ </string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PINGRESP  </string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>DISCONNECT  </string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>源地址</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLineEdit" name="lineEdit_common_dmask"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLineEdit" name="lineEdit_common_saddr">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>MQTT类型</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>源地址掩码</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>目的地址</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>目的地址掩码</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>日志</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>动作</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>位置 (默认最后)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <widget class="QLineEdit" name="lineEdit_add_pos"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>CommonRuleDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>CommonRuleDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

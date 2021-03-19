@@ -63,7 +63,7 @@
 #define NO 0
 #define DEFAULT NF_ACCEPT  /*默认策略*/
 #define MAX_COPY_NUM 32
-#define MF_DEV_NAME "/dev/mf_dev" 
+#define MF_DEV_NAME "/dev/mf_dev0" 
 
 /*IOCTL控制命令定义*/
 #define MF_MAGIC 'x'

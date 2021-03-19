@@ -13,8 +13,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    commonruledialog.cpp \
+    c_helper.c
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    commonruledialog.h \
+    header.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    commonruledialog.ui

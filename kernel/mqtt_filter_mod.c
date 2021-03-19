@@ -7,7 +7,8 @@ static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
 static int active = 1;	/*active=1表示开启, active=0表示关闭, 默认开启*/
 
 dev_t devid;		/*字符设备号*/
-struct cdev mf_dev;	/*描述字符设备*/
+struct cdev cdev;	/*描述字符设备*/
+struct class *dev_class;
 
 char buf[2048];
 
@@ -69,14 +70,14 @@ void test(void){
 /*字符设备驱动open函数*/
 static int mf_open(struct inode *inode, struct file *file)  
 {  
-	printk(KERN_INFO "MF: 成功打开字符设备%s\n", MF_DEV_NAME);
+	printk(KERN_INFO "MF: 成功打开字符设备\n");
 	return 0;  
 }  
  
 /*字符设备驱动release函数*/ 
 static int mf_release(struct inode *inode, struct file *file)  
 {  
-	printk(KERN_INFO "MF: 成功关闭字符设备%s\n", MF_DEV_NAME);
+	printk(KERN_INFO "MF: 成功关闭字符设备\n");
 	return 0;  
 }
 
@@ -362,15 +363,22 @@ static int myfilter_init(void)
 	}
 	
 	
-	
 	/*注册字符设备*/
 	printk(KERN_INFO "MF: 正在注册字符设备驱动...\n");
-	cdev_init(&mf_dev, &mf_fops);
-	alloc_chrdev_region(&devid, 0, 10, MF_DEV_NAME);
+	alloc_chrdev_region(&devid, 0, 10, "mf_dev");
+	cdev_init(&cdev, &mf_fops);
+	cdev.owner = THIS_MODULE;
 	printk(KERN_INFO "MF: MAJOR Number is %d\n",MAJOR(devid));
 	printk(KERN_INFO "MF: MINOR Number is %d\n",MINOR(devid));
-	cdev_add(&mf_dev, devid, 10);
+	cdev_add(&cdev, devid, 10);
 	
+	dev_class = class_create(THIS_MODULE, "dev_class_0");
+	if (IS_ERR(dev_class)) {
+        printk("ERROR\n");
+    } 
+	
+	device_create(dev_class, NULL, devid, NULL, MF_DEV_NAME);
+
 
 	/* 填充nf_hook_ops结构，在hook点挂钩相应的处理函数 */  
 	nfho[0].hook = mqtt_filter;
@@ -405,7 +413,9 @@ static void myfilter_exit(void){
 	
 	/*注销字符设备*/	
 	printk(KERN_INFO "MF: 正在注销字符设备驱动...\n");
-	cdev_del(&mf_dev);
+	cdev_del(&cdev);
+	device_destroy(dev_class, devid);
+	class_destroy(dev_class);     
 	unregister_chrdev_region(devid, 10);
 	printk(KERN_INFO "MF: 字符设备驱动注销成功.\n\n\n");
 }
