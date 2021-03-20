@@ -1,3 +1,0 @@
-#!/bin/bash
-var=$(dmesg | grep MF: | grep -o "[0-9]\+ [0-9]\+" | tail -n 1)
-mknod /dev/mf_dev0 c $var

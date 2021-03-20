@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#安装内核模块
+MF_MOD_NAME="fw"
+LS_MOD=$(lsmod | grep ${MF_MOD_NAME})
+if [ -n "$LS_MOD" ]
+then
+	rmmod ${MF_MOD_NAME}
+fi
+make
+insmod "${MF_MOD_NAME}.ko"
+
+#创建字符设备节点
+MF_DEV_NAME="/dev/mf_dev0"
+DEV_NO=$(dmesg | grep MF: | grep -o "[0-9]\+ [0-9]\+" | tail -n 1)
+LS_DEV=$(ls /dev | grep mf_dev0)
+if [ -n "$LS_DEV" ]
+then
+	rm ${MF_DEV_NAME}
+fi
+mknod ${MF_DEV_NAME} c ${DEV_NO}
+chmod 777 ${MF_DEV_NAME}

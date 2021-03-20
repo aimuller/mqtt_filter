@@ -2,9 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDebug>
 #include "commonruledialog.h"
-#include "header.h"
-
+#include "helper.h"
 
 
 namespace Ui {
@@ -31,6 +31,8 @@ private slots:
     void on_pushButton_mf_close_clicked();
 
 private:
+    int fd;
+    int active;
     Ui::MainWindow *ui;
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;

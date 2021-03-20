@@ -1,13 +1,15 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->label_mf_state->setText("系统状态: 开启");
+    active = 0;
+    ui->label_mf_state->setText("系统状态: 关闭");
+    fd = open_mf_dev();
+
 
     addCommonRuleDialog = new CommonRuleDialog(this);
     modCommonRuleDialog = new CommonRuleDialog(this);
@@ -25,17 +27,21 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_mf_open_clicked()
 {
     ioctl(fd, MF_SYS_OPEN);
+    active = 1;
     ui->label_mf_state->setText("系统状态: 开启");
 }
 
 void MainWindow::on_pushButton_mf_close_clicked()
 {
-    ioctl(fd, MF_SYS_OPEN);
+    ioctl(fd, MF_SYS_CLOSE);
+    active = 0;
     ui->label_mf_state->setText("系统状态: 关闭");
 }
 
 void MainWindow::on_pushButton_add_rule_clicked()
 {
+    if(!active)
+        return;
     addCommonRuleDialog->setMode(ADD_RULE);
     addCommonRuleDialog->setWindowTitle("插入规则");
     addCommonRuleDialog->exec();
@@ -48,6 +54,8 @@ void MainWindow::addCommonRule(struct RULE_ST rule)
 
 void MainWindow::on_pushButton_mod_rule_clicked()
 {
+    if(!active)
+        return;
     modCommonRuleDialog->setMode(MOD_RULE);
     modCommonRuleDialog->setWindowTitle("修改规则");
     modCommonRuleDialog->exec();

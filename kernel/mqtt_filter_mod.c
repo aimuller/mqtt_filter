@@ -4,7 +4,7 @@ struct RULE_LIST_ST rules_head;	/*定义规则链表头结点*/
 unsigned int rule_num;				/*当前的规则条数*/
 
 static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
-static int active = 1;	/*active=1表示开启, active=0表示关闭, 默认开启*/
+static int active = 0;	/*active=1表示开启, active=0表示关闭, 默认开启*/
 
 dev_t devid;		/*字符设备号*/
 struct cdev cdev;	/*描述字符设备*/
@@ -228,10 +228,12 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	switch (cmd) {  
 	case MF_SYS_OPEN:  
 		active = 1;
+		printk("MF: active: %d\n", active);
  		break;
  		
 	case MF_SYS_CLOSE:
 		active = 0;
+		printk("MF: active: %d\n", active);
 		break;  
 		
 	case MF_ADD_RULE:
@@ -346,8 +348,8 @@ unsigned int mqtt_filter(void *priv,
 /*mqtt过滤模块注册函数*/
 static int myfilter_init(void)
 { 
-	struct RULE_LIST_ST *node;
-	struct list_head *tmp;
+	//struct RULE_LIST_ST *node;
+	//struct list_head *tmp;
 	
 	/*初始化规则链表*/
 	rule_num = 0;
@@ -356,10 +358,10 @@ static int myfilter_init(void)
 	test();
 	//printk(KERN_INFO "MF: rule_num after test()：%d\n", rule_num);
 	
-	list_for_each(tmp, &rules_head.list) {
-		node = list_entry(tmp, struct RULE_LIST_ST, list);
-		printk(KERN_INFO "MF: rule_type: %d\n", node->rule.type);
-	}
+	//list_for_each(tmp, &rules_head.list) {
+	//	node = list_entry(tmp, struct RULE_LIST_ST, list);
+	//	printk(KERN_INFO "MF: rule_type: %d\n", node->rule.type);
+	//}
 	
 	
 	/*注册字符设备*/
