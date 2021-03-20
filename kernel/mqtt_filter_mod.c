@@ -9,7 +9,7 @@ static int active = 0;	/*active=1表示开启, active=0表示关闭, 默认开�
 dev_t devid;		/*字符设备号*/
 struct cdev cdev;	/*描述字符设备*/
 
-char buf[2048];
+static char buf[2048];
 
 /*通过file_operations结构来定义字符设备驱动提供的接口函数*/
 static struct file_operations mf_fops = {  
@@ -38,7 +38,7 @@ void test(void){
 	test->rule.smask = 0xffffffff;
 	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
 	test->rule.dmask = 0xffffffff;
-	test->rule.type  = CONNECT;
+	test->rule.mtype  = CONNECT;
 	test->rule.log   = YES;
 	test->rule.action = NF_ACCEPT;
 	add_node(test, 1);
@@ -48,7 +48,7 @@ void test(void){
 	test->rule.smask = 0xffffffff;
 	test->rule.daddr = 0x831fa8c0; /*192.168.33.131*/
 	test->rule.dmask = 0xffffffff;
-	test->rule.type  = CONNACK;
+	test->rule.mtype  = CONNACK;
 	test->rule.log   = YES;
 	test->rule.action = NF_ACCEPT;
 	add_node(test, 2);
@@ -58,7 +58,7 @@ void test(void){
 	test->rule.smask = 0xffffffff;
 	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
 	test->rule.dmask = 0xffffffff;
-	test->rule.type  = DISCONNECT;
+	test->rule.mtype  = DISCONNECT;
 	test->rule.log   = YES;
 	test->rule.action = NF_DROP;
 	add_node(test, 3);
@@ -205,6 +205,7 @@ static void get_rule_list(unsigned long arg){
 	struct RULE_LIST_ST *node;
 	struct list_head *tmp;
 	char *pchar = buf;
+	int ret;
 	
 	/*将规则数量填充在前四个字节*/
 	*((unsigned int *)pchar) = rule_num;
@@ -217,7 +218,11 @@ static void get_rule_list(unsigned long arg){
 		pchar = pchar + sizeof(struct RULE_ST);
 	}
 	
-	copy_to_user((void *)arg, buf, sizeof(unsigned int) + rule_num * sizeof(struct RULE_ST));
+	printk("MF: get_rule_list: rule_num: %d\n", rule_num);
+	printk("MF: get_rule_list: buf: %d\n", *buf);
+	ret = copy_to_user((char *)arg, buf, sizeof(unsigned int) + rule_num * sizeof(struct RULE_ST));
+	if(ret < 0)
+		printk("MF: copy_to_user ERROR\n");
 }
 
 /*字符设备驱动ioctl函数*/
@@ -228,12 +233,12 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	switch (cmd) {  
 	case MF_SYS_OPEN:  
 		active = 1;
-		printk("MF: active: %d\n", active);
+		printk("MF: MF_SYS_OPEN\n");
  		break;
  		
 	case MF_SYS_CLOSE:
 		active = 0;
-		printk("MF: active: %d\n", active);
+		printk("MF: MF_SYS_CLOSE\n");
 		break;  
 		
 	case MF_ADD_RULE:
@@ -249,6 +254,7 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;  
 		
 	case MF_GET_RULE: 
+		printk("MF: MF_GET_RULE\n");
 		get_rule_list(arg);
 		break; 
 		
@@ -267,7 +273,7 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 static int mqtt_check(struct RULE_ST *rule, char *mqtth){
 	u_int8_t *ptr = (u_int8_t *)mqtth;
 	
-	if(rule->type == (*ptr & rule->type)) /* MQTT报文类型define值恰好可以作为其"掩码" */
+	if(rule->mtype == (*ptr & rule->mtype)) /* MQTT报文类型define值恰好可以作为其"掩码" */
 		return YES;
 	
 	return NO;
@@ -360,7 +366,7 @@ static int myfilter_init(void)
 	
 	//list_for_each(tmp, &rules_head.list) {
 	//	node = list_entry(tmp, struct RULE_LIST_ST, list);
-	//	printk(KERN_INFO "MF: rule_type: %d\n", node->rule.type);
+	//	printk(KERN_INFO "MF: rule_mtype: %d\n", node->rule.mtype);
 	//}
 	
 	

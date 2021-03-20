@@ -83,7 +83,7 @@ struct RULE_ST{		/*通用规则结构定义*/
 	u_int32_t smask;	/*目的地址*/
 	u_int32_t daddr;	/*源端口*/
 	u_int32_t dmask;	/*目的端口*/
-	u_int8_t type;		/*指MQTT报文的类型*/
+	u_int8_t mtype;		/*指MQTT报文的类型*/
 	u_int8_t log;		/*是否记录日志*/
 	u_int8_t action;	/*动作*/
 };

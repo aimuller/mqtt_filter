@@ -46,7 +46,10 @@
 #define ANY 0x3F3F3F3F
 #define MAX_COPY_NUM 32     /*内核空间和用户空间一次最多传递的规则条数*/
 #define MF_DEV_NAME "/dev/mf_dev0"
-
+#define YES 1
+#define NO 0
+#define PERMIT 1
+#define DENY 0
 /*为了在插入、修改按钮中复用ruleDialog组件，可以设置一个mode加以区分*/
 /*下面是两种模式的定义*/
 #define ADD_RULE 1
@@ -70,7 +73,7 @@ struct RULE_ST{
     u_int32_t smask;	/*目的地址*/
     u_int32_t daddr;	/*源端口*/
     u_int32_t dmask;	/*目的端口*/
-    u_int8_t type;		/*指MQTT报文的类型*/
+    u_int8_t mtype;		/*指MQTT报文的类型*/
     u_int8_t log;		/*是否记录日志*/
     u_int8_t action;	/*动作*/
 };

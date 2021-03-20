@@ -1,20 +1,24 @@
 #!/bin/bash
 
 #安装内核模块
-MF_MOD_NAME="fw"
+MF_MOD_NAME="mf"
 LS_MOD=$(lsmod | grep ${MF_MOD_NAME})
-if [ -n "$LS_MOD" ]
+#如果之前就安装过内核模块，则先卸载该模块
+if [ -n "${LS_MOD}" ]
 then
 	rmmod ${MF_MOD_NAME}
 fi
 make
 insmod "${MF_MOD_NAME}.ko"
 
+
+
 #创建字符设备节点
 MF_DEV_NAME="/dev/mf_dev0"
 DEV_NO=$(dmesg | grep MF: | grep -o "[0-9]\+ [0-9]\+" | tail -n 1)
 LS_DEV=$(ls /dev | grep mf_dev0)
-if [ -n "$LS_DEV" ]
+#如果之前存在设备节点，则删除该设备节点
+if [ -n "${LS_DEV}" ]
 then
 	rm ${MF_DEV_NAME}
 fi

@@ -1,8 +1,7 @@
 #!/bin/bash
 
-MF_MOD_NAME="fw"
+MF_MOD_NAME="mf"
 MF_DEV_NAME="/dev/mf_dev0"
 
 rmmod ${MF_MOD_NAME}
 rm ${MF_DEV_NAME}
-

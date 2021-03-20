@@ -2,7 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QDebug>
+#include <QMessageBox>
+#include <QDesktopWidget>
+#include <QList>
+
 #include "commonruledialog.h"
 #include "helper.h"
 
@@ -16,6 +19,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     
 public:
+
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     
@@ -33,9 +37,12 @@ private slots:
 private:
     int fd;
     int active;
+    QList<struct RULE_ST> rule_list;
     Ui::MainWindow *ui;
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
+    void upateCommonRule();
+
 };
 
 #endif // MAINWINDOW_H

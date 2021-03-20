@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+static char buf[2048];
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -9,7 +10,6 @@ MainWindow::MainWindow(QWidget *parent) :
     active = 0;
     ui->label_mf_state->setText("系统状态: 关闭");
     fd = open_mf_dev();
-
 
     addCommonRuleDialog = new CommonRuleDialog(this);
     modCommonRuleDialog = new CommonRuleDialog(this);
@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    close_mf_dev(fd);
     delete ui;
 }
 
@@ -29,6 +30,7 @@ void MainWindow::on_pushButton_mf_open_clicked()
     ioctl(fd, MF_SYS_OPEN);
     active = 1;
     ui->label_mf_state->setText("系统状态: 开启");
+    upateCommonRule();
 }
 
 void MainWindow::on_pushButton_mf_close_clicked()
@@ -40,8 +42,10 @@ void MainWindow::on_pushButton_mf_close_clicked()
 
 void MainWindow::on_pushButton_add_rule_clicked()
 {
-    if(!active)
+    if(!active){
+        QMessageBox::information(NULL, "提示", "请先点击\"开启过滤\"按钮开启系统");
         return;
+    }
     addCommonRuleDialog->setMode(ADD_RULE);
     addCommonRuleDialog->setWindowTitle("插入规则");
     addCommonRuleDialog->exec();
@@ -54,8 +58,10 @@ void MainWindow::addCommonRule(struct RULE_ST rule)
 
 void MainWindow::on_pushButton_mod_rule_clicked()
 {
-    if(!active)
+    if(!active){
+        QMessageBox::information(NULL, "提示", "请先点击\"开启过滤\"按钮开启系统");
         return;
+    }
     modCommonRuleDialog->setMode(MOD_RULE);
     modCommonRuleDialog->setWindowTitle("修改规则");
     modCommonRuleDialog->exec();
@@ -65,4 +71,31 @@ void MainWindow::modCommonRule(struct RULE_ST rule)
     qDebug() << "modCommonRule" << endl;
 }
 
+void MainWindow::upateCommonRule()
+{
+    unsigned int len = 0;
+    struct RULE_ST rule;
+    char *pchar = buf;
+
+    //if(!active){
+    //    QMessageBox::information(NULL, "提示", "请先点击\"开启过滤\"按钮开启系统");
+    //    return;
+    //}
+
+    ioctl(fd, MF_GET_RULE, buf);
+    len = *(unsigned int *)pchar;
+    pchar = pchar + sizeof(unsigned int);
+
+    //qDebug("%d\n", len);
+
+    for(int i = 0; i < len; i++){
+        //QString ip = byte2ip(rule.saddr);
+        memcpy(&rule, pchar, sizeof(struct RULE_ST));
+        qDebug() << byte2ip(rule.saddr) << " " << byte2ip(rule.daddr) << " " << byte2mtype(rule.mtype);
+
+        pchar = pchar + sizeof(struct RULE_ST);
+    }
+
+
+}
 

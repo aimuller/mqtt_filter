@@ -1,1 +1,0 @@
-cmd_/home/seed/mqtt_filter/kernel/fw.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /home/seed/mqtt_filter/kernel/fw.ko /home/seed/mqtt_filter/kernel/fw.o /home/seed/mqtt_filter/kernel/fw.mod.o
