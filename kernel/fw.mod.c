@@ -21,21 +21,17 @@ __attribute__((section("__versions"))) = {
 	{ 0xc01d0147, __VMLINUX_SYMBOL_STR(cdev_del) },
 	{ 0xa55617ab, __VMLINUX_SYMBOL_STR(kmalloc_caches) },
 	{ 0x32183c74, __VMLINUX_SYMBOL_STR(cdev_init) },
-	{ 0xd39e5855, __VMLINUX_SYMBOL_STR(device_destroy) },
 	{ 0xda24d0e4, __VMLINUX_SYMBOL_STR(nf_register_hook) },
 	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
 	{ 0x4f8b5ddb, __VMLINUX_SYMBOL_STR(_copy_to_user) },
 	{ 0x50eedeb8, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0xb4390f9a, __VMLINUX_SYMBOL_STR(mcount) },
-	{ 0xe742771, __VMLINUX_SYMBOL_STR(device_create) },
 	{ 0x3a3205a8, __VMLINUX_SYMBOL_STR(cdev_add) },
 	{ 0xef57dad7, __VMLINUX_SYMBOL_STR(kmem_cache_alloc_trace) },
 	{ 0x5d6734dc, __VMLINUX_SYMBOL_STR(nf_unregister_hook) },
 	{ 0x1e047854, __VMLINUX_SYMBOL_STR(warn_slowpath_fmt) },
 	{ 0x37a0cba, __VMLINUX_SYMBOL_STR(kfree) },
-	{ 0xd1d83426, __VMLINUX_SYMBOL_STR(class_destroy) },
 	{ 0x4f6b400b, __VMLINUX_SYMBOL_STR(_copy_from_user) },
-	{ 0x92bbda16, __VMLINUX_SYMBOL_STR(__class_create) },
 	{ 0x88db9f48, __VMLINUX_SYMBOL_STR(__check_object_size) },
 	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
 };
@@ -46,4 +42,4 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "1CC98B5CDD7FD3A7858BB82");
+MODULE_INFO(srcversion, "89761E0964686386B54F8F7");
