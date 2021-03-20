@@ -364,13 +364,10 @@ static int myfilter_init(void)
 	
 	/*注册字符设备*/
 	printk(KERN_INFO "MF: 正在注册字符设备驱动...\n");
-	alloc_chrdev_region(&devid, 0, 10, "mf_dev");
+	alloc_chrdev_region(&devid, 0, 10, "mf_dev_drv");
 	cdev_init(&cdev, &mf_fops);
-	printk(KERN_INFO "MF: MAJOR Number is %d\n",MAJOR(devid));
-	printk(KERN_INFO "MF: MINOR Number is %d\n",MINOR(devid));
+	printk(KERN_INFO "MF: 主次设备号: %d %d\n",MAJOR(devid), MINOR(devid));
 	cdev_add(&cdev, devid, 10);
-	
-
 
 
 	/* 填充nf_hook_ops结构，在hook点挂钩相应的处理函数 */  
@@ -406,7 +403,7 @@ static void myfilter_exit(void){
 	
 	/*注销字符设备*/	
 	printk(KERN_INFO "MF: 正在注销字符设备驱动...\n");
-	cdev_del(&cdev);
+	cdev_del(&cdev);    
 	unregister_chrdev_region(devid, 10);
 	printk(KERN_INFO "MF: 字符设备驱动注销成功.\n\n\n");
 }

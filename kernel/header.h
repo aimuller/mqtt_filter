@@ -33,6 +33,7 @@
 #include <linux/timer.h>
 #include <linux/timex.h>
 #include <linux/rtc.h>
+#include <linux/device.h>  
 
 /*MQTT报文的14种定义*/
 #define CONNECT 0x10U
