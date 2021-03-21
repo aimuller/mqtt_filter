@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "header.h"
+#include "helper.h"
 
 namespace Ui {
 class CommonRuleDialog;
@@ -14,6 +15,7 @@ class CommonRuleDialog : public QDialog
     
 public:
     void setMode(int arg);
+    void setOriginRule(RULE_ST rule);
     explicit CommonRuleDialog(QWidget *parent = 0);
     ~CommonRuleDialog();
     
@@ -25,8 +27,8 @@ private:
     Ui::CommonRuleDialog *ui;
 
 signals:
-    void addCommonRuleSignal(struct RULE_ST);
-    void modCommonRuleSignal(struct RULE_ST);
+    void addCommonRuleSignal(struct RULE_ST, unsigned int);
+    void modCommonRuleSignal(struct RULE_ST, unsigned int);
 
 };
 

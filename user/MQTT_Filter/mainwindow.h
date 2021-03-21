@@ -7,7 +7,7 @@
 #include <QList>
 
 #include "commonruledialog.h"
-#include "helper.h"
+
 
 
 namespace Ui {
@@ -25,14 +25,16 @@ public:
     
 private slots:
     void on_pushButton_add_rule_clicked();
-    void addCommonRule(struct RULE_ST);
-    void modCommonRule(struct RULE_ST);
+    void addCommonRule(struct RULE_ST, unsigned int);
+    void modCommonRule(struct RULE_ST, unsigned int);
 
     void on_pushButton_mod_rule_clicked();
 
     void on_pushButton_mf_open_clicked();
 
     void on_pushButton_mf_close_clicked();
+
+    void on_pushButton_del_rule_clicked();
 
 private:
     int fd;
@@ -41,7 +43,8 @@ private:
     Ui::MainWindow *ui;
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
-    void upateCommonRule();
+    void updateCommonRule();
+    void setRuleItem(struct RULE_ST *, int);
 
 };
 

@@ -52,7 +52,7 @@ public:
     QPushButton *pushButton_del_rule;
     QWidget *gridLayoutWidget_2;
     QGridLayout *gridLayout_3;
-    QTableWidget *tableWidget;
+    QTableWidget *tableWidget_commom_rule;
     QWidget *tab_2;
     QMenuBar *menuBar;
     QMenu *menu;
@@ -140,22 +140,22 @@ public:
         gridLayout_3->setContentsMargins(11, 11, 11, 11);
         gridLayout_3->setObjectName(QStringLiteral("gridLayout_3"));
         gridLayout_3->setContentsMargins(0, 0, 0, 0);
-        tableWidget = new QTableWidget(gridLayoutWidget_2);
-        if (tableWidget->columnCount() < 5)
-            tableWidget->setColumnCount(5);
+        tableWidget_commom_rule = new QTableWidget(gridLayoutWidget_2);
+        if (tableWidget_commom_rule->columnCount() < 5)
+            tableWidget_commom_rule->setColumnCount(5);
         QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
-        tableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem);
+        tableWidget_commom_rule->setHorizontalHeaderItem(0, __qtablewidgetitem);
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
-        tableWidget->setHorizontalHeaderItem(1, __qtablewidgetitem1);
+        tableWidget_commom_rule->setHorizontalHeaderItem(1, __qtablewidgetitem1);
         QTableWidgetItem *__qtablewidgetitem2 = new QTableWidgetItem();
-        tableWidget->setHorizontalHeaderItem(2, __qtablewidgetitem2);
+        tableWidget_commom_rule->setHorizontalHeaderItem(2, __qtablewidgetitem2);
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
-        tableWidget->setHorizontalHeaderItem(3, __qtablewidgetitem3);
+        tableWidget_commom_rule->setHorizontalHeaderItem(3, __qtablewidgetitem3);
         QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
-        tableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem4);
-        tableWidget->setObjectName(QStringLiteral("tableWidget"));
+        tableWidget_commom_rule->setHorizontalHeaderItem(4, __qtablewidgetitem4);
+        tableWidget_commom_rule->setObjectName(QStringLiteral("tableWidget_commom_rule"));
 
-        gridLayout_3->addWidget(tableWidget, 0, 0, 1, 1);
+        gridLayout_3->addWidget(tableWidget_commom_rule, 0, 0, 1, 1);
 
         tabWidget->addTab(tab_common, QString());
         tab_2 = new QWidget();
@@ -197,15 +197,15 @@ public:
         pushButton_add_rule->setText(QApplication::translate("MainWindow", "\346\217\222\345\205\245\350\247\204\345\210\231", 0));
         pushButton_mod_rule->setText(QApplication::translate("MainWindow", "\344\277\256\346\224\271\350\247\204\345\210\231", 0));
         pushButton_del_rule->setText(QApplication::translate("MainWindow", "\345\210\240\351\231\244\350\247\204\345\210\231", 0));
-        QTableWidgetItem *___qtablewidgetitem = tableWidget->horizontalHeaderItem(0);
+        QTableWidgetItem *___qtablewidgetitem = tableWidget_commom_rule->horizontalHeaderItem(0);
         ___qtablewidgetitem->setText(QApplication::translate("MainWindow", "\346\272\220IP", 0));
-        QTableWidgetItem *___qtablewidgetitem1 = tableWidget->horizontalHeaderItem(1);
+        QTableWidgetItem *___qtablewidgetitem1 = tableWidget_commom_rule->horizontalHeaderItem(1);
         ___qtablewidgetitem1->setText(QApplication::translate("MainWindow", "\347\233\256\347\232\204IP", 0));
-        QTableWidgetItem *___qtablewidgetitem2 = tableWidget->horizontalHeaderItem(2);
+        QTableWidgetItem *___qtablewidgetitem2 = tableWidget_commom_rule->horizontalHeaderItem(2);
         ___qtablewidgetitem2->setText(QApplication::translate("MainWindow", "MQTT\347\261\273\345\236\213", 0));
-        QTableWidgetItem *___qtablewidgetitem3 = tableWidget->horizontalHeaderItem(3);
+        QTableWidgetItem *___qtablewidgetitem3 = tableWidget_commom_rule->horizontalHeaderItem(3);
         ___qtablewidgetitem3->setText(QApplication::translate("MainWindow", "\346\227\245\345\277\227", 0));
-        QTableWidgetItem *___qtablewidgetitem4 = tableWidget->horizontalHeaderItem(4);
+        QTableWidgetItem *___qtablewidgetitem4 = tableWidget_commom_rule->horizontalHeaderItem(4);
         ___qtablewidgetitem4->setText(QApplication::translate("MainWindow", "\345\212\250\344\275\234", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_common), QApplication::translate("MainWindow", "\351\200\232\347\224\250\350\247\204\345\210\231", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("MainWindow", "Tab 2", 0));

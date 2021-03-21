@@ -86,12 +86,10 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 {
 	struct list_head *pos;
 	int i;
-	
 	if(N <= 0 || N > rule_num + 1){
 		printk("MF: 插入位置违法! \n");
 		return ERR;
 	}
-	
 	pos = &rules_head.list;
 	
 	if(N == rule_num + 1)	/*若是插入位置在末尾，则直接通过head->prev找到插入位置*/
@@ -101,10 +99,8 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 		for (i = 1; i < N; i++)	/*将节点插入第N个位置*/
 			pos = pos -> next;
 	}
-	
 	list_add(&node->list, pos);
 	rule_num++;
-	
 	return OK;
 }
 
@@ -145,20 +141,25 @@ static int add_rule(unsigned long arg){
 	unsigned int pos;
 	char *pchar = buf;
 	
+	
 	/*从用户空间接收数据*/
-	copy_from_user(buf, (char *)arg, sizeof(buf));
+	copy_from_user(buf, (char *)arg, sizeof(unsigned int) + sizeof(struct RULE_ST));
 	
 	/*提取插入位置*/
 	pos = *((unsigned int *)pchar);
 	pchar = pchar + sizeof(unsigned int);
-	
+
+	printk("MF: pos: %d\n", pos);
+
 	/*生成并填充新的规则链表节点*/
 	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
 	memcpy(&node->rule, pchar, sizeof(struct RULE_ST));
 	
+	//printk("MF: saddr:%x smask:%x daddr:%x dmask:%x mtype:%x log:%d action:%d\n", node->rule.saddr, node->rule.smask, node->rule.daddr, node->rule.dmask, node->rule.mtype, node->rule.log, node->rule.action);
+	
+	//return OK;
 	/*将新节点插入*/
 	add_node(node, pos);
-	
 	return OK;
 }
 
@@ -218,8 +219,8 @@ static void get_rule_list(unsigned long arg){
 		pchar = pchar + sizeof(struct RULE_ST);
 	}
 	
-	printk("MF: get_rule_list: rule_num: %d\n", rule_num);
-	printk("MF: get_rule_list: buf: %d\n", *buf);
+	//printk("MF: get_rule_list: rule_num: %d\n", rule_num);
+	//printk("MF: get_rule_list: buf: %d\n", *buf);
 	ret = copy_to_user((char *)arg, buf, sizeof(unsigned int) + rule_num * sizeof(struct RULE_ST));
 	if(ret < 0)
 		printk("MF: copy_to_user ERROR\n");
@@ -242,14 +243,17 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;  
 		
 	case MF_ADD_RULE:
+		printk("MF: MF_ADD_RULE\n");
 		add_rule(arg);
 		break;  
 		
 	case MF_DELETE_RULE:
+		printk("MF: MF_DELETE_RULE\n");
 		del_node(arg);
 		break;
 		
 	case MF_CLEAR_RULE:
+		printk("MF: MF_CLEAR_RULE\n");
 		clear_rule_list();
 		break;  
 		
@@ -259,13 +263,15 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break; 
 		
 	case MF_GET_LOG: 
+		printk("MF: MF_GET_LOG\n");
 		
 		break; 
  
 	default:  
 	  	break;  
    	};  
-	
+   	
+	printk("MF: rule_num:%d\n", rule_num);
    	return ret;  
 }  
 

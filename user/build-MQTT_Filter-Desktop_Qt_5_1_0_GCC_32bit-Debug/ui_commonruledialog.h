@@ -156,8 +156,8 @@ public:
         CommonRuleDialog->setWindowTitle(QApplication::translate("CommonRuleDialog", "Dialog", 0));
         comboBox_common_action->clear();
         comboBox_common_action->insertItems(0, QStringList()
-         << QApplication::translate("CommonRuleDialog", "\345\205\201\350\256\270", 0)
          << QApplication::translate("CommonRuleDialog", "\346\213\222\347\273\235", 0)
+         << QApplication::translate("CommonRuleDialog", "\345\205\201\350\256\270", 0)
         );
         comboBox_common_log->clear();
         comboBox_common_log->insertItems(0, QStringList()

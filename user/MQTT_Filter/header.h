@@ -23,7 +23,6 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 
-
 /*MQTT报文的14种定义*/
 #define CONNECT 0x10U
 #define CONNACK 0x20U
