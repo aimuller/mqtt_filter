@@ -15,7 +15,7 @@ class CommonRuleDialog : public QDialog
     
 public:
     void setMode(int arg);
-    void setOriginRule(RULE_ST rule);
+    void setSourceRule(QString, int);
     explicit CommonRuleDialog(QWidget *parent = 0);
     ~CommonRuleDialog();
     

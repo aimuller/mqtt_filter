@@ -156,30 +156,31 @@ public:
         CommonRuleDialog->setWindowTitle(QApplication::translate("CommonRuleDialog", "Dialog", 0));
         comboBox_common_action->clear();
         comboBox_common_action->insertItems(0, QStringList()
-         << QApplication::translate("CommonRuleDialog", "\346\213\222\347\273\235", 0)
-         << QApplication::translate("CommonRuleDialog", "\345\205\201\350\256\270", 0)
+         << QApplication::translate("CommonRuleDialog", "DENY", 0)
+         << QApplication::translate("CommonRuleDialog", "PERMIT", 0)
         );
         comboBox_common_log->clear();
         comboBox_common_log->insertItems(0, QStringList()
-         << QApplication::translate("CommonRuleDialog", "\346\230\257", 0)
-         << QApplication::translate("CommonRuleDialog", "\345\220\246", 0)
+         << QApplication::translate("CommonRuleDialog", "YES", 0)
+         << QApplication::translate("CommonRuleDialog", "NO", 0)
         );
         comboBox_common_mtype->clear();
         comboBox_common_mtype->insertItems(0, QStringList()
          << QApplication::translate("CommonRuleDialog", "CONNECT", 0)
-         << QApplication::translate("CommonRuleDialog", "CONNACK ", 0)
+         << QApplication::translate("CommonRuleDialog", "CONNACK", 0)
          << QApplication::translate("CommonRuleDialog", "PUBLISH", 0)
          << QApplication::translate("CommonRuleDialog", "PUBACK", 0)
          << QApplication::translate("CommonRuleDialog", "PUBREC", 0)
          << QApplication::translate("CommonRuleDialog", "PUBREL", 0)
          << QApplication::translate("CommonRuleDialog", "PUBCOMP", 0)
-         << QApplication::translate("CommonRuleDialog", "SUBSCRIBE ", 0)
+         << QApplication::translate("CommonRuleDialog", "SUBSCRIBE", 0)
          << QApplication::translate("CommonRuleDialog", "SUBACK", 0)
          << QApplication::translate("CommonRuleDialog", "UNSUBSCRIBE", 0)
-         << QApplication::translate("CommonRuleDialog", "UNSUBACK ", 0)
-         << QApplication::translate("CommonRuleDialog", "PINGREQ ", 0)
-         << QApplication::translate("CommonRuleDialog", "PINGRESP  ", 0)
-         << QApplication::translate("CommonRuleDialog", "DISCONNECT  ", 0)
+         << QApplication::translate("CommonRuleDialog", "UNSUBACK", 0)
+         << QApplication::translate("CommonRuleDialog", "PINGREQ", 0)
+         << QApplication::translate("CommonRuleDialog", "PINGRESP", 0)
+         << QApplication::translate("CommonRuleDialog", "DISCONNECT", 0)
+         << QApplication::translate("CommonRuleDialog", "ANY", 0)
         );
         label->setText(QApplication::translate("CommonRuleDialog", "\346\272\220\345\234\260\345\235\200", 0));
         lineEdit_common_saddr->setText(QString());

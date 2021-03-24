@@ -51,11 +51,12 @@
 #define PINGRESP 0xD0U
 #define DISCONNECT 0xE0U
 #define AUTH 0xF0U
+#define ANYTYPE 0x00
 
 /*其他常量定义*/
 #define MQTT_PORT 1883		/*MQTT服务端口*/
 #define UNKNOWN 0xFEFEFEFE
-#define ANY 0x3F3F3F3F
+#define ANY_ADDR 0x0
 #define PERMIT 1
 #define DENY 0
 #define OK 1

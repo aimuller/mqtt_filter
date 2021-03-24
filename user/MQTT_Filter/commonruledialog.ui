@@ -43,12 +43,12 @@
      <widget class="QComboBox" name="comboBox_common_action">
       <item>
        <property name="text">
-        <string>拒绝</string>
+        <string>DENY</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>允许</string>
+        <string>PERMIT</string>
        </property>
       </item>
      </widget>
@@ -57,12 +57,12 @@
      <widget class="QComboBox" name="comboBox_common_log">
       <item>
        <property name="text">
-        <string>是</string>
+        <string>YES</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>否</string>
+        <string>NO</string>
        </property>
       </item>
      </widget>
@@ -82,7 +82,7 @@
       </item>
       <item>
        <property name="text">
-        <string>CONNACK </string>
+        <string>CONNACK</string>
        </property>
       </item>
       <item>
@@ -112,7 +112,7 @@
       </item>
       <item>
        <property name="text">
-        <string>SUBSCRIBE </string>
+        <string>SUBSCRIBE</string>
        </property>
       </item>
       <item>
@@ -127,22 +127,27 @@
       </item>
       <item>
        <property name="text">
-        <string>UNSUBACK </string>
+        <string>UNSUBACK</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>PINGREQ </string>
+        <string>PINGREQ</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>PINGRESP  </string>
+        <string>PINGRESP</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>DISCONNECT  </string>
+        <string>DISCONNECT</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ANY</string>
        </property>
       </item>
      </widget>

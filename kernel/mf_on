@@ -8,6 +8,7 @@ if [ -n "${LS_MOD}" ]
 then
 	rmmod ${MF_MOD_NAME}
 fi
+#编译，安装内核模块
 make
 insmod "${MF_MOD_NAME}.ko"
 

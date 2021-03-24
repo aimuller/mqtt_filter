@@ -149,7 +149,7 @@ static int add_rule(unsigned long arg){
 	pos = *((unsigned int *)pchar);
 	pchar = pchar + sizeof(unsigned int);
 
-	printk("MF: pos: %d\n", pos);
+	//printk("MF: pos: %d\n", pos);
 
 	/*生成并填充新的规则链表节点*/
 	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
@@ -211,7 +211,6 @@ static void get_rule_list(unsigned long arg){
 	/*将规则数量填充在前四个字节*/
 	*((unsigned int *)pchar) = rule_num;
 	pchar = pchar + sizeof(unsigned int);
-	
 	
 	list_for_each(tmp, &rules_head.list) {
 		node = list_entry(tmp, struct RULE_LIST_ST, list);
@@ -290,8 +289,8 @@ static int ip_check(struct RULE_ST *rule, struct iphdr *iph){
 	u_int32_t *saddr = (u_int32_t *)&iph->saddr;
 	u_int32_t *daddr = (u_int32_t *)&iph->daddr;
 
-	if( (rule->saddr == ANY || (rule->saddr & rule->smask) == (*saddr & rule->smask)) &&
-	    (rule->daddr == ANY || (rule->daddr & rule->dmask) == (*daddr & rule->dmask)) )
+	if( (rule->saddr == ANY_ADDR || (rule->saddr & rule->smask) == (*saddr & rule->smask)) &&
+	    (rule->daddr == ANY_ADDR || (rule->daddr & rule->dmask) == (*daddr & rule->dmask)) )
 		return YES;
 	//printk("src_ip: %x, %x\n", node->src_ip, *src_ip);
 	//printk("dest_ip: %x, %x\n", node->dest_ip, *dest_ip);

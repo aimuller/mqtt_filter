@@ -36,6 +36,10 @@ private slots:
 
     void on_pushButton_del_rule_clicked();
 
+    void on_pushButton_clear_rule_clicked();
+
+    void on_action_export_rule_file_triggered();
+
 private:
     int fd;
     int active;
@@ -43,8 +47,10 @@ private:
     Ui::MainWindow *ui;
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
+
     void updateCommonRule();
     void setRuleItem(struct RULE_ST *, int);
+    void initRuleList();
 
 };
 

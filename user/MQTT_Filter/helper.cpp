@@ -113,19 +113,27 @@ QString rule2action(u_int8_t action){
 u_int32_t addr2rule(QString str_addr){
     u_int32_t ret = 0;
 
+    if(str_addr.isEmpty() || str_addr == "ANY" || str_addr == "any"){
+        return ANY_ADDR;
+    }
+
     str_addr.remove(QRegExp("\\s"));
     QStringList strlist = str_addr.split(".");
+    if(strlist.length() != 4)
+        return ERR;
 
     ret |= (strlist[0].toUInt());
     ret |= (strlist[1].toUInt() << 8);
     ret |= (strlist[2].toUInt() << 16);
     ret |= (strlist[3].toUInt() << 24);
 
-
     return ret;
 }
 
 u_int32_t mask2rule(QString str_mask){
+    if(str_mask.isEmpty())
+        return 0;
+
     int n_mask = str_mask.toInt();
     u_int32_t  mask = 0xFFFFFFFF;
     return (mask << (32 - n_mask));
@@ -143,9 +151,11 @@ u_int8_t mtype2rule(QString str_mtype){
     type_map["SUBSCRIBE"] = SUBSCRIBE;
     type_map["SUBACK"] = SUBACK;
     type_map["UNSUBSCRIBE"] = UNSUBSCRIBE;
+    type_map["UNSUBACK"] = UNSUBACK;
     type_map["PINGREQ"] = PINGREQ;
     type_map["PINGRESP"] = PINGRESP;
     type_map["DISCONNECT"] = DISCONNECT;
+    type_map["ANY"] = ANYTYPE;
 
     return  type_map[str_mtype];
 }

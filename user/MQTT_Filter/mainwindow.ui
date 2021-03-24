@@ -123,6 +123,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_clear_rule">
+            <property name="text">
+             <string>清除规则</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="gridLayoutWidget_2">
@@ -190,6 +197,10 @@
     <property name="title">
      <string>文件</string>
     </property>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="action_Import_rule_file"/>
+    <addaction name="action_export_rule_file"/>
    </widget>
    <addaction name="menu"/>
   </widget>
@@ -202,6 +213,16 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="action_Import_rule_file">
+   <property name="text">
+    <string>导入规则文件</string>
+   </property>
+  </action>
+  <action name="action_export_rule_file">
+   <property name="text">
+    <string>导出规则文件</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

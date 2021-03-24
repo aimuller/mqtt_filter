@@ -33,6 +33,8 @@ QT_BEGIN_NAMESPACE
 class Ui_MainWindow
 {
 public:
+    QAction *action_Import_rule_file;
+    QAction *action_export_rule_file;
     QWidget *centralWidget;
     QWidget *horizontalLayoutWidget;
     QHBoxLayout *horizontalLayout;
@@ -50,6 +52,7 @@ public:
     QPushButton *pushButton_add_rule;
     QPushButton *pushButton_mod_rule;
     QPushButton *pushButton_del_rule;
+    QPushButton *pushButton_clear_rule;
     QWidget *gridLayoutWidget_2;
     QGridLayout *gridLayout_3;
     QTableWidget *tableWidget_commom_rule;
@@ -64,6 +67,10 @@ public:
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
         MainWindow->resize(802, 564);
+        action_Import_rule_file = new QAction(MainWindow);
+        action_Import_rule_file->setObjectName(QStringLiteral("action_Import_rule_file"));
+        action_export_rule_file = new QAction(MainWindow);
+        action_export_rule_file->setObjectName(QStringLiteral("action_export_rule_file"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         horizontalLayoutWidget = new QWidget(centralWidget);
@@ -132,6 +139,11 @@ public:
 
         horizontalLayout_2->addWidget(pushButton_del_rule);
 
+        pushButton_clear_rule = new QPushButton(horizontalLayoutWidget_2);
+        pushButton_clear_rule->setObjectName(QStringLiteral("pushButton_clear_rule"));
+
+        horizontalLayout_2->addWidget(pushButton_clear_rule);
+
         gridLayoutWidget_2 = new QWidget(tab_common);
         gridLayoutWidget_2->setObjectName(QStringLiteral("gridLayoutWidget_2"));
         gridLayoutWidget_2->setGeometry(QRect(10, 70, 731, 331));
@@ -179,6 +191,10 @@ public:
         MainWindow->setStatusBar(statusBar);
 
         menuBar->addAction(menu->menuAction());
+        menu->addSeparator();
+        menu->addSeparator();
+        menu->addAction(action_Import_rule_file);
+        menu->addAction(action_export_rule_file);
 
         retranslateUi(MainWindow);
 
@@ -191,12 +207,15 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
+        action_Import_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\205\245\350\247\204\345\210\231\346\226\207\344\273\266", 0));
+        action_export_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\207\272\350\247\204\345\210\231\346\226\207\344\273\266", 0));
         label_mf_state->setText(QApplication::translate("MainWindow", "TextLabel", 0));
         pushButton_mf_open->setText(QApplication::translate("MainWindow", "\345\274\200\345\220\257\350\277\207\346\273\244", 0));
         pushButton_mf_close->setText(QApplication::translate("MainWindow", "\345\205\263\351\227\255\350\277\207\346\273\244", 0));
         pushButton_add_rule->setText(QApplication::translate("MainWindow", "\346\217\222\345\205\245\350\247\204\345\210\231", 0));
         pushButton_mod_rule->setText(QApplication::translate("MainWindow", "\344\277\256\346\224\271\350\247\204\345\210\231", 0));
         pushButton_del_rule->setText(QApplication::translate("MainWindow", "\345\210\240\351\231\244\350\247\204\345\210\231", 0));
+        pushButton_clear_rule->setText(QApplication::translate("MainWindow", "\346\270\205\351\231\244\350\247\204\345\210\231", 0));
         QTableWidgetItem *___qtablewidgetitem = tableWidget_commom_rule->horizontalHeaderItem(0);
         ___qtablewidgetitem->setText(QApplication::translate("MainWindow", "\346\272\220IP", 0));
         QTableWidgetItem *___qtablewidgetitem1 = tableWidget_commom_rule->horizontalHeaderItem(1);

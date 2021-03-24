@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     active = 0;
     ui->label_mf_state->setText("系统状态: 关闭");
     fd = open_mf_dev();
-
+    initRuleList();
     updateCommonRule();
 
     addCommonRuleDialog = new CommonRuleDialog(this);
@@ -23,8 +23,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget_commom_rule->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     //ui->tableWidget_commom_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);//对第0列单独设置固定宽度
-    ui->tableWidget_commom_rule->setColumnWidth(0, 160);//设置固定宽
-    ui->tableWidget_commom_rule->setColumnWidth(1, 160);//设置固定宽
+    ui->tableWidget_commom_rule->setColumnWidth(0, 180);//设置固定宽
+    ui->tableWidget_commom_rule->setColumnWidth(1, 180);//设置固定宽
+    ui->tableWidget_commom_rule->setColumnWidth(2, 120);//设置固定宽
 
     connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, unsigned int)),
             this, SLOT(addCommonRule(struct RULE_ST, unsigned int)));
@@ -36,6 +37,23 @@ MainWindow::~MainWindow()
 {
     close_mf_dev(fd);
     delete ui;
+}
+
+void MainWindow::initRuleList(){
+    unsigned int len = 0;
+    struct RULE_ST rule;
+    char *pchar = buf;
+
+    ioctl(fd, MF_GET_RULE, buf);
+    len = *(unsigned int *)pchar;
+    pchar = pchar + sizeof(unsigned int);
+
+    for(unsigned int i = 0; i < len; i++){
+        memcpy(&rule, pchar, sizeof(struct RULE_ST));
+        rule_list.append(rule);
+        pchar = pchar + sizeof(struct RULE_ST);
+    }
+    qDebug() << "initRuleList rule_num:" << rule_list.size();
 }
 
 void MainWindow::on_pushButton_mf_open_clicked()
@@ -75,6 +93,8 @@ void MainWindow::addCommonRule(struct RULE_ST rule, unsigned int pos)
     memcpy(pchar, &rule, sizeof(struct RULE_ST));
 
     ioctl(fd, MF_ADD_RULE, buf);
+
+    rule_list.insert(pos - 1, rule);
     updateCommonRule();
 
     //qDebug()<<rule.saddr<<rule.smask<<rule.daddr<<rule.dmask<<rule.mtype<<rule.log<<rule.action;
@@ -82,24 +102,42 @@ void MainWindow::addCommonRule(struct RULE_ST rule, unsigned int pos)
 
 void MainWindow::on_pushButton_mod_rule_clicked()
 {
+    int pos = ui->tableWidget_commom_rule->currentRow();
+    if(pos < 0){
+        QMessageBox::information(NULL, "提示", "请先点击要修改的规则");
+        return;
+    }
+
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 0)->text(), 0);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 1)->text(), 1);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 2)->text(), 2);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 3)->text(), 3);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 4)->text(), 4);
+
     modCommonRuleDialog->setMode(MOD_RULE);
     modCommonRuleDialog->setWindowTitle("修改规则");
-    //modCommonRuleDialog->setOriginRule(ui->tableWidget_commom_rule->);
     modCommonRuleDialog->exec();
 
 }
 
-void MainWindow::modCommonRule(struct RULE_ST rule, unsigned int pos)
+void MainWindow::modCommonRule(struct RULE_ST rule, unsigned int mod_pos)
 {
-    if(pos <= 0 || pos > ui->tableWidget_commom_rule->rowCount() + 1)
-        pos = ui->tableWidget_commom_rule->rowCount() + 1;
+    int src_pos = ui->tableWidget_commom_rule->currentRow() + 1;
+
+    if(mod_pos <= 0 || mod_pos > ui->tableWidget_commom_rule->rowCount())
+        mod_pos = src_pos;
+
+    ioctl(fd, MF_DELETE_RULE, (unsigned int)src_pos);
+    rule_list.removeAt(src_pos - 1);
 
     char *pchar = buf;
-    *((unsigned int *)pchar) = pos;
+    *((unsigned int *)pchar) = mod_pos;
     pchar = pchar + sizeof(unsigned int);
     memcpy(pchar, &rule, sizeof(struct RULE_ST));
 
     ioctl(fd, MF_ADD_RULE, buf);
+    rule_list.insert(mod_pos - 1, rule);
+
     updateCommonRule();
 }
 
@@ -108,11 +146,6 @@ void MainWindow::updateCommonRule()
     unsigned int len = 0;
     struct RULE_ST rule;
     char *pchar = buf;
-
-    //if(!active){
-    //    QMessageBox::information(NULL, "提示", "请先点击\"开启过滤\"按钮开启系统");
-    //    return;
-    //}
 
     ioctl(fd, MF_GET_RULE, buf);
     len = *(unsigned int *)pchar;
@@ -125,7 +158,6 @@ void MainWindow::updateCommonRule()
         setRuleItem(&rule, i);
         pchar = pchar + sizeof(struct RULE_ST);
     }
-
 
 }
 
@@ -146,11 +178,31 @@ void MainWindow::setRuleItem(struct RULE_ST *rule, int row){
 
 void MainWindow::on_pushButton_del_rule_clicked()
 {
-    int pos = ui->tableWidget_commom_rule->currentRow();
-    if(pos < 0){
+    int pos = ui->tableWidget_commom_rule->currentRow() + 1;
+    if(pos <= 0){
         QMessageBox::information(NULL, "提示", "请先点击要删除的规则");
         return;
     }
-    ioctl(fd, MF_DELETE_RULE, (unsigned int)pos + 1);
+    ioctl(fd, MF_DELETE_RULE, (unsigned int)pos);
+    rule_list.removeAt(pos - 1);
     updateCommonRule();
+}
+
+void MainWindow::on_pushButton_clear_rule_clicked()
+{
+    QMessageBox::StandardButton choose = QMessageBox::question(NULL, "清除规则", "确定要清除所有规则？", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if(choose == QMessageBox::Yes){
+        ioctl(fd, MF_CLEAR_RULE);
+        rule_list.clear();
+        updateCommonRule();
+    }
+}
+
+void MainWindow::on_action_export_rule_file_triggered()
+{
+    QString filter = "rule文件(*.rule)";
+    QString FilePath = QFileDialog::getSaveFileName(this, "保存文件", DEFAULT_DIR, filter);
+
+
+    qDebug() << FilePath;
 }

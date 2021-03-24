@@ -39,16 +39,21 @@
 #define PINGRESP 0xD0U
 #define DISCONNECT 0xE0U
 #define AUTH 0xF0U
+#define ANYTYPE 0x00
 
 /*其他常量定义*/
 #define MQTT_PORT 1883		/*MQTT服务端口*/
-#define ANY 0x3F3F3F3F
+#define ANY_ADDR 0x0
 #define MAX_COPY_NUM 32     /*内核空间和用户空间一次最多传递的规则条数*/
 #define MF_DEV_NAME "/dev/mf_dev0"
 #define YES 1
 #define NO 0
 #define PERMIT 1
 #define DENY 0
+#define ERR 0xFE
+
+
+
 /*为了在插入、修改按钮中复用ruleDialog组件，可以设置一个mode加以区分*/
 /*下面是两种模式的定义*/
 #define ADD_RULE 1
