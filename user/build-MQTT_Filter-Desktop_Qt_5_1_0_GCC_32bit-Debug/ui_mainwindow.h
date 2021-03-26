@@ -21,11 +21,11 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QToolBar>
+#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -36,27 +36,24 @@ public:
     QAction *action_Import_rule_file;
     QAction *action_export_rule_file;
     QWidget *centralWidget;
-    QWidget *horizontalLayoutWidget;
+    QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout;
-    QLabel *label_mf_state;
-    QSpacerItem *horizontalSpacer_2;
     QPushButton *pushButton_mf_open;
-    QSpacerItem *horizontalSpacer;
     QPushButton *pushButton_mf_close;
-    QWidget *gridLayoutWidget;
-    QGridLayout *gridLayout;
+    QLabel *label_mf_state;
+    QVBoxLayout *verticalLayout_2;
     QTabWidget *tabWidget;
-    QWidget *tab_common;
-    QWidget *horizontalLayoutWidget_2;
+    QWidget *tab_rule;
+    QGridLayout *gridLayout_2;
     QHBoxLayout *horizontalLayout_2;
     QPushButton *pushButton_add_rule;
     QPushButton *pushButton_mod_rule;
     QPushButton *pushButton_del_rule;
     QPushButton *pushButton_clear_rule;
-    QWidget *gridLayoutWidget_2;
     QGridLayout *gridLayout_3;
-    QTableWidget *tableWidget_commom_rule;
-    QWidget *tab_2;
+    QTableWidget *tableWidget_rule;
+    QWidget *tab_log;
+    QGridLayout *gridLayout;
     QMenuBar *menuBar;
     QMenu *menu;
     QToolBar *mainToolBar;
@@ -66,120 +63,121 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(802, 564);
+        MainWindow->resize(791, 565);
         action_Import_rule_file = new QAction(MainWindow);
         action_Import_rule_file->setObjectName(QStringLiteral("action_Import_rule_file"));
         action_export_rule_file = new QAction(MainWindow);
         action_export_rule_file->setObjectName(QStringLiteral("action_export_rule_file"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
-        horizontalLayoutWidget = new QWidget(centralWidget);
-        horizontalLayoutWidget->setObjectName(QStringLiteral("horizontalLayoutWidget"));
-        horizontalLayoutWidget->setGeometry(QRect(210, 0, 341, 31));
-        horizontalLayout = new QHBoxLayout(horizontalLayoutWidget);
+        verticalLayout_3 = new QVBoxLayout(centralWidget);
+        verticalLayout_3->setSpacing(6);
+        verticalLayout_3->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
+        horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(6);
-        horizontalLayout->setContentsMargins(11, 11, 11, 11);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
-        horizontalLayout->setContentsMargins(0, 0, 0, 0);
-        label_mf_state = new QLabel(horizontalLayoutWidget);
-        label_mf_state->setObjectName(QStringLiteral("label_mf_state"));
-
-        horizontalLayout->addWidget(label_mf_state);
-
-        horizontalSpacer_2 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        horizontalLayout->addItem(horizontalSpacer_2);
-
-        pushButton_mf_open = new QPushButton(horizontalLayoutWidget);
+        pushButton_mf_open = new QPushButton(centralWidget);
         pushButton_mf_open->setObjectName(QStringLiteral("pushButton_mf_open"));
 
-        horizontalLayout->addWidget(pushButton_mf_open);
+        horizontalLayout->addWidget(pushButton_mf_open, 0, Qt::AlignRight);
 
-        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        horizontalLayout->addItem(horizontalSpacer);
-
-        pushButton_mf_close = new QPushButton(horizontalLayoutWidget);
+        pushButton_mf_close = new QPushButton(centralWidget);
         pushButton_mf_close->setObjectName(QStringLiteral("pushButton_mf_close"));
 
-        horizontalLayout->addWidget(pushButton_mf_close);
+        horizontalLayout->addWidget(pushButton_mf_close, 0, Qt::AlignHCenter);
 
-        gridLayoutWidget = new QWidget(centralWidget);
-        gridLayoutWidget->setObjectName(QStringLiteral("gridLayoutWidget"));
-        gridLayoutWidget->setGeometry(QRect(20, 40, 761, 451));
-        gridLayout = new QGridLayout(gridLayoutWidget);
-        gridLayout->setSpacing(6);
-        gridLayout->setContentsMargins(11, 11, 11, 11);
-        gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        gridLayout->setContentsMargins(0, 0, 0, 0);
-        tabWidget = new QTabWidget(gridLayoutWidget);
+        label_mf_state = new QLabel(centralWidget);
+        label_mf_state->setObjectName(QStringLiteral("label_mf_state"));
+
+        horizontalLayout->addWidget(label_mf_state, 0, Qt::AlignLeft);
+
+
+        verticalLayout_3->addLayout(horizontalLayout);
+
+        verticalLayout_2 = new QVBoxLayout();
+        verticalLayout_2->setSpacing(6);
+        verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
+        tabWidget = new QTabWidget(centralWidget);
         tabWidget->setObjectName(QStringLiteral("tabWidget"));
-        tab_common = new QWidget();
-        tab_common->setObjectName(QStringLiteral("tab_common"));
-        horizontalLayoutWidget_2 = new QWidget(tab_common);
-        horizontalLayoutWidget_2->setObjectName(QStringLiteral("horizontalLayoutWidget_2"));
-        horizontalLayoutWidget_2->setGeometry(QRect(10, 10, 731, 41));
-        horizontalLayout_2 = new QHBoxLayout(horizontalLayoutWidget_2);
+        tab_rule = new QWidget();
+        tab_rule->setObjectName(QStringLiteral("tab_rule"));
+        gridLayout_2 = new QGridLayout(tab_rule);
+        gridLayout_2->setSpacing(6);
+        gridLayout_2->setContentsMargins(11, 11, 11, 11);
+        gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
+        horizontalLayout_2 = new QHBoxLayout();
         horizontalLayout_2->setSpacing(6);
-        horizontalLayout_2->setContentsMargins(11, 11, 11, 11);
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
-        horizontalLayout_2->setContentsMargins(0, 0, 0, 0);
-        pushButton_add_rule = new QPushButton(horizontalLayoutWidget_2);
+        pushButton_add_rule = new QPushButton(tab_rule);
         pushButton_add_rule->setObjectName(QStringLiteral("pushButton_add_rule"));
 
         horizontalLayout_2->addWidget(pushButton_add_rule);
 
-        pushButton_mod_rule = new QPushButton(horizontalLayoutWidget_2);
+        pushButton_mod_rule = new QPushButton(tab_rule);
         pushButton_mod_rule->setObjectName(QStringLiteral("pushButton_mod_rule"));
 
         horizontalLayout_2->addWidget(pushButton_mod_rule);
 
-        pushButton_del_rule = new QPushButton(horizontalLayoutWidget_2);
+        pushButton_del_rule = new QPushButton(tab_rule);
         pushButton_del_rule->setObjectName(QStringLiteral("pushButton_del_rule"));
 
         horizontalLayout_2->addWidget(pushButton_del_rule);
 
-        pushButton_clear_rule = new QPushButton(horizontalLayoutWidget_2);
+        pushButton_clear_rule = new QPushButton(tab_rule);
         pushButton_clear_rule->setObjectName(QStringLiteral("pushButton_clear_rule"));
 
         horizontalLayout_2->addWidget(pushButton_clear_rule);
 
-        gridLayoutWidget_2 = new QWidget(tab_common);
-        gridLayoutWidget_2->setObjectName(QStringLiteral("gridLayoutWidget_2"));
-        gridLayoutWidget_2->setGeometry(QRect(10, 70, 731, 331));
-        gridLayout_3 = new QGridLayout(gridLayoutWidget_2);
+
+        gridLayout_2->addLayout(horizontalLayout_2, 0, 0, 1, 1);
+
+        gridLayout_3 = new QGridLayout();
         gridLayout_3->setSpacing(6);
-        gridLayout_3->setContentsMargins(11, 11, 11, 11);
         gridLayout_3->setObjectName(QStringLiteral("gridLayout_3"));
-        gridLayout_3->setContentsMargins(0, 0, 0, 0);
-        tableWidget_commom_rule = new QTableWidget(gridLayoutWidget_2);
-        if (tableWidget_commom_rule->columnCount() < 5)
-            tableWidget_commom_rule->setColumnCount(5);
+        tableWidget_rule = new QTableWidget(tab_rule);
+        if (tableWidget_rule->columnCount() < 6)
+            tableWidget_rule->setColumnCount(6);
         QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
-        tableWidget_commom_rule->setHorizontalHeaderItem(0, __qtablewidgetitem);
+        tableWidget_rule->setHorizontalHeaderItem(0, __qtablewidgetitem);
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
-        tableWidget_commom_rule->setHorizontalHeaderItem(1, __qtablewidgetitem1);
+        tableWidget_rule->setHorizontalHeaderItem(1, __qtablewidgetitem1);
         QTableWidgetItem *__qtablewidgetitem2 = new QTableWidgetItem();
-        tableWidget_commom_rule->setHorizontalHeaderItem(2, __qtablewidgetitem2);
+        tableWidget_rule->setHorizontalHeaderItem(2, __qtablewidgetitem2);
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
-        tableWidget_commom_rule->setHorizontalHeaderItem(3, __qtablewidgetitem3);
+        tableWidget_rule->setHorizontalHeaderItem(3, __qtablewidgetitem3);
         QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
-        tableWidget_commom_rule->setHorizontalHeaderItem(4, __qtablewidgetitem4);
-        tableWidget_commom_rule->setObjectName(QStringLiteral("tableWidget_commom_rule"));
+        tableWidget_rule->setHorizontalHeaderItem(4, __qtablewidgetitem4);
+        QTableWidgetItem *__qtablewidgetitem5 = new QTableWidgetItem();
+        tableWidget_rule->setHorizontalHeaderItem(5, __qtablewidgetitem5);
+        tableWidget_rule->setObjectName(QStringLiteral("tableWidget_rule"));
 
-        gridLayout_3->addWidget(tableWidget_commom_rule, 0, 0, 1, 1);
+        gridLayout_3->addWidget(tableWidget_rule, 0, 0, 1, 1);
 
-        tabWidget->addTab(tab_common, QString());
-        tab_2 = new QWidget();
-        tab_2->setObjectName(QStringLiteral("tab_2"));
-        tabWidget->addTab(tab_2, QString());
 
-        gridLayout->addWidget(tabWidget, 0, 0, 1, 1);
+        gridLayout_2->addLayout(gridLayout_3, 1, 0, 1, 1);
+
+        tabWidget->addTab(tab_rule, QString());
+        tab_log = new QWidget();
+        tab_log->setObjectName(QStringLiteral("tab_log"));
+        tabWidget->addTab(tab_log, QString());
+
+        verticalLayout_2->addWidget(tabWidget);
+
+
+        verticalLayout_3->addLayout(verticalLayout_2);
+
+        gridLayout = new QGridLayout();
+        gridLayout->setSpacing(6);
+        gridLayout->setObjectName(QStringLiteral("gridLayout"));
+
+        verticalLayout_3->addLayout(gridLayout);
 
         MainWindow->setCentralWidget(centralWidget);
+        pushButton_mf_open->raise();
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 802, 23));
+        menuBar->setGeometry(QRect(0, 0, 791, 23));
         menu = new QMenu(menuBar);
         menu->setObjectName(QStringLiteral("menu"));
         MainWindow->setMenuBar(menuBar);
@@ -209,25 +207,27 @@ public:
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
         action_Import_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\205\245\350\247\204\345\210\231\346\226\207\344\273\266", 0));
         action_export_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\207\272\350\247\204\345\210\231\346\226\207\344\273\266", 0));
-        label_mf_state->setText(QApplication::translate("MainWindow", "TextLabel", 0));
         pushButton_mf_open->setText(QApplication::translate("MainWindow", "\345\274\200\345\220\257\350\277\207\346\273\244", 0));
         pushButton_mf_close->setText(QApplication::translate("MainWindow", "\345\205\263\351\227\255\350\277\207\346\273\244", 0));
+        label_mf_state->setText(QApplication::translate("MainWindow", " TextLabel", 0));
         pushButton_add_rule->setText(QApplication::translate("MainWindow", "\346\217\222\345\205\245\350\247\204\345\210\231", 0));
         pushButton_mod_rule->setText(QApplication::translate("MainWindow", "\344\277\256\346\224\271\350\247\204\345\210\231", 0));
         pushButton_del_rule->setText(QApplication::translate("MainWindow", "\345\210\240\351\231\244\350\247\204\345\210\231", 0));
         pushButton_clear_rule->setText(QApplication::translate("MainWindow", "\346\270\205\351\231\244\350\247\204\345\210\231", 0));
-        QTableWidgetItem *___qtablewidgetitem = tableWidget_commom_rule->horizontalHeaderItem(0);
-        ___qtablewidgetitem->setText(QApplication::translate("MainWindow", "\346\272\220IP", 0));
-        QTableWidgetItem *___qtablewidgetitem1 = tableWidget_commom_rule->horizontalHeaderItem(1);
-        ___qtablewidgetitem1->setText(QApplication::translate("MainWindow", "\347\233\256\347\232\204IP", 0));
-        QTableWidgetItem *___qtablewidgetitem2 = tableWidget_commom_rule->horizontalHeaderItem(2);
-        ___qtablewidgetitem2->setText(QApplication::translate("MainWindow", "MQTT\347\261\273\345\236\213", 0));
-        QTableWidgetItem *___qtablewidgetitem3 = tableWidget_commom_rule->horizontalHeaderItem(3);
-        ___qtablewidgetitem3->setText(QApplication::translate("MainWindow", "\346\227\245\345\277\227", 0));
-        QTableWidgetItem *___qtablewidgetitem4 = tableWidget_commom_rule->horizontalHeaderItem(4);
-        ___qtablewidgetitem4->setText(QApplication::translate("MainWindow", "\345\212\250\344\275\234", 0));
-        tabWidget->setTabText(tabWidget->indexOf(tab_common), QApplication::translate("MainWindow", "\351\200\232\347\224\250\350\247\204\345\210\231", 0));
-        tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("MainWindow", "Tab 2", 0));
+        QTableWidgetItem *___qtablewidgetitem = tableWidget_rule->horizontalHeaderItem(0);
+        ___qtablewidgetitem->setText(QApplication::translate("MainWindow", "MQTT\347\261\273\345\236\213", 0));
+        QTableWidgetItem *___qtablewidgetitem1 = tableWidget_rule->horizontalHeaderItem(1);
+        ___qtablewidgetitem1->setText(QApplication::translate("MainWindow", "\345\212\250\344\275\234", 0));
+        QTableWidgetItem *___qtablewidgetitem2 = tableWidget_rule->horizontalHeaderItem(2);
+        ___qtablewidgetitem2->setText(QApplication::translate("MainWindow", "\346\227\245\345\277\227", 0));
+        QTableWidgetItem *___qtablewidgetitem3 = tableWidget_rule->horizontalHeaderItem(3);
+        ___qtablewidgetitem3->setText(QApplication::translate("MainWindow", "\346\272\220IP", 0));
+        QTableWidgetItem *___qtablewidgetitem4 = tableWidget_rule->horizontalHeaderItem(4);
+        ___qtablewidgetitem4->setText(QApplication::translate("MainWindow", "\347\233\256\347\232\204IP", 0));
+        QTableWidgetItem *___qtablewidgetitem5 = tableWidget_rule->horizontalHeaderItem(5);
+        ___qtablewidgetitem5->setText(QApplication::translate("MainWindow", "\345\205\266\344\273\226", 0));
+        tabWidget->setTabText(tabWidget->indexOf(tab_rule), QApplication::translate("MainWindow", "\350\247\204\345\210\231\347\256\241\347\220\206", 0));
+        tabWidget->setTabText(tabWidget->indexOf(tab_log), QApplication::translate("MainWindow", "\346\227\245\345\277\227\345\256\241\346\237\245", 0));
         menu->setTitle(QApplication::translate("MainWindow", "\346\226\207\344\273\266", 0));
     } // retranslateUi
 

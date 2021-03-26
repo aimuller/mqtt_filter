@@ -78,15 +78,37 @@
 #define MF_GET_RULE 	_IO(MF_MAGIC, 6)
 #define MF_GET_LOG 		_IO(MF_MAGIC, 7)
 
+struct CONNECT_ST{
+	u_int8_t flag;
+}
 
-struct RULE_ST{		/*通用规则结构定义*/
+struct PUBLISH_ST{
+	u_int8_t flag;
+}
+
+struct SUBSCRIBE_ST{
+	u_int8_t flag;
+}
+
+struct UNSUBSCRIBE_ST{
+	u_int8_t flag;
+}
+
+struct RULE_ST{		/*规则结构定义*/
 	u_int32_t saddr;	/*源地址*/
-	u_int32_t smask;	/*目的地址*/
-	u_int32_t daddr;	/*源端口*/
-	u_int32_t dmask;	/*目的端口*/
-	u_int8_t mtype;		/*指MQTT报文的类型*/
+	u_int32_t smask;	/*源地址掩码*/
+	u_int32_t daddr;	/*目的地址*/
+	u_int32_t dmask;	/*目的地址掩码*/
+	u_int8_t mtype;		/*MQTT报文的类型*/
 	u_int8_t log;		/*是否记录日志*/
 	u_int8_t action;	/*动作*/
+	
+	union{				/*特别考虑的四种报文的补充规则结构*/
+		struct CONNECT_ST connect;
+		struct PUBLISH_ST publish;
+		struct SUBSCRIBE_ST subscribe;
+		struct UNSUBSCRIBE_ST unsubscribe;
+	}
 };
 
 struct RULE_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/

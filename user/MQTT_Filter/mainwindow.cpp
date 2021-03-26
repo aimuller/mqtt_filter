@@ -18,14 +18,14 @@ MainWindow::MainWindow(QWidget *parent) :
     addCommonRuleDialog = new CommonRuleDialog(this);
     modCommonRuleDialog = new CommonRuleDialog(this);
 
-    ui->tableWidget_commom_rule->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
-    ui->tableWidget_commom_rule->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
-    ui->tableWidget_commom_rule->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableWidget_rule->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
+    ui->tableWidget_rule->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
+    ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
-    //ui->tableWidget_commom_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);//对第0列单独设置固定宽度
-    ui->tableWidget_commom_rule->setColumnWidth(0, 180);//设置固定宽
-    ui->tableWidget_commom_rule->setColumnWidth(1, 180);//设置固定宽
-    ui->tableWidget_commom_rule->setColumnWidth(2, 120);//设置固定宽
+    //ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);//对第0列单独设置固定宽度
+    //ui->tableWidget_rule->setColumnWidth(0, 180);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(1, 180);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(2, 120);//设置固定宽
 
     connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, unsigned int)),
             this, SLOT(addCommonRule(struct RULE_ST, unsigned int)));
@@ -84,8 +84,8 @@ void MainWindow::on_pushButton_add_rule_clicked()
 
 void MainWindow::addCommonRule(struct RULE_ST rule, unsigned int pos)
 {
-    if(pos <= 0 || pos > ui->tableWidget_commom_rule->rowCount() + 1)
-        pos = ui->tableWidget_commom_rule->rowCount() + 1;
+    if(pos <= 0 || pos > ui->tableWidget_rule->rowCount() + 1)
+        pos = ui->tableWidget_rule->rowCount() + 1;
 
     char *pchar = buf;
     *((unsigned int *)pchar) = pos;
@@ -102,17 +102,17 @@ void MainWindow::addCommonRule(struct RULE_ST rule, unsigned int pos)
 
 void MainWindow::on_pushButton_mod_rule_clicked()
 {
-    int pos = ui->tableWidget_commom_rule->currentRow();
+    int pos = ui->tableWidget_rule->currentRow();
     if(pos < 0){
         QMessageBox::information(NULL, "提示", "请先点击要修改的规则");
         return;
     }
 
-    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 0)->text(), 0);
-    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 1)->text(), 1);
-    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 2)->text(), 2);
-    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 3)->text(), 3);
-    modCommonRuleDialog->setSourceRule(ui->tableWidget_commom_rule->item(pos, 4)->text(), 4);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_rule->item(pos, 0)->text(), 0);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_rule->item(pos, 1)->text(), 1);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_rule->item(pos, 2)->text(), 2);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_rule->item(pos, 3)->text(), 3);
+    modCommonRuleDialog->setSourceRule(ui->tableWidget_rule->item(pos, 4)->text(), 4);
 
     modCommonRuleDialog->setMode(MOD_RULE);
     modCommonRuleDialog->setWindowTitle("修改规则");
@@ -122,9 +122,9 @@ void MainWindow::on_pushButton_mod_rule_clicked()
 
 void MainWindow::modCommonRule(struct RULE_ST rule, unsigned int mod_pos)
 {
-    int src_pos = ui->tableWidget_commom_rule->currentRow() + 1;
+    int src_pos = ui->tableWidget_rule->currentRow() + 1;
 
-    if(mod_pos <= 0 || mod_pos > ui->tableWidget_commom_rule->rowCount())
+    if(mod_pos <= 0 || mod_pos > ui->tableWidget_rule->rowCount())
         mod_pos = src_pos;
 
     ioctl(fd, MF_DELETE_RULE, (unsigned int)src_pos);
@@ -151,7 +151,7 @@ void MainWindow::updateCommonRule()
     len = *(unsigned int *)pchar;
     pchar = pchar + sizeof(unsigned int);
 
-    ui->tableWidget_commom_rule->setRowCount(len);
+    ui->tableWidget_rule->setRowCount(len);
 
     for(unsigned int i = 0; i < len; i++){
         memcpy(&rule, pchar, sizeof(struct RULE_ST));
@@ -163,22 +163,22 @@ void MainWindow::updateCommonRule()
 
 void MainWindow::setRuleItem(struct RULE_ST *rule, int row){
 
-    ui->tableWidget_commom_rule->setItem(row, 0, new QTableWidgetItem(rule2ip(rule->saddr, rule->smask)));
-    ui->tableWidget_commom_rule->setItem(row, 1, new QTableWidgetItem(rule2ip(rule->daddr, rule->dmask)));
-    ui->tableWidget_commom_rule->setItem(row, 2, new QTableWidgetItem(rule2mtype(rule->mtype)));
-    ui->tableWidget_commom_rule->setItem(row, 3, new QTableWidgetItem(rule2log(rule->log)));
-    ui->tableWidget_commom_rule->setItem(row, 4, new QTableWidgetItem(rule2action(rule->action)));
+    ui->tableWidget_rule->setItem(row, 0, new QTableWidgetItem(rule2ip(rule->saddr, rule->smask)));
+    ui->tableWidget_rule->setItem(row, 1, new QTableWidgetItem(rule2ip(rule->daddr, rule->dmask)));
+    ui->tableWidget_rule->setItem(row, 2, new QTableWidgetItem(rule2mtype(rule->mtype)));
+    ui->tableWidget_rule->setItem(row, 3, new QTableWidgetItem(rule2log(rule->log)));
+    ui->tableWidget_rule->setItem(row, 4, new QTableWidgetItem(rule2action(rule->action)));
 
-    ui->tableWidget_commom_rule->item(row, 0)->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget_commom_rule->item(row, 1)->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget_commom_rule->item(row, 2)->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget_commom_rule->item(row, 3)->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget_commom_rule->item(row, 4)->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_rule->item(row, 0)->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_rule->item(row, 1)->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_rule->item(row, 2)->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_rule->item(row, 3)->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_rule->item(row, 4)->setTextAlignment(Qt::AlignCenter);
 }
 
 void MainWindow::on_pushButton_del_rule_clicked()
 {
-    int pos = ui->tableWidget_commom_rule->currentRow() + 1;
+    int pos = ui->tableWidget_rule->currentRow() + 1;
     if(pos <= 0){
         QMessageBox::information(NULL, "提示", "请先点击要删除的规则");
         return;

@@ -22,6 +22,8 @@ public:
 private slots:
     void on_buttonBox_accepted();
 
+    void on_comboBox_common_mtype_activated(int index);
+
 private:
     int mode;
     Ui::CommonRuleDialog *ui;

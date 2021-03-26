@@ -7,6 +7,7 @@ CommonRuleDialog::CommonRuleDialog(QWidget *parent) :
     ui(new Ui::CommonRuleDialog)
 {
     ui->setupUi(this);
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 CommonRuleDialog::~CommonRuleDialog()
@@ -17,9 +18,9 @@ CommonRuleDialog::~CommonRuleDialog()
 void CommonRuleDialog::setMode(int arg){
     mode = arg;
     if(mode == ADD_RULE)
-        ui->label_8->setText("位置(默认最后的位置)");
+        ui->label_8->setText("位置(默认最后)");
     else if(mode == MOD_RULE){
-        ui->label_8->setText("位置(默认原来的位置)");
+        ui->label_8->setText("位置(默认原位置)");
     }
 }
 void CommonRuleDialog::setSourceRule(QString str, int col){
@@ -67,4 +68,18 @@ void CommonRuleDialog::on_buttonBox_accepted()
         emit addCommonRuleSignal(rule, pos);
     else if(mode == MOD_RULE)
         emit modCommonRuleSignal(rule, pos);
+}
+
+void CommonRuleDialog::on_comboBox_common_mtype_activated(int index)
+{
+    if(ui->comboBox_common_mtype->itemText(index) == "CONNECT")
+        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->indexOf(ui->page_connect));
+    else if(ui->comboBox_common_mtype->itemText(index) == "PUBLISH")
+        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->indexOf(ui->page_publish));
+    else if(ui->comboBox_common_mtype->itemText(index) == "SUBSCRIBE")
+        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->indexOf(ui->page_subscribe));
+    else if(ui->comboBox_common_mtype->itemText(index) == "UNSUBSCRIBE")
+        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->indexOf(ui->page_unsubscribe));
+    else
+        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->indexOf(ui->page_common));
 }

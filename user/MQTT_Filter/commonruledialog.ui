@@ -6,223 +6,665 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>590</width>
-    <height>357</height>
+    <width>584</width>
+    <height>329</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>270</y>
-     <width>341</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QWidget" name="gridLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>60</y>
-     <width>551</width>
-     <height>131</height>
-    </rect>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="3" column="2">
-     <widget class="QComboBox" name="comboBox_common_action">
-      <item>
+  <layout class="QGridLayout" name="gridLayout_8">
+   <item row="5" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="3" column="3">
+      <widget class="QLineEdit" name="lineEdit_common_dmask"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>DENY</string>
+        <string>源地址掩码</string>
        </property>
-      </item>
-      <item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QComboBox" name="comboBox_common_mtype">
+       <item>
+        <property name="text">
+         <string>ANY</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>CONNECT</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>CONNACK</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PUBLISH</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PUBACK</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PUBREC</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PUBREL</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PUBCOMP</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>SUBSCRIBE</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>SUBACK</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>UNSUBSCRIBE</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>UNSUBACK</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PINGREQ</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PINGRESP</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>DISCONNECT</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>PERMIT</string>
+        <string>位置 (默认最后)</string>
        </property>
-      </item>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>动作</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>目的地址掩码</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="comboBox_common_action">
+       <item>
+        <property name="text">
+         <string>DENY</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PERMIT</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>源地址</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>MQTT类型</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLineEdit" name="lineEdit_common_saddr">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>目的地址</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="lineEdit_common_smask"/>
+     </item>
+     <item row="1" column="2">
+      <widget class="QComboBox" name="comboBox_common_log">
+       <item>
+        <property name="text">
+         <string>YES</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>NO</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>日志</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLineEdit" name="lineEdit_common_daddr"/>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLineEdit" name="lineEdit_add_pos"/>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0">
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="page_common">
+      <zorder>buttonBox</zorder>
+      <zorder>gridLayoutWidget</zorder>
      </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QComboBox" name="comboBox_common_log">
-      <item>
-       <property name="text">
-        <string>YES</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>NO</string>
-       </property>
-      </item>
+     <widget class="QWidget" name="page_connect">
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="1" column="0">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="4" column="4">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QComboBox" name="comboBox_connect_pf">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>UNF (User Name Flag )</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>WR (Will Retain)      </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>PF (Password Flag ) </string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QComboBox" name="comboBox_connect_wqos">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>CS (Clean Session)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>WQoS (Will QoS)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="3" column="0">
+          <widget class="QComboBox" name="comboBox_connect_unf">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QComboBox" name="comboBox_connect_cs">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="4">
+          <widget class="QComboBox" name="comboBox_7"/>
+         </item>
+         <item row="3" column="4">
+          <widget class="QComboBox" name="comboBox_connect_wr">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <spacer name="verticalSpacer_9">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QLineEdit" name="lineEdit_common_smask"/>
-    </item>
-    <item row="1" column="2">
-     <widget class="QLineEdit" name="lineEdit_common_daddr"/>
-    </item>
-    <item row="3" column="0">
-     <widget class="QComboBox" name="comboBox_common_mtype">
-      <item>
-       <property name="text">
-        <string>CONNECT</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>CONNACK</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PUBLISH</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PUBACK</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PUBREC</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PUBREL</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PUBCOMP</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SUBSCRIBE</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SUBACK</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>UNSUBSCRIBE</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>UNSUBACK</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PINGREQ</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>PINGRESP</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>DISCONNECT</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>ANY</string>
-       </property>
-      </item>
+     <widget class="QWidget" name="page_publish">
+      <layout class="QGridLayout" name="gridLayout_9">
+       <item row="3" column="0">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_20">
+           <property name="text">
+            <string>过滤主题</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit_publish_keyword"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit_publish_topic"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>过滤关键词</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>DUP (重发标志)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="comboBox_publish_qos">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>RETAIN (保留标志)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>QoS (服务质量等级)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QComboBox" name="comboBox_publish_retain">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="comboBox_publish_dup">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>源地址</string>
-      </property>
+     <widget class="QWidget" name="page_subscribe">
+      <layout class="QGridLayout" name="gridLayout_10">
+       <item row="1" column="1">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>服务质量要求</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit_subscribe_topicfilter"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_23">
+           <property name="text">
+            <string>主题过滤器</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" alignment="Qt::AlignLeft">
+          <widget class="QComboBox" name="comboBox_subscribe_rqos"/>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <spacer name="verticalSpacer_10">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLineEdit" name="lineEdit_common_dmask"/>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLineEdit" name="lineEdit_common_saddr">
-      <property name="text">
-       <string/>
-      </property>
+     <widget class="QWidget" name="page_unsubscribe">
+      <layout class="QGridLayout" name="gridLayout_11">
+       <item row="1" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_25">
+           <property name="text">
+            <string>主题过滤器</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_unsubscribe_topicfilter"/>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <spacer name="verticalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>MQTT类型</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>源地址掩码</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="2">
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>目的地址</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QLabel" name="label_5">
-      <property name="text">
-       <string>目的地址掩码</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>日志</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QLabel" name="label_7">
-      <property name="text">
-       <string>动作</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="3">
-     <widget class="QLabel" name="label_8">
-      <property name="text">
-       <string>位置 (默认最后)</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="3">
-     <widget class="QLineEdit" name="lineEdit_add_pos"/>
-    </item>
-   </layout>
-  </widget>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <spacer name="verticalSpacer_5">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0">
+    <spacer name="verticalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+  <zorder>stackedWidget</zorder>
+  <zorder>label_2</zorder>
+  <zorder>gridLayoutWidget</zorder>
+  <zorder>buttonBox</zorder>
+  <zorder>verticalSpacer_3</zorder>
+  <zorder>verticalSpacer_5</zorder>
  </widget>
  <resources/>
  <connections>
