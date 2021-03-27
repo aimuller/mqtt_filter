@@ -54,20 +54,20 @@ public:
     QWidget *page_connect;
     QGridLayout *gridLayout_7;
     QGridLayout *gridLayout_2;
-    QLabel *label_18;
     QComboBox *comboBox_connect_pf;
     QLabel *label_10;
     QLabel *label_14;
     QLabel *label_13;
     QComboBox *comboBox_connect_wqos;
-    QLabel *label_17;
     QLabel *label_16;
     QSpacerItem *horizontalSpacer_3;
     QComboBox *comboBox_connect_unf;
-    QComboBox *comboBox_connect_cs;
-    QComboBox *comboBox_7;
     QComboBox *comboBox_connect_wr;
     QSpacerItem *horizontalSpacer_4;
+    QLabel *label_17;
+    QComboBox *comboBox_connect_wf;
+    QComboBox *comboBox_connect_cs;
+    QLabel *label_18;
     QSpacerItem *verticalSpacer_2;
     QSpacerItem *verticalSpacer_9;
     QWidget *page_publish;
@@ -217,11 +217,6 @@ public:
         gridLayout_7->setObjectName(QStringLiteral("gridLayout_7"));
         gridLayout_2 = new QGridLayout();
         gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
-        label_18 = new QLabel(page_connect);
-        label_18->setObjectName(QStringLiteral("label_18"));
-
-        gridLayout_2->addWidget(label_18, 4, 4, 1, 1);
-
         comboBox_connect_pf = new QComboBox(page_connect);
         comboBox_connect_pf->setObjectName(QStringLiteral("comboBox_connect_pf"));
 
@@ -247,11 +242,6 @@ public:
 
         gridLayout_2->addWidget(comboBox_connect_wqos, 5, 0, 1, 1);
 
-        label_17 = new QLabel(page_connect);
-        label_17->setObjectName(QStringLiteral("label_17"));
-
-        gridLayout_2->addWidget(label_17, 4, 2, 1, 1);
-
         label_16 = new QLabel(page_connect);
         label_16->setObjectName(QStringLiteral("label_16"));
 
@@ -266,16 +256,6 @@ public:
 
         gridLayout_2->addWidget(comboBox_connect_unf, 3, 0, 1, 1);
 
-        comboBox_connect_cs = new QComboBox(page_connect);
-        comboBox_connect_cs->setObjectName(QStringLiteral("comboBox_connect_cs"));
-
-        gridLayout_2->addWidget(comboBox_connect_cs, 5, 2, 1, 1);
-
-        comboBox_7 = new QComboBox(page_connect);
-        comboBox_7->setObjectName(QStringLiteral("comboBox_7"));
-
-        gridLayout_2->addWidget(comboBox_7, 5, 4, 1, 1);
-
         comboBox_connect_wr = new QComboBox(page_connect);
         comboBox_connect_wr->setObjectName(QStringLiteral("comboBox_connect_wr"));
 
@@ -284,6 +264,26 @@ public:
         horizontalSpacer_4 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         gridLayout_2->addItem(horizontalSpacer_4, 0, 3, 1, 1);
+
+        label_17 = new QLabel(page_connect);
+        label_17->setObjectName(QStringLiteral("label_17"));
+
+        gridLayout_2->addWidget(label_17, 4, 4, 1, 1);
+
+        comboBox_connect_wf = new QComboBox(page_connect);
+        comboBox_connect_wf->setObjectName(QStringLiteral("comboBox_connect_wf"));
+
+        gridLayout_2->addWidget(comboBox_connect_wf, 5, 2, 1, 1);
+
+        comboBox_connect_cs = new QComboBox(page_connect);
+        comboBox_connect_cs->setObjectName(QStringLiteral("comboBox_connect_cs"));
+
+        gridLayout_2->addWidget(comboBox_connect_cs, 5, 4, 1, 1);
+
+        label_18 = new QLabel(page_connect);
+        label_18->setObjectName(QStringLiteral("label_18"));
+
+        gridLayout_2->addWidget(label_18, 4, 2, 1, 1);
 
 
         gridLayout_7->addLayout(gridLayout_2, 1, 0, 1, 1);
@@ -506,7 +506,6 @@ public:
          << QApplication::translate("CommonRuleDialog", "NO", 0)
         );
         label_6->setText(QApplication::translate("CommonRuleDialog", "\346\227\245\345\277\227", 0));
-        label_18->setText(QApplication::translate("CommonRuleDialog", "TextLabel", 0));
         comboBox_connect_pf->clear();
         comboBox_connect_pf->insertItems(0, QStringList()
          << QApplication::translate("CommonRuleDialog", "0", 0)
@@ -521,15 +520,9 @@ public:
          << QApplication::translate("CommonRuleDialog", "1", 0)
          << QApplication::translate("CommonRuleDialog", "2", 0)
         );
-        label_17->setText(QApplication::translate("CommonRuleDialog", "CS (Clean Session)", 0));
         label_16->setText(QApplication::translate("CommonRuleDialog", "WQoS (Will QoS)", 0));
         comboBox_connect_unf->clear();
         comboBox_connect_unf->insertItems(0, QStringList()
-         << QApplication::translate("CommonRuleDialog", "0", 0)
-         << QApplication::translate("CommonRuleDialog", "1", 0)
-        );
-        comboBox_connect_cs->clear();
-        comboBox_connect_cs->insertItems(0, QStringList()
          << QApplication::translate("CommonRuleDialog", "0", 0)
          << QApplication::translate("CommonRuleDialog", "1", 0)
         );
@@ -538,6 +531,18 @@ public:
          << QApplication::translate("CommonRuleDialog", "0", 0)
          << QApplication::translate("CommonRuleDialog", "1", 0)
         );
+        label_17->setText(QApplication::translate("CommonRuleDialog", "CS (Clean Session)", 0));
+        comboBox_connect_wf->clear();
+        comboBox_connect_wf->insertItems(0, QStringList()
+         << QApplication::translate("CommonRuleDialog", "0", 0)
+         << QApplication::translate("CommonRuleDialog", "1", 0)
+        );
+        comboBox_connect_cs->clear();
+        comboBox_connect_cs->insertItems(0, QStringList()
+         << QApplication::translate("CommonRuleDialog", "0", 0)
+         << QApplication::translate("CommonRuleDialog", "1", 0)
+        );
+        label_18->setText(QApplication::translate("CommonRuleDialog", "WF (Will Flag)", 0));
         label_20->setText(QApplication::translate("CommonRuleDialog", "\350\277\207\346\273\244\344\270\273\351\242\230", 0));
         label_21->setText(QApplication::translate("CommonRuleDialog", "\350\277\207\346\273\244\345\205\263\351\224\256\350\257\215", 0));
         label_9->setText(QApplication::translate("CommonRuleDialog", "DUP (\351\207\215\345\217\221\346\240\207\345\277\227)", 0));

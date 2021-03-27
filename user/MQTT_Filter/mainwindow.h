@@ -49,8 +49,8 @@ private:
     CommonRuleDialog *modCommonRuleDialog;
 
     void updateCommonRule();
+    void getRuleFromKernel();
     void setRuleItem(struct RULE_ST *, int);
-    void initRuleList();
 
 };
 

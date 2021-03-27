@@ -16,16 +16,20 @@ class CommonRuleDialog : public QDialog
 public:
     void setMode(int arg);
     void setSourceRule(QString, int);
+    void setSourceRule(struct RULE_ST &);
     explicit CommonRuleDialog(QWidget *parent = 0);
     ~CommonRuleDialog();
     
 private slots:
     void on_buttonBox_accepted();
 
-    void on_comboBox_common_mtype_activated(int index);
+    //void on_comboBox_common_mtype_activated(int index);
+
+    void on_comboBox_common_mtype_activated(const QString &mtype);
 
 private:
     int mode;
+    u_int8_t cflag2rule();
     Ui::CommonRuleDialog *ui;
 
 signals:

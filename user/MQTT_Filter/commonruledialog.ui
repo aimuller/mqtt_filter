@@ -223,13 +223,6 @@
       <layout class="QGridLayout" name="gridLayout_7">
        <item row="1" column="0">
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="4" column="4">
-          <widget class="QLabel" name="label_18">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="2">
           <widget class="QComboBox" name="comboBox_connect_pf">
            <item>
@@ -284,13 +277,6 @@
            </item>
           </widget>
          </item>
-         <item row="4" column="2">
-          <widget class="QLabel" name="label_17">
-           <property name="text">
-            <string>CS (Clean Session)</string>
-           </property>
-          </widget>
-         </item>
          <item row="4" column="0">
           <widget class="QLabel" name="label_16">
            <property name="text">
@@ -325,23 +311,6 @@
            </item>
           </widget>
          </item>
-         <item row="5" column="2">
-          <widget class="QComboBox" name="comboBox_connect_cs">
-           <item>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="5" column="4">
-          <widget class="QComboBox" name="comboBox_7"/>
-         </item>
          <item row="3" column="4">
           <widget class="QComboBox" name="comboBox_connect_wr">
            <item>
@@ -368,6 +337,48 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="4" column="4">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>CS (Clean Session)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QComboBox" name="comboBox_connect_wf">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="4">
+          <widget class="QComboBox" name="comboBox_connect_cs">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>WF (Will Flag)</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

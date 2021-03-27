@@ -1,7 +1,6 @@
 #ifndef HELPRE_H
 #define HELPRE_H
 #include "header.h"
-#include <QString>
 #include <QDebug>
 #include <QRegExp>
 #include <QStringList>
@@ -12,10 +11,15 @@
 int open_mf_dev();
 int close_mf_dev(int fd);
 
-QString rule2ip(u_int32_t addr, u_int32_t mask);
+
 QString rule2mtype(u_int8_t mtype);
-QString rule2log(u_int8_t log);
 QString rule2action(u_int8_t action);
+QString rule2log(u_int8_t log);
+QString rule2addr(u_int32_t addr);
+QString rule2mask(u_int32_t mask);
+QString rule2cflag(u_int8_t cflag);
+
+
 
 u_int32_t addr2rule(QString str_addr);
 u_int32_t mask2rule(QString str_mask);

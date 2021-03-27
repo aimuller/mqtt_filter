@@ -23,5 +23,6 @@ if [ -n "${LS_DEV}" ]
 then
 	rm ${MF_DEV_NAME}
 fi
+#创建设备节点，并改变权限使得用户态也能读取
 mknod ${MF_DEV_NAME} c ${DEV_NO}
 chmod 777 ${MF_DEV_NAME}

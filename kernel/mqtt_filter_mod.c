@@ -9,7 +9,7 @@ static int active = 0;	/*active=1表示开启, active=0表示关闭, 默认开�
 dev_t devid;		/*字符设备号*/
 struct cdev cdev;	/*描述字符设备*/
 
-static char buf[2048];
+static u_int8_t buf[BUF_SIZE];
 
 /*通过file_operations结构来定义字符设备驱动提供的接口函数*/
 static struct file_operations mf_fops = {  
@@ -41,6 +41,7 @@ void test(void){
 	test->rule.mtype  = CONNECT;
 	test->rule.log   = YES;
 	test->rule.action = NF_ACCEPT;
+	test->rule.deep.connect.flag = 0xFF;
 	add_node(test, 1);
 	
 	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
@@ -80,6 +81,9 @@ static int mf_release(struct inode *inode, struct file *file)
 	return 0;  
 }
 
+/*将用户空间传入的buf进行解码*/
+
+
 
 /*插入规则链表节点*/
 static int add_node(struct RULE_LIST_ST *node, unsigned int N)
@@ -104,8 +108,6 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 	return OK;
 }
 
-
-
 /*删除规则链表节点*/
 static int del_node(unsigned long N)
 {
@@ -129,6 +131,24 @@ static int del_node(unsigned long N)
 	
 	list_del(pos);	/*删除list节点链表关系*/
 	node = list_entry(pos, struct RULE_LIST_ST, list);
+
+	switch(node->rule.mtype){
+	case CONNECT:
+
+		break;
+	case PUBLISH:
+		
+		break;
+	case SUBSCRIBE:
+	
+		break;
+	case UNSUBSCRIBE:
+	
+		break;
+	default:
+		break;
+	}
+	
 	kfree(node); 		/*释放该结点所占空间*/
 	rule_num--;
 	
@@ -139,22 +159,45 @@ static int del_node(unsigned long N)
 static int add_rule(unsigned long arg){
 	struct RULE_LIST_ST *node;
 	unsigned int pos;
-	char *pchar = buf;
+	u_int8_t *ptr = buf;
 	
 	
 	/*从用户空间接收数据*/
-	copy_from_user(buf, (char *)arg, sizeof(unsigned int) + sizeof(struct RULE_ST));
+	copy_from_user(buf, (u_int8_t *)arg, BUF_SIZE);
 	
 	/*提取插入位置*/
-	pos = *((unsigned int *)pchar);
-	pchar = pchar + sizeof(unsigned int);
+	pos = *((unsigned int *)ptr);
+	ptr = ptr + sizeof(unsigned int);
 
 	//printk("MF: pos: %d\n", pos);
 
 	/*生成并填充新的规则链表节点*/
 	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-	memcpy(&node->rule, pchar, sizeof(struct RULE_ST));
+	node->rule.mtype = *ptr;	ptr += sizeof(u_int8_t);
+	node->rule.action = *ptr;	ptr += sizeof(u_int8_t);
+	node->rule.log = *ptr;		ptr += sizeof(u_int8_t);
+	node->rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+	node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+	node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+	node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+
+	switch(node->rule.mtype){
+	case CONNECT:
+		node->rule.deep.connect.flag = *ptr;	ptr += sizeof(u_int8_t);
+		break;
+	case PUBLISH:
+		
+		break;
+	case SUBSCRIBE:
 	
+		break;
+	case UNSUBSCRIBE:
+	
+		break;
+	default:
+		break;
+	}
+
 	//printk("MF: saddr:%x smask:%x daddr:%x dmask:%x mtype:%x log:%d action:%d\n", node->rule.saddr, node->rule.smask, node->rule.daddr, node->rule.dmask, node->rule.mtype, node->rule.log, node->rule.action);
 	
 	//return OK;
@@ -169,7 +212,7 @@ static int add_rule_list(unsigned long arg){
 	unsigned int len;
 	char *pchar = buf;
 	
-	copy_from_user(buf, (char *)arg, sizeof(buf));	/*从用户空间接收数据*/
+	copy_from_user(buf, (u_int8_t *)arg, sizeof(buf));	/*从用户空间接收数据*/
 	len = *((unsigned int *)pchar);	/*提取规则数量*/
 	pchar = pchar + 4;
 	
@@ -196,31 +239,81 @@ static void clear_rule_list(void){
 		list_del(pos);
 		node = list_entry(pos, struct RULE_LIST_ST, list);
 		//printk(KERN_INFO "MF: clear: %x\n", node->rule.saddr);
+
+		switch(node->rule.mtype){
+		case CONNECT:
+		
+			break;
+		case PUBLISH:
+			
+			break;
+		case SUBSCRIBE:
+		
+			break;
+		case UNSUBSCRIBE:
+		
+			break;
+		default:
+			break;
+		}
+		
 		kfree(node);
 	}
 	rule_num = 0;
 }
 
-/*将内核规则链表拷贝到用户空间*/
-static void get_rule_list(unsigned long arg){
+/*将内核规则链表编码到buf中*/
+static int rules2buf(void){
 	struct RULE_LIST_ST *node;
 	struct list_head *tmp;
-	char *pchar = buf;
-	int ret;
-	
+	u_int8_t *ptr = buf;
+
 	/*将规则数量填充在前四个字节*/
-	*((unsigned int *)pchar) = rule_num;
-	pchar = pchar + sizeof(unsigned int);
-	
+	*((unsigned int *)ptr) = rule_num;
+	ptr += sizeof(unsigned int);
+
 	list_for_each(tmp, &rules_head.list) {
 		node = list_entry(tmp, struct RULE_LIST_ST, list);
-		memcpy(pchar, &node->rule, sizeof(struct RULE_ST));
-		pchar = pchar + sizeof(struct RULE_ST);
+
+		*ptr = node->rule.mtype; 	ptr += sizeof(u_int8_t);
+		*ptr = node->rule.action; 	ptr += sizeof(u_int8_t);
+		*ptr = node->rule.log; 		ptr += sizeof(u_int8_t);
+		*((u_int32_t *)ptr) = (node->rule.saddr);	ptr += sizeof(u_int32_t);
+		*((u_int32_t *)ptr) = (node->rule.smask);	ptr += sizeof(u_int32_t);
+		*((u_int32_t *)ptr) = (node->rule.daddr);	ptr += sizeof(u_int32_t);
+		*((u_int32_t *)ptr) = (node->rule.dmask);	ptr += sizeof(u_int32_t);
+		
+
+		switch(node->rule.mtype){
+		case CONNECT:
+			*ptr = node->rule.deep.connect.flag; 
+			ptr += sizeof(u_int8_t);
+			break;
+		case PUBLISH:
+			
+			break;
+		case SUBSCRIBE:
+		
+			break;
+		case UNSUBSCRIBE:
+		
+			break;
+		default:
+			break;
+		}
 	}
-	
+	return (ptr - buf);
+}
+
+/*将内核规则链表拷贝到用户空间*/
+static void get_rule_list(unsigned long arg){
+	int ret, len;
+
+	len = rules2buf();
 	//printk("MF: get_rule_list: rule_num: %d\n", rule_num);
 	//printk("MF: get_rule_list: buf: %d\n", *buf);
-	ret = copy_to_user((char *)arg, buf, sizeof(unsigned int) + rule_num * sizeof(struct RULE_ST));
+
+	ret = copy_to_user((u_int8_t *)arg, buf, len);
 	if(ret < 0)
 		printk("MF: copy_to_user ERROR\n");
 }
@@ -274,12 +367,73 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
    	return ret;  
 }  
 
-/*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, char *mqtth){
-	u_int8_t *ptr = (u_int8_t *)mqtth;
+/*计算mqtt报文剩余长度*/
+static unsigned int mqtt_remaining_len(u_int8_t *ptr, unsigned int *offset_ptr){
+	unsigned int len = 0, base = 1;
+	len += (*ptr & 0x7F);
+	*offset_ptr = 1;
 	
-	if(rule->mtype == (*ptr & rule->mtype)) /* MQTT报文类型define值恰好可以作为其"掩码" */
+	while(*ptr & 0x80){
+		ptr++;
+		base = base << 7;
+		len += (*ptr & 0x7F) * base;
+		*offset_ptr = *offset_ptr + 1;
+	}
+	
+	return len;
+}
+
+static int mqtt_connect_check(struct RULE_ST *rule, u_int8_t *mqtth){
+	unsigned int offset;
+	u_int8_t connect_flag = 0;
+	u_int8_t *ptr = mqtth;
+	
+	/*让ptr指向mqtt固定报头剩余长度字段*/
+	ptr++; 
+	
+	/*将剩余长度所占字节数存放在offset中*/
+	mqtt_remaining_len(ptr, &offset);
+	
+	/*ptr偏移offset个字节，指向协议名的长度MSB字段*/
+	ptr += offset;	
+	
+	/*ptr偏移(MSB和LSB的2个字节 + 协议所占字节)个字节，指向level级别字段*/
+	ptr += *((u_int16_t *)ptr) + 2;
+	
+	/*ptr偏移1个字节，指向连接标志(Connect Flags)字段，并取出连接标志*/
+	ptr++;
+	connect_flag = *ptr;
+	if(connect_flag == rule->deep.connect.flag)
 		return YES;
+		
+	return NO;
+}
+
+/*mqtt_check函数*/
+static int mqtt_check(struct RULE_ST *rule, u_int8_t *mqtth){
+	/*ptr指向mqtt报文的第一个字节*/
+	u_int8_t *ptr  = mqtth; 
+	
+	/*MQTT报文类型define值恰好可以作为其"掩码"*/
+	u_int8_t mtype = (*ptr & rule->mtype);
+	
+	if(rule->mtype == mtype){
+		switch(mtype){
+		case CONNECT:
+			return mqtt_connect_check(rule, mqtth);
+		case PUBLISH:
+			
+			break;
+		case SUBSCRIBE:
+		
+			break;
+		case UNSUBSCRIBE:
+		
+			break;
+		default:
+			return YES;
+		}
+	}
 	
 	return NO;
 }

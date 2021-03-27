@@ -42,7 +42,7 @@ QT_MOC_LITERAL(7, 123, 5)
     "\0RULE_ST\0modCommonRuleSignal\0"
     "on_buttonBox_accepted\0"
     "on_comboBox_common_mtype_activated\0"
-    "index\0"
+    "mtype\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -73,7 +73,7 @@ static const uint qt_meta_data_CommonRuleDialog[] = {
 
  // slots: parameters
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,    7,
+    QMetaType::Void, QMetaType::QString,    7,
 
        0        // eod
 };
@@ -86,7 +86,7 @@ void CommonRuleDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         case 0: _t->addCommonRuleSignal((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< uint(*)>(_a[2]))); break;
         case 1: _t->modCommonRuleSignal((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< uint(*)>(_a[2]))); break;
         case 2: _t->on_buttonBox_accepted(); break;
-        case 3: _t->on_comboBox_common_mtype_activated((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 3: _t->on_comboBox_common_mtype_activated((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {

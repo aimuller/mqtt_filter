@@ -5,7 +5,6 @@ int open_mf_dev(){
     ret = open(MF_DEV_NAME, O_RDWR);
     if(ret < 0 ){
         perror("open");
-        return 0;
     }
     return ret;
 }
@@ -14,9 +13,8 @@ int close_mf_dev(int fd){
     return close(fd);
 }
 
-QString rule2ip(u_int32_t addr, u_int32_t mask){
+QString rule2addr(u_int32_t addr){
     unsigned char *pchar = (unsigned char *)&addr;
-    int n_mask = 0;
     QString ret;
 
     ret = QString::number((int)pchar[0]) + "."
@@ -24,15 +22,19 @@ QString rule2ip(u_int32_t addr, u_int32_t mask){
             + QString::number((int)pchar[2]) + "."
             + QString::number((int)pchar[3]);
 
+    return ret;
+}
+
+QString rule2mask(u_int32_t mask){
+    int n_mask = 0;
 
     for(int i = sizeof(u_int32_t) * 8 - 1; i >= 0; i--) {
         if (mask & (0x01 << i))
             n_mask++;
     }
 
-    ret = ret + "/" + QString::number(n_mask);
+    return QString::number(n_mask);
 
-    return ret;
 }
 
 QString rule2mtype(u_int8_t mtype){
@@ -109,6 +111,16 @@ QString rule2action(u_int8_t action){
     return ret;
 }
 
+QString rule2cflag(u_int8_t cflag){
+    QString ret;
+    ret = "UNF=" + QString::number((cflag & 0x80) >> 7)  + ", " +
+            "PF=" + QString::number((cflag & 0x40) >> 6) + ", " +
+            "WR=" + QString::number((cflag & 0x20) >> 5) + ", " +
+          "WQoS=" + QString::number((cflag & 0x18) >> 3) + ", " +
+            "WF=" + QString::number((cflag & 0x04) >> 2) + ", " +
+            "CS=" + QString::number((cflag & 0x02) >> 1);
+    return ret;
+}
 
 u_int32_t addr2rule(QString str_addr){
     u_int32_t ret = 0;

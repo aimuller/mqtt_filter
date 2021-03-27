@@ -65,6 +65,7 @@
 #define NO 0
 #define DEFAULT NF_ACCEPT  /*默认策略*/
 #define MAX_COPY_NUM 32
+#define BUF_SIZE 4096
 #define MF_DEV_NAME "/dev/mf_dev0" 
 
 /*IOCTL控制命令定义*/
@@ -80,35 +81,38 @@
 
 struct CONNECT_ST{
 	u_int8_t flag;
-}
+};
 
 struct PUBLISH_ST{
 	u_int8_t flag;
-}
+	char *topic;
+	char *keyword;
+};
 
 struct SUBSCRIBE_ST{
-	u_int8_t flag;
-}
+	char *topic_filter;
+	u_int8_t rqos;
+};
 
 struct UNSUBSCRIBE_ST{
-	u_int8_t flag;
-}
+	char *topic_filter;
+};
 
 struct RULE_ST{		/*规则结构定义*/
+	u_int8_t mtype;		/*MQTT报文的类型*/
+	u_int8_t action;	/*动作*/
+	u_int8_t log;		/*是否记录日志*/
 	u_int32_t saddr;	/*源地址*/
 	u_int32_t smask;	/*源地址掩码*/
 	u_int32_t daddr;	/*目的地址*/
 	u_int32_t dmask;	/*目的地址掩码*/
-	u_int8_t mtype;		/*MQTT报文的类型*/
-	u_int8_t log;		/*是否记录日志*/
-	u_int8_t action;	/*动作*/
 	
 	union{				/*特别考虑的四种报文的补充规则结构*/
 		struct CONNECT_ST connect;
 		struct PUBLISH_ST publish;
 		struct SUBSCRIBE_ST subscribe;
 		struct UNSUBSCRIBE_ST unsubscribe;
-	}
+	}deep;
 };
 
 struct RULE_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/
@@ -128,7 +132,7 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N);
 /*删除规则链表节点*/
 static int del_node(unsigned long N);
 /*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, char *mqtth);
+static int mqtt_check(struct RULE_ST *rule, u_int8_t *mqtth);
 /*ip_check函数*/
 static int ip_check(struct RULE_ST *rule, struct iphdr *iph);
 /*规则check函数*/

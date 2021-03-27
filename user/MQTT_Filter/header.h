@@ -23,6 +23,8 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 
+#include <QString>
+
 /*MQTT报文的14种定义*/
 #define CONNECT 0x10U
 #define CONNACK 0x20U
@@ -51,7 +53,7 @@
 #define PERMIT 1
 #define DENY 0
 #define ERR 0xFE
-
+#define BUF_SIZE 4096
 
 
 /*为了在插入、修改按钮中复用ruleDialog组件，可以设置一个mode加以区分*/
@@ -71,15 +73,40 @@
 #define MF_GET_RULE 	_IO(MF_MAGIC, 6)
 #define MF_GET_LOG 		_IO(MF_MAGIC, 7)
 
-/*通用规则结构定义*/
-struct RULE_ST{
-    u_int32_t saddr;	/*源地址*/
-    u_int32_t smask;	/*目的地址*/
-    u_int32_t daddr;	/*源端口*/
-    u_int32_t dmask;	/*目的端口*/
-    u_int8_t mtype;		/*指MQTT报文的类型*/
-    u_int8_t log;		/*是否记录日志*/
+struct CONNECT_ST{
+    u_int8_t flag;
+};
+
+struct PUBLISH_ST{
+    u_int8_t flag;
+    QString *topic;
+    QString *keyword;
+};
+
+struct SUBSCRIBE_ST{
+    QString *topic_filter;
+    u_int8_t rqos;
+};
+
+struct UNSUBSCRIBE_ST{
+    QString *topic_filter;
+};
+
+struct RULE_ST{		/*规则结构定义*/
+    u_int8_t mtype;		/*MQTT报文的类型*/
     u_int8_t action;	/*动作*/
+    u_int8_t log;		/*是否记录日志*/
+    u_int32_t saddr;	/*源地址*/
+    u_int32_t smask;	/*源地址掩码*/
+    u_int32_t daddr;	/*目的地址*/
+    u_int32_t dmask;	/*目的地址掩码*/
+
+    union{				/*特别考虑的四种报文的补充规则结构*/
+        struct CONNECT_ST connect;
+        struct PUBLISH_ST publish;
+        struct SUBSCRIBE_ST subscribe;
+        struct UNSUBSCRIBE_ST unsubscribe;
+    }deep;
 };
 
 #endif // HEADER_H
