@@ -111,7 +111,7 @@ QString rule2action(u_int8_t action){
     return ret;
 }
 
-QString rule2cflag(u_int8_t cflag){
+QString rule2conflag(u_int8_t cflag){
     QString ret;
     ret = "UNF=" + QString::number((cflag & 0x80) >> 7)  + ", " +
             "PF=" + QString::number((cflag & 0x40) >> 6) + ", " +
@@ -121,6 +121,15 @@ QString rule2cflag(u_int8_t cflag){
             "CS=" + QString::number((cflag & 0x02) >> 1);
     return ret;
 }
+
+QString rule2pubflag(u_int8_t pflag){
+    QString ret;
+    ret = "DUP=" + QString::number((pflag & 0x08) >> 3)  + ", " +
+          "QoS=" + QString::number((pflag & 0x06) >> 1) + ", " +
+       "RETAIN=" + QString::number((pflag & 0x01));
+    return ret;
+}
+
 
 u_int32_t addr2rule(QString str_addr){
     u_int32_t ret = 0;

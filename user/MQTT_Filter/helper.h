@@ -17,7 +17,8 @@ QString rule2action(u_int8_t action);
 QString rule2log(u_int8_t log);
 QString rule2addr(u_int32_t addr);
 QString rule2mask(u_int32_t mask);
-QString rule2cflag(u_int8_t cflag);
+QString rule2conflag(u_int8_t cflag);
+QString rule2pubflag(u_int8_t pflag);
 
 
 

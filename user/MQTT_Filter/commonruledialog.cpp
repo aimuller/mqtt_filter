@@ -111,18 +111,34 @@ void CommonRuleDialog::on_buttonBox_accepted()
 
     switch(rule.mtype){
     case CONNECT:
-        rule.deep.connect.flag = cflag2rule();
+        rule.deep.connect.flag = conflag2rule();
         break;
     case PUBLISH:
-
+        rule.deep.publish.flag = pubflag2rule();
+        if(ui->lineEdit_publish_topic->text().isEmpty())
+            rule.deep.publish.topic = NULL;
+        else
+            rule.deep.publish.topic = new QString(ui->lineEdit_publish_topic->text());
+        if(ui->lineEdit_publish_keyword->text().isEmpty())
+            rule.deep.publish.keyword = NULL;
+        else
+            rule.deep.publish.keyword = new QString(ui->lineEdit_publish_keyword->text());
         break;
     case SUBSCRIBE:
-
+        if(ui->lineEdit_subscribe_topicfilter->text().isEmpty())
+            rule.deep.subscribe.topic_filter = NULL;
+        else{
+            rule.deep.subscribe.topic_filter = new QString(ui->lineEdit_subscribe_topicfilter->text());
+            rule.deep.subscribe.rqos = (u_int8_t)(ui->comboBox_subscribe_rqos->currentText().toUShort());
+        }
         break;
     case UNSUBSCRIBE:
-
+        if(ui->lineEdit_unsubscribe_topicfilter->text().isEmpty()){
+            rule.deep.unsubscribe.topic_filter = NULL;
+        }
+        else
+            rule.deep.unsubscribe.topic_filter = new QString(ui->lineEdit_unsubscribe_topicfilter->text());
         break;
-
     default:
         break;
     }
@@ -149,8 +165,9 @@ void CommonRuleDialog::on_comboBox_common_mtype_activated(int index)
 }
 */
 
-u_int8_t CommonRuleDialog::cflag2rule(){
-    unsigned short flag;
+u_int8_t CommonRuleDialog::conflag2rule(){
+    unsigned short flag = 0;
+
     flag = (ui->comboBox_connect_unf->currentText().toUShort() << 7)
          | (ui->comboBox_connect_pf->currentText().toUShort() << 6)
          | (ui->comboBox_connect_wr->currentText().toUShort() << 5)
@@ -161,6 +178,18 @@ u_int8_t CommonRuleDialog::cflag2rule(){
     //qDebug() << QString::number(flag, 2);
     return u_int8_t(flag);
 }
+
+u_int8_t CommonRuleDialog::pubflag2rule(){
+    unsigned short flag = 0;
+
+    flag = (ui->comboBox_publish_dup ->currentText().toUShort() << 3)
+         | (ui->comboBox_publish_qos->currentText().toUShort() << 1)
+         | (ui->comboBox_publish_retain->currentText().toUShort());
+
+    //qDebug() << QString::number(flag, 2);
+    return u_int8_t(flag);
+}
+
 
 void CommonRuleDialog::on_comboBox_common_mtype_activated(const QString &mtype)
 {

@@ -40,6 +40,8 @@ private slots:
 
     void on_action_export_rule_file_triggered();
 
+    void on_action_Import_rule_file_triggered();
+
 private:
     int fd;
     int active;
@@ -48,9 +50,11 @@ private:
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
 
-    void updateCommonRule();
+    void showUserRuleList();
     void getRuleFromKernel();
+    void setRuleToBuffer(struct RULE_ST &rule, unsigned int pos);
     void setRuleItem(struct RULE_ST *, int);
+    void free_qstring(int pos);
 
 };
 

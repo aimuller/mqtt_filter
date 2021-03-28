@@ -41,7 +41,7 @@ void test(void){
 	test->rule.mtype  = CONNECT;
 	test->rule.log   = YES;
 	test->rule.action = NF_ACCEPT;
-	test->rule.deep.connect.flag = 0xFF;
+	test->rule.deep.connect.flag = 0xF6;
 	add_node(test, 1);
 	
 	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
@@ -81,10 +81,6 @@ static int mf_release(struct inode *inode, struct file *file)
 	return 0;  
 }
 
-/*将用户空间传入的buf进行解码*/
-
-
-
 /*插入规则链表节点*/
 static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 {
@@ -107,6 +103,33 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 	rule_num++;
 	return OK;
 }
+
+static void free_node(struct RULE_LIST_ST *node){
+	switch(node->rule.mtype){
+	case PUBLISH:
+		if(node->rule.deep.publish.topic != NULL)
+			kfree(node->rule.deep.publish.topic);
+		if(node->rule.deep.publish.keyword != NULL)
+			kfree(node->rule.deep.publish.keyword);
+		node->rule.deep.publish.topic = NULL;
+		node->rule.deep.publish.keyword = NULL;
+		break;
+	case SUBSCRIBE:
+		if(node->rule.deep.subscribe.topic_filter != NULL)
+			kfree(node->rule.deep.subscribe.topic_filter);
+		node->rule.deep.subscribe.topic_filter = NULL;
+		break;
+	case UNSUBSCRIBE:
+		if(node->rule.deep.unsubscribe.topic_filter != NULL)
+			kfree(node->rule.deep.unsubscribe.topic_filter);
+		node->rule.deep.unsubscribe.topic_filter = NULL;
+		break;
+	default:
+		break;
+	}
+	kfree(node); 		/*释放该结点所占空间*/
+}
+
 
 /*删除规则链表节点*/
 static int del_node(unsigned long N)
@@ -131,25 +154,7 @@ static int del_node(unsigned long N)
 	
 	list_del(pos);	/*删除list节点链表关系*/
 	node = list_entry(pos, struct RULE_LIST_ST, list);
-
-	switch(node->rule.mtype){
-	case CONNECT:
-
-		break;
-	case PUBLISH:
-		
-		break;
-	case SUBSCRIBE:
-	
-		break;
-	case UNSUBSCRIBE:
-	
-		break;
-	default:
-		break;
-	}
-	
-	kfree(node); 		/*释放该结点所占空间*/
+	free_node(node);
 	rule_num--;
 	
 	return OK;
@@ -183,16 +188,54 @@ static int add_rule(unsigned long arg){
 
 	switch(node->rule.mtype){
 	case CONNECT:
-		node->rule.deep.connect.flag = *ptr;	ptr += sizeof(u_int8_t);
+		node->rule.deep.connect.flag = *ptr;	
+		ptr += sizeof(u_int8_t);
 		break;
 	case PUBLISH:
-		
+		node->rule.deep.publish.flag = *ptr;
+		ptr += sizeof(u_int8_t);
+		if(*ptr){
+			node->rule.deep.publish.topic = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+			strcpy(node->rule.deep.publish.topic, ptr);
+			ptr += (strlen(ptr) + 1);
+		}
+		else{
+			node->rule.deep.publish.topic = NULL;
+			ptr += sizeof(u_int8_t);
+		}
+		if(*ptr){
+			node->rule.deep.publish.keyword = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+			strcpy(node->rule.deep.publish.keyword, ptr);
+			ptr += (strlen(ptr) + 1);
+		}
+		else{
+			node->rule.deep.publish.keyword = NULL;
+			ptr += sizeof(u_int8_t);
+		}
 		break;
 	case SUBSCRIBE:
-	
+		if(*ptr){
+			node->rule.deep.subscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+			strcpy(node->rule.deep.subscribe.topic_filter, ptr);
+			ptr += (strlen(ptr) + 1);
+			node->rule.deep.subscribe.rqos = *ptr;
+			ptr += sizeof(u_int8_t);
+		}
+		else{
+			node->rule.deep.subscribe.topic_filter = NULL;
+			ptr += sizeof(u_int8_t);
+		}
 		break;
 	case UNSUBSCRIBE:
-	
+		if(*ptr){
+			node->rule.deep.unsubscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+			strcpy(node->rule.deep.unsubscribe.topic_filter, ptr);
+			ptr += (strlen(ptr) + 1);
+		}
+		else{
+			node->rule.deep.unsubscribe.topic_filter = NULL;
+			ptr += sizeof(u_int8_t);
+		}
 		break;
 	default:
 		break;
@@ -229,6 +272,7 @@ static int add_rule_list(unsigned long arg){
 	return OK;
 }
 
+
 /*清除规则链表*/
 static void clear_rule_list(void){
 	struct RULE_LIST_ST *node;
@@ -239,25 +283,7 @@ static void clear_rule_list(void){
 		list_del(pos);
 		node = list_entry(pos, struct RULE_LIST_ST, list);
 		//printk(KERN_INFO "MF: clear: %x\n", node->rule.saddr);
-
-		switch(node->rule.mtype){
-		case CONNECT:
-		
-			break;
-		case PUBLISH:
-			
-			break;
-		case SUBSCRIBE:
-		
-			break;
-		case UNSUBSCRIBE:
-		
-			break;
-		default:
-			break;
-		}
-		
-		kfree(node);
+		free_node(node);
 	}
 	rule_num = 0;
 }
@@ -283,20 +309,54 @@ static int rules2buf(void){
 		*((u_int32_t *)ptr) = (node->rule.daddr);	ptr += sizeof(u_int32_t);
 		*((u_int32_t *)ptr) = (node->rule.dmask);	ptr += sizeof(u_int32_t);
 		
-
 		switch(node->rule.mtype){
 		case CONNECT:
 			*ptr = node->rule.deep.connect.flag; 
 			ptr += sizeof(u_int8_t);
 			break;
 		case PUBLISH:
-			
+			*ptr = node->rule.deep.publish.flag;
+			ptr += sizeof(u_int8_t);
+
+			if(node->rule.deep.publish.topic != NULL){
+				strcpy((char *)ptr, node->rule.deep.publish.topic);
+				ptr += (strlen(node->rule.deep.publish.topic) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
+
+			if(node->rule.deep.publish.topic != NULL){
+				strcpy((char *)ptr, node->rule.deep.publish.keyword);
+				ptr += (strlen(node->rule.deep.publish.keyword) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
 			break;
 		case SUBSCRIBE:
-		
+			if(node->rule.deep.subscribe.topic_filter != NULL){
+				strcpy((char *)ptr, node->rule.deep.subscribe.topic_filter);
+				ptr += (strlen(node->rule.deep.subscribe.topic_filter) + 1);
+				*ptr = node->rule.deep.subscribe.rqos;
+				ptr += sizeof(u_int8_t);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
 			break;
 		case UNSUBSCRIBE:
-		
+			if(node->rule.deep.unsubscribe.topic_filter != NULL){
+				strcpy((char *)ptr, node->rule.deep.unsubscribe.topic_filter);
+				ptr += (strlen(node->rule.deep.unsubscribe.topic_filter) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
 			break;
 		default:
 			break;

@@ -191,6 +191,7 @@ public:
         menuBar->addAction(menu->menuAction());
         menu->addSeparator();
         menu->addSeparator();
+        menu->addSeparator();
         menu->addAction(action_Import_rule_file);
         menu->addAction(action_export_rule_file);
 

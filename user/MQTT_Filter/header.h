@@ -107,6 +107,7 @@ struct RULE_ST{		/*规则结构定义*/
         struct SUBSCRIBE_ST subscribe;
         struct UNSUBSCRIBE_ST unsubscribe;
     }deep;
+
 };
 
 #endif // HEADER_H

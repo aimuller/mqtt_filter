@@ -161,6 +161,7 @@
     </property>
     <addaction name="separator"/>
     <addaction name="separator"/>
+    <addaction name="separator"/>
     <addaction name="action_Import_rule_file"/>
     <addaction name="action_export_rule_file"/>
    </widget>

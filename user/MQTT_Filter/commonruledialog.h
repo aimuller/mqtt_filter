@@ -29,7 +29,9 @@ private slots:
 
 private:
     int mode;
-    u_int8_t cflag2rule();
+    u_int8_t conflag2rule();
+    u_int8_t pubflag2rule();
+    //u_int8_t subrqos2rule();
     Ui::CommonRuleDialog *ui;
 
 signals:

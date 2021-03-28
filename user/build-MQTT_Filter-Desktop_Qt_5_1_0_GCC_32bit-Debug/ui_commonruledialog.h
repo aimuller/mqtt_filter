@@ -460,7 +460,7 @@ public:
         QObject::connect(buttonBox, SIGNAL(accepted()), CommonRuleDialog, SLOT(accept()));
         QObject::connect(buttonBox, SIGNAL(rejected()), CommonRuleDialog, SLOT(reject()));
 
-        stackedWidget->setCurrentIndex(1);
+        stackedWidget->setCurrentIndex(3);
 
 
         QMetaObject::connectSlotsByName(CommonRuleDialog);
@@ -567,6 +567,12 @@ public:
         label_11->setText(QString());
         label_22->setText(QApplication::translate("CommonRuleDialog", "\346\234\215\345\212\241\350\264\250\351\207\217\350\246\201\346\261\202", 0));
         label_23->setText(QApplication::translate("CommonRuleDialog", "\344\270\273\351\242\230\350\277\207\346\273\244\345\231\250", 0));
+        comboBox_subscribe_rqos->clear();
+        comboBox_subscribe_rqos->insertItems(0, QStringList()
+         << QApplication::translate("CommonRuleDialog", "0", 0)
+         << QApplication::translate("CommonRuleDialog", "1", 0)
+         << QApplication::translate("CommonRuleDialog", "2", 0)
+        );
         label_25->setText(QApplication::translate("CommonRuleDialog", "\344\270\273\351\242\230\350\277\207\346\273\244\345\231\250", 0));
     } // retranslateUi
 
