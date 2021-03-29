@@ -252,21 +252,81 @@ static int add_rule(unsigned long arg){
 /*将大量规则插入*/
 static int add_rule_list(unsigned long arg){
 	struct RULE_LIST_ST *node;
-	unsigned int len;
-	char *pchar = buf;
+	unsigned int len, pos;
+	u_int8_t *ptr = buf;
 	
-	copy_from_user(buf, (u_int8_t *)arg, sizeof(buf));	/*从用户空间接收数据*/
-	len = *((unsigned int *)pchar);	/*提取规则数量*/
-	pchar = pchar + 4;
+	copy_from_user(buf, (u_int8_t *)arg, BUF_SIZE);	/*从用户空间接收数据*/
+	len = *((unsigned int *)ptr);	/*提取规则数量*/
+	ptr = ptr + 4;
 	
 	if(len > MAX_COPY_NUM)
 		return ERR;
 	
-	while(len--){
-		/*生成并填充新的规则链表节点*/
+	for(pos = 1; pos <= len; pos++ ){
 		node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-		memcpy(&node->rule, pchar, sizeof(struct RULE_ST));
-		add_node(node, rule_num + 1);	/*将新节点插入*/
+		node->rule.mtype = *ptr;	ptr += sizeof(u_int8_t);
+		node->rule.action = *ptr;	ptr += sizeof(u_int8_t);
+		node->rule.log = *ptr;		ptr += sizeof(u_int8_t);
+		node->rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+
+		switch(node->rule.mtype){
+		case CONNECT:
+			node->rule.deep.connect.flag = *ptr;	
+			ptr += sizeof(u_int8_t);
+			break;
+		case PUBLISH:
+			node->rule.deep.publish.flag = *ptr;
+			ptr += sizeof(u_int8_t);
+			if(*ptr){
+				node->rule.deep.publish.topic = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.publish.topic, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.publish.topic = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			if(*ptr){
+				node->rule.deep.publish.keyword = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.publish.keyword, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.publish.keyword = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			break;
+		case SUBSCRIBE:
+			if(*ptr){
+				node->rule.deep.subscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.subscribe.topic_filter, ptr);
+				ptr += (strlen(ptr) + 1);
+				node->rule.deep.subscribe.rqos = *ptr;
+				ptr += sizeof(u_int8_t);
+			}
+			else{
+				node->rule.deep.subscribe.topic_filter = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			break;
+		case UNSUBSCRIBE:
+			if(*ptr){
+				node->rule.deep.unsubscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.unsubscribe.topic_filter, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.unsubscribe.topic_filter = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			break;
+		default:
+			break;
+		}
+		add_node(node, pos);
 	}
 	
 	return OK;
@@ -397,6 +457,11 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case MF_ADD_RULE:
 		printk("MF: MF_ADD_RULE\n");
 		add_rule(arg);
+		break;  
+
+	case MF_ADD_LIST:
+		printk("MF: MF_ADD_RULE\n");
+		add_rule_list(arg);
 		break;  
 		
 	case MF_DELETE_RULE:

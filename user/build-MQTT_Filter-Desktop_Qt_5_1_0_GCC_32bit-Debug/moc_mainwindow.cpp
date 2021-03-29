@@ -82,8 +82,8 @@ static const uint qt_meta_data_MainWindow[] = {
 
  // slots: parameters
     QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 4, QMetaType::UInt,    2,    2,
-    QMetaType::Void, 0x80000000 | 4, QMetaType::UInt,    2,    2,
+    QMetaType::Void, 0x80000000 | 4, QMetaType::Int,    2,    2,
+    QMetaType::Void, 0x80000000 | 4, QMetaType::Int,    2,    2,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -101,8 +101,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         MainWindow *_t = static_cast<MainWindow *>(_o);
         switch (_id) {
         case 0: _t->on_pushButton_add_rule_clicked(); break;
-        case 1: _t->addCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< uint(*)>(_a[2]))); break;
-        case 2: _t->modCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< uint(*)>(_a[2]))); break;
+        case 1: _t->addCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 2: _t->modCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
         case 3: _t->on_pushButton_mod_rule_clicked(); break;
         case 4: _t->on_pushButton_mf_open_clicked(); break;
         case 5: _t->on_pushButton_mf_close_clicked(); break;

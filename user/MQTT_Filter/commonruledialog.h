@@ -35,8 +35,8 @@ private:
     Ui::CommonRuleDialog *ui;
 
 signals:
-    void addCommonRuleSignal(struct RULE_ST, unsigned int);
-    void modCommonRuleSignal(struct RULE_ST, unsigned int);
+    void addCommonRuleSignal(struct RULE_ST, int);
+    void modCommonRuleSignal(struct RULE_ST, int);
 
 };
 

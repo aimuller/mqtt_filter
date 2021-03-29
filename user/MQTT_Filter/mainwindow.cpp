@@ -30,19 +30,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tableWidget_rule->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
     ui->tableWidget_rule->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
-    ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-    ui->tableWidget_rule->setColumnWidth(0, 110);//设置固定宽
-    ui->tableWidget_rule->setColumnWidth(1, 80);//设置固定宽
-    ui->tableWidget_rule->setColumnWidth(2, 70);//设置固定宽
-    ui->tableWidget_rule->setColumnWidth(3, 170);//设置固定宽
-    ui->tableWidget_rule->setColumnWidth(4, 170);//设置固定宽
-    ui->tableWidget_rule->setColumnWidth(5, 200);//设置固定宽
+    //ui->tableWidget_rule->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    //if (vScrollBar != NULL)
+         //vScrollBar->setValue(ui->tableWidget_rule->verticalScrollBar()->maximum());
 
-    connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, unsigned int)),
-            this, SLOT(addCommonRule(struct RULE_ST, unsigned int)));
-    connect(modCommonRuleDialog, SIGNAL(modCommonRuleSignal(struct RULE_ST, unsigned int)),
-            this, SLOT(modCommonRule(struct RULE_ST, unsigned int)));
+
+    //ui->tableWidget_rule->setColumnWidth(0, 110);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(1, 80);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(2, 70);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(3, 170);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(4, 170);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(5, 200);//设置固定宽
+
+    connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, int)),
+            this, SLOT(addCommonRule(struct RULE_ST, int)));
+    connect(modCommonRuleDialog, SIGNAL(modCommonRuleSignal(struct RULE_ST, int)),
+            this, SLOT(modCommonRule(struct RULE_ST, int)));
 }
 
 MainWindow::~MainWindow()
@@ -78,7 +83,7 @@ void MainWindow::on_pushButton_add_rule_clicked()
     addCommonRuleDialog->exec();
 }
 
-void MainWindow::addCommonRule(struct RULE_ST rule, unsigned int pos)
+void MainWindow::addCommonRule(struct RULE_ST rule, int pos)
 {
     if(pos <= 0 || pos > ui->tableWidget_rule->rowCount() + 1)
         pos = ui->tableWidget_rule->rowCount() + 1;
@@ -189,7 +194,7 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
     //qDebug() << "buf len: " << (ptr - (u_int8_t *)buf);
 }
 
-void MainWindow::modCommonRule(struct RULE_ST rule, unsigned int mod_pos)
+void MainWindow::modCommonRule(struct RULE_ST rule, int mod_pos)
 {
     int src_pos = ui->tableWidget_rule->currentRow() + 1;
     if(mod_pos <= 0 || mod_pos > ui->tableWidget_rule->rowCount())
@@ -213,7 +218,7 @@ void MainWindow::modCommonRule(struct RULE_ST rule, unsigned int mod_pos)
 void MainWindow::showUserRuleList()
 {
     ui->tableWidget_rule->setRowCount(rule_list.size());
-    for(unsigned int i = 0; i < rule_list.size(); i++){
+    for(int i = 0; i < rule_list.size(); i++){
         setRuleItem(&rule_list[i], i);
     }
 }
@@ -310,7 +315,6 @@ void MainWindow::setRuleItem(struct RULE_ST *rule, int row){
     switch(rule->mtype){
     case CONNECT:
         str = rule2conflag(rule->deep.connect.flag);
-        ui->tableWidget_rule->setItem(row, 5, new QTableWidgetItem(str));
         break;
     case PUBLISH:
         str = rule2pubflag(rule->deep.publish.flag);
@@ -337,7 +341,7 @@ void MainWindow::setRuleItem(struct RULE_ST *rule, int row){
     }
 
     ui->tableWidget_rule->setItem(row, 5, new QTableWidgetItem(str));
-    for(unsigned int i = 0; i < ui->tableWidget_rule->columnCount(); i++)
+    for(int i = 0; i < ui->tableWidget_rule->columnCount() - 1; i++)
         ui->tableWidget_rule->item(row, i)->setTextAlignment(Qt::AlignCenter);
 }
 
@@ -398,7 +402,7 @@ void MainWindow::on_pushButton_clear_rule_clicked()
     if(choose == QMessageBox::Yes){
         ioctl(fd, MF_CLEAR_RULE);
 
-        for(unsigned int i = 0; i < rule_list.size(); i++)
+        for(int i = 0; i < rule_list.size(); i++)
             free_qstring(i);
         rule_list.clear();
 
@@ -417,7 +421,7 @@ void MainWindow::on_action_export_rule_file_triggered()
 
     QFile RuleFile(FilePath);
     if(RuleFile.open(QIODevice::ReadWrite | QIODevice::Text)){
-        for(unsigned int i = 0; i < rule_list.size(); i++){
+        for(int i = 0; i < rule_list.size(); i++){
             QString rule_str;
 
             rule_str += rule2mtype(rule_list[i].mtype) + DEVIDE;
@@ -460,6 +464,17 @@ void MainWindow::on_action_export_rule_file_triggered()
 
 void MainWindow::on_action_Import_rule_file_triggered()
 {
+
+    //QMessageBox::StandardButton choose = QMessageBox::question(NULL, "清除规则", "是否清除当前规则表？", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    //if(choose == QMessageBox::No){
+        //return;
+    //}
+    ioctl(fd, MF_CLEAR_RULE);
+    for(int i = 0; i < rule_list.size(); i++)
+        free_qstring(i);
+    rule_list.clear();
+
+
     QString filter = tr("规则文件(*.rule);;全部文件(*);;");
     QString FilePath = QFileDialog::getOpenFileName(this, "导入文件", DEFAULT_DIR, filter);
     if(FilePath.isEmpty()){
@@ -512,6 +527,89 @@ void MainWindow::on_action_Import_rule_file_triggered()
     }
 
     RuleFile.close();
-    showUserRuleList();
 
+    setRuleListToBuffer();
+    ioctl(fd, MF_ADD_LIST, buf);
+    getRuleFromKernel();
+    showUserRuleList();
+}
+void MainWindow::setRuleListToBuffer(){
+    QByteArray ba;
+    char *pchar;
+    u_int8_t *ptr = (u_int8_t *)buf;
+
+    *((unsigned int *)ptr) = (unsigned int)rule_list.size();
+    ptr = ptr + sizeof(unsigned int);
+
+    for(int i = 0; i < rule_list.size(); i++){
+        *ptr = rule_list[i].mtype; 	ptr += sizeof(u_int8_t);
+        *ptr = rule_list[i].action; ptr += sizeof(u_int8_t);
+        *ptr = rule_list[i].log; 	ptr += sizeof(u_int8_t);
+        *((u_int32_t *)ptr) = (rule_list[i].saddr);	ptr += sizeof(u_int32_t);
+        *((u_int32_t *)ptr) = (rule_list[i].smask);	ptr += sizeof(u_int32_t);
+        *((u_int32_t *)ptr) = (rule_list[i].daddr);	ptr += sizeof(u_int32_t);
+        *((u_int32_t *)ptr) = (rule_list[i].dmask);	ptr += sizeof(u_int32_t);
+
+        switch(rule_list[i].mtype){
+        case CONNECT:
+            *ptr = rule_list[i].deep.connect.flag;
+            ptr += sizeof(u_int8_t);
+            break;
+
+        case PUBLISH:
+            *ptr = rule_list[i].deep.publish.flag;
+            ptr += sizeof(u_int8_t);
+
+            if(rule_list[i].deep.publish.topic != NULL){
+                ba = rule_list[i].deep.publish.topic->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+
+            if(rule_list[i].deep.publish.topic != NULL){
+                ba = rule_list[i].deep.publish.keyword->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+            break;
+        case SUBSCRIBE:
+            if(rule_list[i].deep.subscribe.topic_filter != NULL){
+                ba = rule_list[i].deep.subscribe.topic_filter->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+                *ptr = rule_list[i].deep.subscribe.rqos;
+                ptr += sizeof(u_int8_t);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+            break;
+        case UNSUBSCRIBE:
+            if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
+                ba = rule_list[i].deep.unsubscribe.topic_filter->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+            break;
+        default:
+            break;
+        }
+    }
 }

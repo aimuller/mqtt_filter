@@ -68,8 +68,8 @@ static const uint qt_meta_data_CommonRuleDialog[] = {
        6,    1,   45,    2, 0x08,
 
  // signals: parameters
-    QMetaType::Void, 0x80000000 | 3, QMetaType::UInt,    2,    2,
-    QMetaType::Void, 0x80000000 | 3, QMetaType::UInt,    2,    2,
+    QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    2,    2,
+    QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    2,    2,
 
  // slots: parameters
     QMetaType::Void,
@@ -83,8 +83,8 @@ void CommonRuleDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
     if (_c == QMetaObject::InvokeMetaMethod) {
         CommonRuleDialog *_t = static_cast<CommonRuleDialog *>(_o);
         switch (_id) {
-        case 0: _t->addCommonRuleSignal((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< uint(*)>(_a[2]))); break;
-        case 1: _t->modCommonRuleSignal((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< uint(*)>(_a[2]))); break;
+        case 0: _t->addCommonRuleSignal((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 1: _t->modCommonRuleSignal((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
         case 2: _t->on_buttonBox_accepted(); break;
         case 3: _t->on_comboBox_common_mtype_activated((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         default: ;
@@ -93,13 +93,13 @@ void CommonRuleDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         int *result = reinterpret_cast<int *>(_a[0]);
         void **func = reinterpret_cast<void **>(_a[1]);
         {
-            typedef void (CommonRuleDialog::*_t)(RULE_ST , unsigned int );
+            typedef void (CommonRuleDialog::*_t)(RULE_ST , int );
             if (*reinterpret_cast<_t *>(func) == static_cast<_t>(&CommonRuleDialog::addCommonRuleSignal)) {
                 *result = 0;
             }
         }
         {
-            typedef void (CommonRuleDialog::*_t)(RULE_ST , unsigned int );
+            typedef void (CommonRuleDialog::*_t)(RULE_ST , int );
             if (*reinterpret_cast<_t *>(func) == static_cast<_t>(&CommonRuleDialog::modCommonRuleSignal)) {
                 *result = 1;
             }
@@ -144,14 +144,14 @@ int CommonRuleDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 }
 
 // SIGNAL 0
-void CommonRuleDialog::addCommonRuleSignal(RULE_ST _t1, unsigned int _t2)
+void CommonRuleDialog::addCommonRuleSignal(RULE_ST _t1, int _t2)
 {
     void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)) };
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 
 // SIGNAL 1
-void CommonRuleDialog::modCommonRuleSignal(RULE_ST _t1, unsigned int _t2)
+void CommonRuleDialog::modCommonRuleSignal(RULE_ST _t1, int _t2)
 {
     void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)) };
     QMetaObject::activate(this, &staticMetaObject, 1, _a);

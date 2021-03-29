@@ -80,12 +80,25 @@ void CommonRuleDialog::setSourceRule(struct RULE_ST &rule){
         break;
     case PUBLISH:
         ui->stackedWidget->setCurrentWidget(ui->page_publish);
+        ui->comboBox_publish_dup->setCurrentText(QString::number((rule.deep.publish.flag & 0x08) >> 3));
+        ui->comboBox_publish_qos->setCurrentText(QString::number((rule.deep.publish.flag & 0x05) >> 1));
+        ui->comboBox_publish_retain->setCurrentText(QString::number(rule.deep.publish.flag & 0x01));
+        if(rule.deep.publish.topic != NULL)
+            ui->lineEdit_publish_topic->setText(*(rule.deep.publish.topic));
+        if(rule.deep.publish.keyword != NULL)
+            ui->lineEdit_publish_keyword->setText(*(rule.deep.publish.keyword));
         break;
     case SUBSCRIBE:
         ui->stackedWidget->setCurrentWidget(ui->page_subscribe);
+        if(rule.deep.subscribe.topic_filter != NULL){
+            ui->lineEdit_subscribe_topicfilter->setText(*(rule.deep.subscribe.topic_filter));
+            ui->comboBox_subscribe_rqos->setCurrentText(QString::number(rule.deep.subscribe.rqos));
+        }
         break;
     case UNSUBSCRIBE:
         ui->stackedWidget->setCurrentWidget(ui->page_unsubscribe);
+        if(rule.deep.unsubscribe.topic_filter != NULL)
+            ui->lineEdit_unsubscribe_topicfilter->setText(*(rule.deep.unsubscribe.topic_filter));
         break;
     default:
         ui->stackedWidget->setCurrentWidget(ui->page_common);
@@ -98,7 +111,7 @@ void CommonRuleDialog::setSourceRule(struct RULE_ST &rule){
 void CommonRuleDialog::on_buttonBox_accepted()
 {
     RULE_ST rule;
-    unsigned int pos = 0;
+    int pos = 0;
 
     rule.saddr  = addr2rule(ui->lineEdit_common_saddr->text());
     rule.smask  = mask2rule(ui->lineEdit_common_smask->text());
@@ -107,7 +120,7 @@ void CommonRuleDialog::on_buttonBox_accepted()
     rule.mtype  = mtype2rule(ui->comboBox_common_mtype->currentText());
     rule.log    = log2rule(ui->comboBox_common_log->currentText());
     rule.action = action2rule(ui->comboBox_common_action->currentText());
-    pos = ui->lineEdit_add_pos->text().toUInt();
+    pos = ui->lineEdit_add_pos->text().toInt();
 
     switch(rule.mtype){
     case CONNECT:

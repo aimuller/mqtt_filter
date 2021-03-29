@@ -25,8 +25,8 @@ public:
     
 private slots:
     void on_pushButton_add_rule_clicked();
-    void addCommonRule(struct RULE_ST, unsigned int);
-    void modCommonRule(struct RULE_ST, unsigned int);
+    void addCommonRule(struct RULE_ST, int);
+    void modCommonRule(struct RULE_ST, int);
 
     void on_pushButton_mod_rule_clicked();
 
@@ -52,6 +52,7 @@ private:
 
     void showUserRuleList();
     void getRuleFromKernel();
+    void setRuleListToBuffer();
     void setRuleToBuffer(struct RULE_ST &rule, unsigned int pos);
     void setRuleItem(struct RULE_ST *, int);
     void free_qstring(int pos);
