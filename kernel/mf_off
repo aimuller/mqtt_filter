@@ -3,5 +3,15 @@
 MF_MOD_NAME="mf"
 MF_DEV_NAME="/dev/mf_dev0"
 
-rmmod ${MF_MOD_NAME}
-rm ${MF_DEV_NAME}
+LS_MOD=$(lsmod | grep ${MF_MOD_NAME})
+if [ -n "${LS_MOD}" ]
+then
+	rmmod ${MF_MOD_NAME}
+fi
+
+
+LS_DEV=$(ls /dev | grep mf_dev0)
+if [ -n "${LS_DEV}" ]
+then
+	rm ${MF_DEV_NAME}
+fi

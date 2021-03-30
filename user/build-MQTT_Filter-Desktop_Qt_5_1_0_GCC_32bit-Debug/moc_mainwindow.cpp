@@ -19,8 +19,8 @@
 
 QT_BEGIN_MOC_NAMESPACE
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[13];
-    char stringdata[310];
+    QByteArrayData data[18];
+    char stringdata[405];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -41,7 +41,12 @@ QT_MOC_LITERAL(8, 140, 30),
 QT_MOC_LITERAL(9, 171, 30),
 QT_MOC_LITERAL(10, 202, 32),
 QT_MOC_LITERAL(11, 235, 36),
-QT_MOC_LITERAL(12, 272, 36)
+QT_MOC_LITERAL(12, 272, 36),
+QT_MOC_LITERAL(13, 309, 31),
+QT_MOC_LITERAL(14, 341, 17),
+QT_MOC_LITERAL(15, 359, 4),
+QT_MOC_LITERAL(16, 364, 33),
+QT_MOC_LITERAL(17, 398, 5)
     },
     "MainWindow\0on_pushButton_add_rule_clicked\0"
     "\0addCommonRule\0RULE_ST\0modCommonRule\0"
@@ -52,6 +57,10 @@ QT_MOC_LITERAL(12, 272, 36)
     "on_pushButton_clear_rule_clicked\0"
     "on_action_export_rule_file_triggered\0"
     "on_action_Import_rule_file_triggered\0"
+    "on_tableWidget_rule_itemEntered\0"
+    "QTableWidgetItem*\0item\0"
+    "on_tableWidget_rule_doubleClicked\0"
+    "index\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -61,7 +70,7 @@ static const uint qt_meta_data_MainWindow[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+      12,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -69,16 +78,18 @@ static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   64,    2, 0x08,
-       3,    2,   65,    2, 0x08,
-       5,    2,   70,    2, 0x08,
-       6,    0,   75,    2, 0x08,
-       7,    0,   76,    2, 0x08,
-       8,    0,   77,    2, 0x08,
-       9,    0,   78,    2, 0x08,
-      10,    0,   79,    2, 0x08,
-      11,    0,   80,    2, 0x08,
-      12,    0,   81,    2, 0x08,
+       1,    0,   74,    2, 0x08,
+       3,    2,   75,    2, 0x08,
+       5,    2,   80,    2, 0x08,
+       6,    0,   85,    2, 0x08,
+       7,    0,   86,    2, 0x08,
+       8,    0,   87,    2, 0x08,
+       9,    0,   88,    2, 0x08,
+      10,    0,   89,    2, 0x08,
+      11,    0,   90,    2, 0x08,
+      12,    0,   91,    2, 0x08,
+      13,    1,   92,    2, 0x08,
+      16,    1,   95,    2, 0x08,
 
  // slots: parameters
     QMetaType::Void,
@@ -91,6 +102,8 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 14,   15,
+    QMetaType::Void, QMetaType::QModelIndex,   17,
 
        0        // eod
 };
@@ -110,6 +123,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 7: _t->on_pushButton_clear_rule_clicked(); break;
         case 8: _t->on_action_export_rule_file_triggered(); break;
         case 9: _t->on_action_Import_rule_file_triggered(); break;
+        case 10: _t->on_tableWidget_rule_itemEntered((*reinterpret_cast< QTableWidgetItem*(*)>(_a[1]))); break;
+        case 11: _t->on_tableWidget_rule_doubleClicked((*reinterpret_cast< const QModelIndex(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -140,13 +155,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 12)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 12;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 12)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 10;
+        _id -= 12;
     }
     return _id;
 }

@@ -55,10 +55,11 @@
 
 /*其他常量定义*/
 #define MQTT_PORT 1883		/*MQTT服务端口*/
-#define UNKNOWN 0xFEFEFEFE
 #define ANY_ADDR 0x0
 #define PERMIT 1
 #define DENY 0
+#define TRUE 1
+#define FALSE 0
 #define OK 1
 #define ERR -1
 #define YES 1
@@ -67,6 +68,11 @@
 #define MAX_COPY_NUM 32
 #define BUF_SIZE 4096
 #define MF_DEV_NAME "/dev/mf_dev0" 
+#define ENABLED 1
+#define DISABLED 0
+
+#define TOPIC_MATCH_INVAL 0	/*主题匹配非法*/
+#define TOPIC_MATCH_VAILD 1	/*主题匹配合法，但不代表匹配成功*/
 
 /*IOCTL控制命令定义*/
 #define MF_MAGIC 'x'
@@ -100,20 +106,21 @@ struct UNSUBSCRIBE_ST{
 };
 
 struct RULE_ST{		/*规则结构定义*/
-	u_int8_t mtype;		/*MQTT报文的类型*/
-	u_int8_t action;	/*动作*/
-	u_int8_t log;		/*是否记录日志*/
-	u_int32_t saddr;	/*源地址*/
-	u_int32_t smask;	/*源地址掩码*/
-	u_int32_t daddr;	/*目的地址*/
-	u_int32_t dmask;	/*目的地址掩码*/
-	
-	union{				/*特别考虑的四种报文的补充规则结构*/
-		struct CONNECT_ST connect;
-		struct PUBLISH_ST publish;
-		struct SUBSCRIBE_ST subscribe;
-		struct UNSUBSCRIBE_ST unsubscribe;
-	}deep;
+    u_int8_t mtype;		/*MQTT报文的类型*/
+    u_int8_t action;	/*动作*/
+    u_int8_t log;		/*是否记录日志*/
+    u_int32_t saddr;	/*源地址*/
+    u_int32_t smask;	/*源地址掩码*/
+    u_int32_t daddr;	/*目的地址*/
+    u_int32_t dmask;	/*目的地址掩码*/
+    u_int8_t enabled_deep;
+    union{				/*特别考虑的四种报文的补充规则结构*/
+        struct CONNECT_ST connect;
+        struct PUBLISH_ST publish;
+        struct SUBSCRIBE_ST subscribe;
+        struct UNSUBSCRIBE_ST unsubscribe;
+    }deep;
+
 };
 
 struct RULE_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/

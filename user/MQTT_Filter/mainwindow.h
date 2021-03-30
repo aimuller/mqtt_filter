@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QDesktopWidget>
+#include <QToolTip>
+#include <QTableWidget>
 #include <QList>
 
 #include "commonruledialog.h"
@@ -41,6 +43,12 @@ private slots:
     void on_action_export_rule_file_triggered();
 
     void on_action_Import_rule_file_triggered();
+
+    void on_tableWidget_rule_itemEntered(QTableWidgetItem *item);
+
+    //void on_tableWidget_rule_cellEntered(int row, int column);
+
+    void on_tableWidget_rule_doubleClicked(const QModelIndex &index);
 
 private:
     int fd;

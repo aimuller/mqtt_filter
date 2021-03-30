@@ -54,7 +54,8 @@
 #define DENY 0
 #define ERR 0xFE
 #define BUF_SIZE 4096
-
+#define ENABLED 1
+#define DISABLED 0
 
 /*为了在插入、修改按钮中复用ruleDialog组件，可以设置一个mode加以区分*/
 /*下面是两种模式的定义*/
@@ -101,7 +102,7 @@ struct RULE_ST{		/*规则结构定义*/
     u_int32_t smask;	/*源地址掩码*/
     u_int32_t daddr;	/*目的地址*/
     u_int32_t dmask;	/*目的地址掩码*/
-
+    u_int8_t enabled_deep;
     union{				/*特别考虑的四种报文的补充规则结构*/
         struct CONNECT_ST connect;
         struct PUBLISH_ST publish;

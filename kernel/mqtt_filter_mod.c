@@ -105,6 +105,9 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 }
 
 static void free_node(struct RULE_LIST_ST *node){
+	if(node->rule.enabled_deep == DISABLED)
+		return;
+
 	switch(node->rule.mtype){
 	case PUBLISH:
 		if(node->rule.deep.publish.topic != NULL)
@@ -185,93 +188,9 @@ static int add_rule(unsigned long arg){
 	node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
 	node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
 	node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+	node->rule.enabled_deep = *ptr;	ptr += sizeof(u_int8_t);
 
-	switch(node->rule.mtype){
-	case CONNECT:
-		node->rule.deep.connect.flag = *ptr;	
-		ptr += sizeof(u_int8_t);
-		break;
-	case PUBLISH:
-		node->rule.deep.publish.flag = *ptr;
-		ptr += sizeof(u_int8_t);
-		if(*ptr){
-			node->rule.deep.publish.topic = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
-			strcpy(node->rule.deep.publish.topic, ptr);
-			ptr += (strlen(ptr) + 1);
-		}
-		else{
-			node->rule.deep.publish.topic = NULL;
-			ptr += sizeof(u_int8_t);
-		}
-		if(*ptr){
-			node->rule.deep.publish.keyword = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
-			strcpy(node->rule.deep.publish.keyword, ptr);
-			ptr += (strlen(ptr) + 1);
-		}
-		else{
-			node->rule.deep.publish.keyword = NULL;
-			ptr += sizeof(u_int8_t);
-		}
-		break;
-	case SUBSCRIBE:
-		if(*ptr){
-			node->rule.deep.subscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
-			strcpy(node->rule.deep.subscribe.topic_filter, ptr);
-			ptr += (strlen(ptr) + 1);
-			node->rule.deep.subscribe.rqos = *ptr;
-			ptr += sizeof(u_int8_t);
-		}
-		else{
-			node->rule.deep.subscribe.topic_filter = NULL;
-			ptr += sizeof(u_int8_t);
-		}
-		break;
-	case UNSUBSCRIBE:
-		if(*ptr){
-			node->rule.deep.unsubscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
-			strcpy(node->rule.deep.unsubscribe.topic_filter, ptr);
-			ptr += (strlen(ptr) + 1);
-		}
-		else{
-			node->rule.deep.unsubscribe.topic_filter = NULL;
-			ptr += sizeof(u_int8_t);
-		}
-		break;
-	default:
-		break;
-	}
-
-	//printk("MF: saddr:%x smask:%x daddr:%x dmask:%x mtype:%x log:%d action:%d\n", node->rule.saddr, node->rule.smask, node->rule.daddr, node->rule.dmask, node->rule.mtype, node->rule.log, node->rule.action);
-	
-	//return OK;
-	/*将新节点插入*/
-	add_node(node, pos);
-	return OK;
-}
-
-/*将大量规则插入*/
-static int add_rule_list(unsigned long arg){
-	struct RULE_LIST_ST *node;
-	unsigned int len, pos;
-	u_int8_t *ptr = buf;
-	
-	copy_from_user(buf, (u_int8_t *)arg, BUF_SIZE);	/*从用户空间接收数据*/
-	len = *((unsigned int *)ptr);	/*提取规则数量*/
-	ptr = ptr + 4;
-	
-	if(len > MAX_COPY_NUM)
-		return ERR;
-	
-	for(pos = 1; pos <= len; pos++ ){
-		node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-		node->rule.mtype = *ptr;	ptr += sizeof(u_int8_t);
-		node->rule.action = *ptr;	ptr += sizeof(u_int8_t);
-		node->rule.log = *ptr;		ptr += sizeof(u_int8_t);
-		node->rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
-		node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
-		node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
-		node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
-
+	if(node->rule.enabled_deep == ENABLED){
 		switch(node->rule.mtype){
 		case CONNECT:
 			node->rule.deep.connect.flag = *ptr;	
@@ -326,9 +245,97 @@ static int add_rule_list(unsigned long arg){
 		default:
 			break;
 		}
+	}
+	//printk("MF: saddr:%x smask:%x daddr:%x dmask:%x mtype:%x log:%d action:%d\n", node->rule.saddr, node->rule.smask, node->rule.daddr, node->rule.dmask, node->rule.mtype, node->rule.log, node->rule.action);
+	
+	//return OK;
+	/*将新节点插入*/
+	add_node(node, pos);
+	return OK;
+}
+
+/*将大量规则插入*/
+static int add_rule_list(unsigned long arg){
+	struct RULE_LIST_ST *node;
+	unsigned int len, pos;
+	u_int8_t *ptr = buf;
+	
+	copy_from_user(buf, (u_int8_t *)arg, BUF_SIZE);	/*从用户空间接收数据*/
+	len = *((unsigned int *)ptr);	/*提取规则数量*/
+	ptr = ptr + 4;
+	
+	if(len > MAX_COPY_NUM)
+		return ERR;
+	
+	for(pos = 1; pos <= len; pos++ ){
+		node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
+		node->rule.mtype = *ptr;	ptr += sizeof(u_int8_t);
+		node->rule.action = *ptr;	ptr += sizeof(u_int8_t);
+		node->rule.log = *ptr;		ptr += sizeof(u_int8_t);
+		node->rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.enabled_deep = *ptr;	ptr += sizeof(u_int8_t);
+
+		if(node->rule.enabled_deep == ENABLED){
+			switch(node->rule.mtype){
+			case CONNECT:
+				node->rule.deep.connect.flag = *ptr;	
+				ptr += sizeof(u_int8_t);
+				break;
+			case PUBLISH:
+				node->rule.deep.publish.flag = *ptr;
+				ptr += sizeof(u_int8_t);
+				if(*ptr){
+					node->rule.deep.publish.topic = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.publish.topic, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.publish.topic = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				if(*ptr){
+					node->rule.deep.publish.keyword = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.publish.keyword, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.publish.keyword = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				break;
+			case SUBSCRIBE:
+				if(*ptr){
+					node->rule.deep.subscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.subscribe.topic_filter, ptr);
+					ptr += (strlen(ptr) + 1);
+					node->rule.deep.subscribe.rqos = *ptr;
+					ptr += sizeof(u_int8_t);
+				}
+				else{
+					node->rule.deep.subscribe.topic_filter = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				break;
+			case UNSUBSCRIBE:
+				if(*ptr){
+					node->rule.deep.unsubscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.unsubscribe.topic_filter, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.unsubscribe.topic_filter = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				break;
+			default:
+				break;
+			}
+		}
 		add_node(node, pos);
 	}
-	
 	return OK;
 }
 
@@ -368,58 +375,61 @@ static int rules2buf(void){
 		*((u_int32_t *)ptr) = (node->rule.smask);	ptr += sizeof(u_int32_t);
 		*((u_int32_t *)ptr) = (node->rule.daddr);	ptr += sizeof(u_int32_t);
 		*((u_int32_t *)ptr) = (node->rule.dmask);	ptr += sizeof(u_int32_t);
-		
-		switch(node->rule.mtype){
-		case CONNECT:
-			*ptr = node->rule.deep.connect.flag; 
-			ptr += sizeof(u_int8_t);
-			break;
-		case PUBLISH:
-			*ptr = node->rule.deep.publish.flag;
-			ptr += sizeof(u_int8_t);
+		*ptr = node->rule.enabled_deep;	ptr += sizeof(u_int8_t);
 
-			if(node->rule.deep.publish.topic != NULL){
-				strcpy((char *)ptr, node->rule.deep.publish.topic);
-				ptr += (strlen(node->rule.deep.publish.topic) + 1);
-			}
-			else{
-				*ptr = 0;
+		if(node->rule.enabled_deep == ENABLED){
+			switch(node->rule.mtype){
+			case CONNECT:
+				*ptr = node->rule.deep.connect.flag; 
 				ptr += sizeof(u_int8_t);
-			}
+				break;
+			case PUBLISH:
+				*ptr = node->rule.deep.publish.flag;
+				ptr += sizeof(u_int8_t);
 
-			if(node->rule.deep.publish.topic != NULL){
-				strcpy((char *)ptr, node->rule.deep.publish.keyword);
-				ptr += (strlen(node->rule.deep.publish.keyword) + 1);
+				if(node->rule.deep.publish.topic != NULL){
+					strcpy((char *)ptr, node->rule.deep.publish.topic);
+					ptr += (strlen(node->rule.deep.publish.topic) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+
+				if(node->rule.deep.publish.topic != NULL){
+					strcpy((char *)ptr, node->rule.deep.publish.keyword);
+					ptr += (strlen(node->rule.deep.publish.keyword) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				break;
+			case SUBSCRIBE:
+				if(node->rule.deep.subscribe.topic_filter != NULL){
+					strcpy((char *)ptr, node->rule.deep.subscribe.topic_filter);
+					ptr += (strlen(node->rule.deep.subscribe.topic_filter) + 1);
+					*ptr = node->rule.deep.subscribe.rqos;
+					ptr += sizeof(u_int8_t);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				break;
+			case UNSUBSCRIBE:
+				if(node->rule.deep.unsubscribe.topic_filter != NULL){
+					strcpy((char *)ptr, node->rule.deep.unsubscribe.topic_filter);
+					ptr += (strlen(node->rule.deep.unsubscribe.topic_filter) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				break;
+			default:
+				break;
 			}
-			else{
-				*ptr = 0;
-				ptr += sizeof(u_int8_t);
-			}
-			break;
-		case SUBSCRIBE:
-			if(node->rule.deep.subscribe.topic_filter != NULL){
-				strcpy((char *)ptr, node->rule.deep.subscribe.topic_filter);
-				ptr += (strlen(node->rule.deep.subscribe.topic_filter) + 1);
-				*ptr = node->rule.deep.subscribe.rqos;
-				ptr += sizeof(u_int8_t);
-			}
-			else{
-				*ptr = 0;
-				ptr += sizeof(u_int8_t);
-			}
-			break;
-		case UNSUBSCRIBE:
-			if(node->rule.deep.unsubscribe.topic_filter != NULL){
-				strcpy((char *)ptr, node->rule.deep.unsubscribe.topic_filter);
-				ptr += (strlen(node->rule.deep.unsubscribe.topic_filter) + 1);
-			}
-			else{
-				*ptr = 0;
-				ptr += sizeof(u_int8_t);
-			}
-			break;
-		default:
-			break;
 		}
 	}
 	return (ptr - buf);
@@ -508,6 +518,136 @@ static unsigned int mqtt_remaining_len(u_int8_t *ptr, unsigned int *offset_ptr){
 	return len;
 }
 
+
+static int topic_matches(const char *sub, const char *topic, int *result)
+{
+	size_t spos;
+
+	if(!result) return TOPIC_MATCH_INVAL;
+	*result = FALSE;
+
+	if(!sub || !topic || sub[0] == 0 || topic[0] == 0){
+		return TOPIC_MATCH_INVAL;
+	}
+
+	if((sub[0] == '$' && topic[0] != '$')
+			|| (topic[0] == '$' && sub[0] != '$')){
+
+		return TOPIC_MATCH_VAILD;
+	}
+
+	spos = 0;
+
+	while(sub[0] != 0){
+		if(topic[0] == '+' || topic[0] == '#'){
+			return TOPIC_MATCH_INVAL;
+		}
+		if(sub[0] != topic[0] || topic[0] == 0){ /* Check for wildcard matches */
+			if(sub[0] == '+'){
+				/* Check for bad "+foo" or "a/+foo" subscription */
+				if(spos > 0 && sub[-1] != '/'){
+					return TOPIC_MATCH_INVAL;
+				}
+				/* Check for bad "foo+" or "foo+/a" subscription */
+				if(sub[1] != 0 && sub[1] != '/'){
+					return TOPIC_MATCH_INVAL;
+				}
+				spos++;
+				sub++;
+				while(topic[0] != 0 && topic[0] != '/'){
+					if(topic[0] == '+' || topic[0] == '#'){
+						return TOPIC_MATCH_INVAL;
+					}
+					topic++;
+				}
+				if(topic[0] == 0 && sub[0] == 0){
+					*result = TRUE;
+					return TOPIC_MATCH_VAILD;
+				}
+			}else if(sub[0] == '#'){
+				/* Check for bad "foo#" subscription */
+				if(spos > 0 && sub[-1] != '/'){
+					return TOPIC_MATCH_INVAL;
+				}
+				/* Check for # not the final character of the sub, e.g. "#foo" */
+				if(sub[1] != 0){
+					return TOPIC_MATCH_INVAL;
+				}else{
+					while(topic[0] != 0){
+						if(topic[0] == '+' || topic[0] == '#'){
+							return TOPIC_MATCH_INVAL;
+						}
+						topic++;
+					}
+					*result = TRUE;
+					return TOPIC_MATCH_VAILD;
+				}
+			}else{
+				/* Check for e.g. foo/bar matching foo/+/# */
+				if(topic[0] == 0
+						&& spos > 0
+						&& sub[-1] == '+'
+						&& sub[0] == '/'
+						&& sub[1] == '#')
+				{
+					*result = TRUE;
+					return TOPIC_MATCH_VAILD;
+				}
+
+				/* There is no match at this point, but is the sub invalid? */
+				while(sub[0] != 0){
+					if(sub[0] == '#' && sub[1] != 0){
+						return TOPIC_MATCH_INVAL;
+					}
+					spos++;
+					sub++;
+				}
+
+				/* Valid input, but no match */
+				return TOPIC_MATCH_VAILD;
+			}
+		}else{
+			/* sub[spos] == topic[tpos] */
+			if(topic[1] == 0){
+				/* Check for e.g. foo matching foo/# */
+				if(sub[1] == '/'
+						&& sub[2] == '#'
+						&& sub[3] == 0){
+					*result = TRUE;
+					return TOPIC_MATCH_VAILD;
+				}
+			}
+			spos++;
+			sub++;
+			topic++;
+			if(sub[0] == 0 && topic[0] == 0){
+				*result = TRUE;
+				return TOPIC_MATCH_VAILD;
+			}else if(topic[0] == 0 && sub[0] == '+' && sub[1] == 0){
+				if(spos > 0 && sub[-1] != '/'){
+					return TOPIC_MATCH_INVAL;
+				}
+				spos++;
+				sub++;
+				*result = TRUE;
+				return TOPIC_MATCH_VAILD;
+			}
+		}
+	}
+	if((topic[0] != 0 || sub[0] != 0)){
+		*result = FALSE;
+	}
+	while(topic[0] != 0){
+		if(topic[0] == '+' || topic[0] == '#'){
+			return TOPIC_MATCH_INVAL;
+		}
+		topic++;
+	}
+
+	return TOPIC_MATCH_VAILD;
+}
+
+
 static int mqtt_connect_check(struct RULE_ST *rule, u_int8_t *mqtth){
 	unsigned int offset;
 	u_int8_t connect_flag = 0;
@@ -522,16 +662,69 @@ static int mqtt_connect_check(struct RULE_ST *rule, u_int8_t *mqtth){
 	/*ptr偏移offset个字节，指向协议名的长度MSB字段*/
 	ptr += offset;	
 	
-	/*ptr偏移(MSB和LSB的2个字节 + 协议所占字节)个字节，指向level级别字段*/
-	ptr += *((u_int16_t *)ptr) + 2;
+	/*ptr偏移(协议名MSB和LSB的2个字节 + 协议所占字节)个字节，指向level级别字段*/
+	ptr += *((u_int16_t *)ptr) + sizeof(u_int8_t) * 2;
 	
 	/*ptr偏移1个字节，指向连接标志(Connect Flags)字段，并取出连接标志*/
 	ptr++;
 	connect_flag = *ptr;
-	if(connect_flag == rule->deep.connect.flag)
-		return YES;
+	if(connect_flag != rule->deep.connect.flag)
+		return NO;
 		
-	return NO;
+	return YES;
+}
+
+static int mqtt_publish_check(struct RULE_ST *rule, u_int8_t *mqtth){
+	unsigned int offset, remaining_len, len;
+	u_int8_t *ptr, *variable_hdr, *payload_hdr;
+	int result = FALSE, ret = TOPIC_MATCH_INVAL;
+	char *topic;
+	
+	
+	/*检查publish_flag*/
+	ptr = mqtth;
+	if((*ptr & 0x0F) != (rule->deep.connect.flag & 0x0F));
+		return NO;
+	
+	/*让ptr指向mqtt固定报头剩余长度字段*/
+	ptr++; 
+	
+	/*将剩余长度所占字节数存放在offset中*/
+	remaining_len = mqtt_remaining_len(ptr, &offset);
+	
+	/*ptr偏移offset个字节，指向主题名MSB字段，同时也是可变报头开始的位置*/
+	ptr += offset;	
+	variable_hdr = ptr;
+	
+	/*取出主题名MSB和LSB字段中的长度, 再将ptr偏移2字节，指向主题名字段*/
+	len = *((u_int16_t *)ptr);
+	ptr += sizeof(u_int8_t) * 2;
+	
+	/*如果publish规则中的topic非空，则需要进行更深入的匹配*/
+	if(rule->deep.publish.topic){
+		/*申请空间存放topic，并与规则中topic项进行匹配*/
+		topic = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
+		strcpy(topic, ptr);
+		topic[len] = '\0';
+	
+		ret = topic_matches(rule->deep.publish.topic, topic, &result);
+		kfree(topic);
+		
+		if(ret == TOPIC_MATCH_INVAL || result == FALSE)
+			return NO;	/*topic匹配不合法，或者匹配不成功，返回NO*/
+	}	
+	ptr += len;
+	
+	/*取出报文标识符MSB和LSB字段, 再将ptr偏移2字节，指向payload字段*/
+	len = *((u_int16_t *)ptr);
+	ptr += sizeof(u_int8_t) * 2;
+	payload_hdr = ptr;
+	
+	/*计算payload字段的长度， payload长度 = 剩余长度 - 可变报头长度  */
+	len = remaining_len - (payload_hdr - variable_hdr);
+	
+	/*所有规则项匹配成功，返回YES*/
+	return YES;
 }
 
 /*mqtt_check函数*/
@@ -543,21 +736,25 @@ static int mqtt_check(struct RULE_ST *rule, u_int8_t *mqtth){
 	u_int8_t mtype = (*ptr & rule->mtype);
 	
 	if(rule->mtype == mtype){
-		switch(mtype){
-		case CONNECT:
-			return mqtt_connect_check(rule, mqtth);
-		case PUBLISH:
+		if(rule->enabled_deep == ENABLED){
+			switch(mtype){
+			case CONNECT:
+				return mqtt_connect_check(rule, mqtth);
+			case PUBLISH:
 			
-			break;
-		case SUBSCRIBE:
+				break;
+			case SUBSCRIBE:
 		
-			break;
-		case UNSUBSCRIBE:
+				break;
+			case UNSUBSCRIBE:
 		
-			break;
-		default:
-			return YES;
+				break;
+			default:
+				return YES;
+			}
 		}
+		else
+			return YES;
 	}
 	
 	return NO;

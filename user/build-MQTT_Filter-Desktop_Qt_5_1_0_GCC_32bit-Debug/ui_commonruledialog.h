@@ -13,6 +13,7 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
@@ -103,14 +104,16 @@ public:
     QLineEdit *lineEdit_unsubscribe_topicfilter;
     QSpacerItem *verticalSpacer_7;
     QSpacerItem *verticalSpacer_8;
-    QSpacerItem *verticalSpacer_5;
+    QHBoxLayout *horizontalLayout_4;
+    QCheckBox *checkBox;
     QSpacerItem *verticalSpacer_3;
+    QSpacerItem *verticalSpacer_5;
 
     void setupUi(QDialog *CommonRuleDialog)
     {
         if (CommonRuleDialog->objectName().isEmpty())
             CommonRuleDialog->setObjectName(QStringLiteral("CommonRuleDialog"));
-        CommonRuleDialog->resize(584, 329);
+        CommonRuleDialog->resize(650, 441);
         gridLayout_8 = new QGridLayout(CommonRuleDialog);
         gridLayout_8->setObjectName(QStringLiteral("gridLayout_8"));
         buttonBox = new QDialogButtonBox(CommonRuleDialog);
@@ -118,7 +121,7 @@ public:
         buttonBox->setOrientation(Qt::Horizontal);
         buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
 
-        gridLayout_8->addWidget(buttonBox, 5, 0, 1, 1);
+        gridLayout_8->addWidget(buttonBox, 7, 0, 1, 1);
 
         gridLayout = new QGridLayout();
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
@@ -286,15 +289,15 @@ public:
         gridLayout_2->addWidget(label_18, 4, 2, 1, 1);
 
 
-        gridLayout_7->addLayout(gridLayout_2, 1, 0, 1, 1);
+        gridLayout_7->addLayout(gridLayout_2, 2, 0, 1, 1);
 
         verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-        gridLayout_7->addItem(verticalSpacer_2, 2, 0, 1, 1);
+        gridLayout_7->addItem(verticalSpacer_2, 3, 0, 1, 1);
 
         verticalSpacer_9 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-        gridLayout_7->addItem(verticalSpacer_9, 0, 0, 1, 1);
+        gridLayout_7->addItem(verticalSpacer_9, 1, 0, 1, 1);
 
         stackedWidget->addWidget(page_connect);
         page_publish = new QWidget();
@@ -442,15 +445,25 @@ public:
 
         stackedWidget->addWidget(page_unsubscribe);
 
-        gridLayout_8->addWidget(stackedWidget, 3, 0, 1, 1);
+        gridLayout_8->addWidget(stackedWidget, 5, 0, 1, 1);
 
-        verticalSpacer_5 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        horizontalLayout_4 = new QHBoxLayout();
+        horizontalLayout_4->setObjectName(QStringLiteral("horizontalLayout_4"));
+        checkBox = new QCheckBox(CommonRuleDialog);
+        checkBox->setObjectName(QStringLiteral("checkBox"));
 
-        gridLayout_8->addItem(verticalSpacer_5, 2, 0, 1, 1);
+        horizontalLayout_4->addWidget(checkBox);
+
+
+        gridLayout_8->addLayout(horizontalLayout_4, 3, 0, 1, 1);
 
         verticalSpacer_3 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-        gridLayout_8->addItem(verticalSpacer_3, 0, 0, 1, 1);
+        gridLayout_8->addItem(verticalSpacer_3, 2, 0, 1, 1);
+
+        verticalSpacer_5 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        gridLayout_8->addItem(verticalSpacer_5, 0, 0, 1, 1);
 
         stackedWidget->raise();
         label_2->raise();
@@ -460,7 +473,7 @@ public:
         QObject::connect(buttonBox, SIGNAL(accepted()), CommonRuleDialog, SLOT(accept()));
         QObject::connect(buttonBox, SIGNAL(rejected()), CommonRuleDialog, SLOT(reject()));
 
-        stackedWidget->setCurrentIndex(3);
+        stackedWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(CommonRuleDialog);
@@ -574,6 +587,7 @@ public:
          << QApplication::translate("CommonRuleDialog", "2", 0)
         );
         label_25->setText(QApplication::translate("CommonRuleDialog", "\344\270\273\351\242\230\350\277\207\346\273\244\345\231\250", 0));
+        checkBox->setText(QApplication::translate("CommonRuleDialog", "\345\220\257\347\224\250\346\267\261\345\261\202\350\277\207\346\273\244\351\241\271", 0));
     } // retranslateUi
 
 };

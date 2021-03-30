@@ -30,20 +30,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tableWidget_rule->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
     ui->tableWidget_rule->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
-    ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+
+    ui->tableWidget_rule->setMouseTracking(true);   //对鼠标进行监控，使得可以调用QtoolTip
+
+    //ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
     //ui->tableWidget_rule->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     //if (vScrollBar != NULL)
          //vScrollBar->setValue(ui->tableWidget_rule->verticalScrollBar()->maximum());
 
 
-    //ui->tableWidget_rule->setColumnWidth(0, 110);//设置固定宽
-    //ui->tableWidget_rule->setColumnWidth(1, 80);//设置固定宽
-    //ui->tableWidget_rule->setColumnWidth(2, 70);//设置固定宽
-    //ui->tableWidget_rule->setColumnWidth(3, 170);//设置固定宽
-    //ui->tableWidget_rule->setColumnWidth(4, 170);//设置固定宽
-    //ui->tableWidget_rule->setColumnWidth(5, 200);//设置固定宽
+    ui->tableWidget_rule->setColumnWidth(0, 120);//设置固定宽
+    ui->tableWidget_rule->setColumnWidth(1, 70);//设置固定宽
+    ui->tableWidget_rule->setColumnWidth(2, 60);//设置固定宽
+    ui->tableWidget_rule->setColumnWidth(3, 160);//设置固定宽
+    ui->tableWidget_rule->setColumnWidth(4, 160);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(5, 500);//设置固定宽
 
+    //connect(this, SIGNAL(itemEntered(QTableWidgetItem *)),
+    //        this, SLOT(slotItemEnter(QTableWidgetItem *)));
     connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, int)),
             this, SLOT(addCommonRule(struct RULE_ST, int)));
     connect(modCommonRuleDialog, SIGNAL(modCommonRuleSignal(struct RULE_ST, int)),
@@ -106,7 +112,7 @@ void MainWindow::on_pushButton_mod_rule_clicked()
         return;
     }
 
-    modCommonRuleDialog->setSourceRule(rule_list[pos]);
+    modCommonRuleDialog->setSourceRule(rule_list[pos], pos);
 
     modCommonRuleDialog->setMode(MOD_RULE);
     modCommonRuleDialog->setWindowTitle("修改规则");
@@ -130,66 +136,70 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
     *((u_int32_t *)ptr) = (rule.daddr);	ptr += sizeof(u_int32_t);
     *((u_int32_t *)ptr) = (rule.dmask);	ptr += sizeof(u_int32_t);
 
-    switch(rule.mtype){
-    case CONNECT:
-        *ptr = rule.deep.connect.flag;
-        ptr += sizeof(u_int8_t);
-        break;
+    *ptr = rule.enabled_deep; 	ptr += sizeof(u_int8_t);
 
-    case PUBLISH:
-        *ptr = rule.deep.publish.flag;
-        ptr += sizeof(u_int8_t);
+    if(rule.enabled_deep == ENABLED){
+        switch(rule.mtype){
+        case CONNECT:
+            *ptr = rule.deep.connect.flag;
+            ptr += sizeof(u_int8_t);
+            break;
 
-        if(rule.deep.publish.topic != NULL){
-            ba = rule.deep.publish.topic->toLatin1();
-            pchar = ba.data();
-            strcpy((char *)ptr, pchar);
-            ptr += (strlen(pchar) + 1);
-        }
-        else{
-            *ptr = 0;
+        case PUBLISH:
+            *ptr = rule.deep.publish.flag;
             ptr += sizeof(u_int8_t);
-        }
 
-        if(rule.deep.publish.topic != NULL){
-            ba = rule.deep.publish.keyword->toLatin1();
-            pchar = ba.data();
-            strcpy((char *)ptr, pchar);
-            ptr += (strlen(pchar) + 1);
+            if(rule.deep.publish.topic != NULL){
+                ba = rule.deep.publish.topic->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+
+            if(rule.deep.publish.topic != NULL){
+                ba = rule.deep.publish.keyword->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+            break;
+        case SUBSCRIBE:
+            if(rule.deep.subscribe.topic_filter != NULL){
+                ba = rule.deep.subscribe.topic_filter->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+                *ptr = rule.deep.subscribe.rqos;
+                ptr += sizeof(u_int8_t);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+            break;
+        case UNSUBSCRIBE:
+            if(rule.deep.unsubscribe.topic_filter != NULL){
+                ba = rule.deep.unsubscribe.topic_filter->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+            break;
+        default:
+            break;
         }
-        else{
-            *ptr = 0;
-            ptr += sizeof(u_int8_t);
-        }
-        break;
-    case SUBSCRIBE:
-        if(rule.deep.subscribe.topic_filter != NULL){
-            ba = rule.deep.subscribe.topic_filter->toLatin1();
-            pchar = ba.data();
-            strcpy((char *)ptr, pchar);
-            ptr += (strlen(pchar) + 1);
-            *ptr = rule.deep.subscribe.rqos;
-            ptr += sizeof(u_int8_t);
-        }
-        else{
-            *ptr = 0;
-            ptr += sizeof(u_int8_t);
-        }
-        break;
-    case UNSUBSCRIBE:
-        if(rule.deep.unsubscribe.topic_filter != NULL){
-            ba = rule.deep.unsubscribe.topic_filter->toLatin1();
-            pchar = ba.data();
-            strcpy((char *)ptr, pchar);
-            ptr += (strlen(pchar) + 1);
-        }
-        else{
-            *ptr = 0;
-            ptr += sizeof(u_int8_t);
-        }
-        break;
-    default:
-        break;
     }
     //qDebug() << "buf len: " << (ptr - (u_int8_t *)buf);
 }
@@ -245,59 +255,62 @@ void MainWindow::getRuleFromKernel(){
         rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
         rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
         rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+        rule.enabled_deep = *ptr;  ptr += sizeof(u_int8_t);
 
-        switch(rule.mtype){
-        case CONNECT:
-            rule.deep.connect.flag = *ptr;
-            ptr += sizeof(u_int8_t);
-            break;
-        case PUBLISH:
-            rule.deep.publish.flag = *ptr;
-            ptr += sizeof(u_int8_t);
+        if(rule.enabled_deep == ENABLED){
+            switch(rule.mtype){
+            case CONNECT:
+                rule.deep.connect.flag = *ptr;
+                ptr += sizeof(u_int8_t);
+                break;
+            case PUBLISH:
+                rule.deep.publish.flag = *ptr;
+                ptr += sizeof(u_int8_t);
 
-            if(*ptr){
-                rule.deep.publish.topic = new QString((char *)ptr);
-                ptr += (strlen((char *)ptr) + 1);
-            }
-            else{
-                rule.deep.publish.topic = NULL;
-                ptr += sizeof(u_int8_t);
-            }
+                if(*ptr){
+                    rule.deep.publish.topic = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.publish.topic = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
 
-            if(*ptr){
-                rule.deep.publish.keyword = new QString((char *)ptr);
-                ptr += (strlen((char *)ptr) + 1);
-            }
-            else{
-                rule.deep.publish.keyword = NULL;
-                ptr += sizeof(u_int8_t);
-            }
+                if(*ptr){
+                    rule.deep.publish.keyword = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.publish.keyword = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
 
-            break;
-        case SUBSCRIBE:
-            if(*ptr){
-                rule.deep.subscribe.topic_filter = new QString((char *)ptr);
-                ptr += (strlen((char *)ptr) + 1);
-                rule.deep.subscribe.rqos = *ptr;
-                ptr += sizeof(u_int8_t);
+                break;
+            case SUBSCRIBE:
+                if(*ptr){
+                    rule.deep.subscribe.topic_filter = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                    rule.deep.subscribe.rqos = *ptr;
+                    ptr += sizeof(u_int8_t);
+                }
+                else{
+                    rule.deep.subscribe.topic_filter = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
+                break;
+            case UNSUBSCRIBE:
+                if(*ptr){
+                    rule.deep.unsubscribe.topic_filter = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.unsubscribe.topic_filter = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
+                break;
+            default:
+                break;
             }
-            else{
-                rule.deep.subscribe.topic_filter = NULL;
-                ptr += sizeof(u_int8_t);
-            }
-            break;
-        case UNSUBSCRIBE:
-            if(*ptr){
-                rule.deep.unsubscribe.topic_filter = new QString((char *)ptr);
-                ptr += (strlen((char *)ptr) + 1);
-            }
-            else{
-                rule.deep.unsubscribe.topic_filter = NULL;
-                ptr += sizeof(u_int8_t);
-            }
-            break;
-        default:
-            break;
         }
         rule_list.push_back(rule);
     }
@@ -312,37 +325,41 @@ void MainWindow::setRuleItem(struct RULE_ST *rule, int row){
     ui->tableWidget_rule->setItem(row, 3, new QTableWidgetItem(rule2addr(rule->saddr) + "/" + rule2mask(rule->smask)));
     ui->tableWidget_rule->setItem(row, 4, new QTableWidgetItem(rule2addr(rule->daddr) + "/" + rule2mask(rule->dmask)));
 
-    switch(rule->mtype){
-    case CONNECT:
-        str = rule2conflag(rule->deep.connect.flag);
-        break;
-    case PUBLISH:
-        str = rule2pubflag(rule->deep.publish.flag);
-        if(rule->deep.publish.topic != NULL)
-            str += ", Topic=\"" + *(rule->deep.publish.topic) + "\"";
-        if(rule->deep.publish.keyword != NULL)
-            str += ", Keyword=\"" + *(rule->deep.publish.keyword) + "\"";
-        break;
-    case SUBSCRIBE:
-        if(rule->deep.subscribe.topic_filter != NULL){
-            str = "TopicFilter=\"";
-            str += *(rule->deep.subscribe.topic_filter) + "\",  Requested QoS=";
-            str += QString::number(rule->deep.subscribe.rqos);
+    if(rule->enabled_deep == ENABLED){
+        switch(rule->mtype){
+        case CONNECT:
+            str = rule2conflag(rule->deep.connect.flag);
+            break;
+        case PUBLISH:
+            str = rule2pubflag(rule->deep.publish.flag);
+            if(rule->deep.publish.topic != NULL)
+                str += ", Topic=\"" + *(rule->deep.publish.topic) + "\"";
+            if(rule->deep.publish.keyword != NULL)
+                str += ", Keyword=\"" + *(rule->deep.publish.keyword) + "\"";
+            break;
+        case SUBSCRIBE:
+            if(rule->deep.subscribe.topic_filter != NULL){
+                str = "TopicFilter=\"";
+                str += *(rule->deep.subscribe.topic_filter) + "\",  Requested QoS=";
+                str += QString::number(rule->deep.subscribe.rqos);
+            }
+            break;
+        case UNSUBSCRIBE:
+            if(rule->deep.unsubscribe.topic_filter != NULL){
+                str = "TopicFilter=\"";
+                str += *(rule->deep.unsubscribe.topic_filter) + "\"";
+            }
+            break;
+        default:
+            break;
         }
-        break;
-    case UNSUBSCRIBE:
-        if(rule->deep.unsubscribe.topic_filter != NULL){
-            str = "TopicFilter=\"";
-            str += *(rule->deep.unsubscribe.topic_filter) + "\"";
-        }
-        break;
-    default:
-        break;
     }
-
     ui->tableWidget_rule->setItem(row, 5, new QTableWidgetItem(str));
-    for(int i = 0; i < ui->tableWidget_rule->columnCount() - 1; i++)
-        ui->tableWidget_rule->item(row, i)->setTextAlignment(Qt::AlignCenter);
+    for(int i = 0; i < ui->tableWidget_rule->columnCount(); i++){
+        QTableWidgetItem* pItem = ui->tableWidget_rule->item(row, i);
+        pItem->setFlags(pItem->flags() & (~Qt::ItemIsEditable));
+        pItem->setTextAlignment(Qt::AlignCenter);
+    }
 }
 
 void MainWindow::on_pushButton_del_rule_clicked()
@@ -368,31 +385,33 @@ void MainWindow::on_pushButton_del_rule_clicked()
 }
 
 void MainWindow::free_qstring(int pos){
-    switch(rule_list[pos].mtype){
-    case PUBLISH:
-        if(rule_list[pos].deep.publish.topic != NULL){
-            delete rule_list[pos].deep.publish.topic;
-            rule_list[pos].deep.publish.topic = NULL;
+    if(rule_list[pos].enabled_deep == ENABLED){
+        switch(rule_list[pos].mtype){
+        case PUBLISH:
+            if(rule_list[pos].deep.publish.topic != NULL){
+                delete rule_list[pos].deep.publish.topic;
+                rule_list[pos].deep.publish.topic = NULL;
+            }
+            if(rule_list[pos].deep.publish.keyword != NULL){
+                delete rule_list[pos].deep.publish.keyword;
+                rule_list[pos].deep.publish.keyword = NULL;
+            }
+            break;
+        case SUBSCRIBE:
+            if(rule_list[pos].deep.subscribe.topic_filter != NULL){
+                delete rule_list[pos].deep.subscribe.topic_filter;
+                rule_list[pos].deep.subscribe.topic_filter = NULL;
+            }
+            break;
+        case UNSUBSCRIBE:
+            if(rule_list[pos].deep.unsubscribe.topic_filter != NULL){
+                delete rule_list[pos].deep.unsubscribe.topic_filter;
+                rule_list[pos].deep.unsubscribe.topic_filter = NULL;
+            }
+            break;
+        default:
+            break;
         }
-        if(rule_list[pos].deep.publish.keyword != NULL){
-            delete rule_list[pos].deep.publish.keyword;
-            rule_list[pos].deep.publish.keyword = NULL;
-        }
-        break;
-    case SUBSCRIBE:
-        if(rule_list[pos].deep.subscribe.topic_filter != NULL){
-            delete rule_list[pos].deep.subscribe.topic_filter;
-            rule_list[pos].deep.subscribe.topic_filter = NULL;
-        }
-        break;
-    case UNSUBSCRIBE:
-        if(rule_list[pos].deep.unsubscribe.topic_filter != NULL){
-            delete rule_list[pos].deep.unsubscribe.topic_filter;
-            rule_list[pos].deep.unsubscribe.topic_filter = NULL;
-        }
-        break;
-    default:
-        break;
     }
 }
 
@@ -428,32 +447,35 @@ void MainWindow::on_action_export_rule_file_triggered()
             rule_str += rule2action(rule_list[i].action) + DEVIDE;
             rule_str += rule2log(rule_list[i].log) + DEVIDE;
             rule_str += rule2addr(rule_list[i].saddr) +  DEVIDE + rule2mask(rule_list[i].smask) + DEVIDE;
-            rule_str += rule2addr(rule_list[i].daddr) +  DEVIDE + rule2mask(rule_list[i].dmask);
+            rule_str += rule2addr(rule_list[i].daddr) +  DEVIDE + rule2mask(rule_list[i].dmask) + DEVIDE;
+            rule_str += QString::number(rule_list[i].enabled_deep, 2);
 
-            switch(rule_list[i].mtype){
-            case CONNECT:
-                rule_str += DEVIDE + QString::number(rule_list[i].deep.connect.flag, 2);
-                break;
-            case PUBLISH:
-                rule_str += DEVIDE + QString::number(rule_list[i].deep.publish.flag, 2);
-                if(rule_list[i].deep.publish.topic != NULL)
-                    rule_str += DEVIDE + *(rule_list[i].deep.publish.topic);
-                if(rule_list[i].deep.publish.keyword != NULL)
-                    rule_str += DEVIDE + *(rule_list[i].deep.publish.keyword);
-                break;
-            case SUBSCRIBE:
-                if(rule_list[i].deep.subscribe.topic_filter != NULL){
-                    rule_str += DEVIDE + *(rule_list[i].deep.subscribe.topic_filter);
-                    rule_str += DEVIDE + QString::number(rule_list[i].deep.subscribe.rqos, 2);
+            if(rule_list[i].enabled_deep == ENABLED){
+                switch(rule_list[i].mtype){
+                case CONNECT:
+                    rule_str += DEVIDE + QString::number(rule_list[i].deep.connect.flag, 2);
+                    break;
+                case PUBLISH:
+                    rule_str += DEVIDE + QString::number(rule_list[i].deep.publish.flag, 2);
+                    if(rule_list[i].deep.publish.topic != NULL)
+                        rule_str += DEVIDE + *(rule_list[i].deep.publish.topic);
+                    if(rule_list[i].deep.publish.keyword != NULL)
+                        rule_str += DEVIDE + *(rule_list[i].deep.publish.keyword);
+                    break;
+                case SUBSCRIBE:
+                    if(rule_list[i].deep.subscribe.topic_filter != NULL){
+                        rule_str += DEVIDE + *(rule_list[i].deep.subscribe.topic_filter);
+                        rule_str += DEVIDE + QString::number(rule_list[i].deep.subscribe.rqos, 2);
+                    }
+                    break;
+                case UNSUBSCRIBE:
+                    if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
+                       rule_str += DEVIDE + *(rule_list[i].deep.unsubscribe.topic_filter);
+                    }
+                    break;
+                default:
+                    break;
                 }
-                break;
-            case UNSUBSCRIBE:
-                if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
-                   rule_str += DEVIDE + *(rule_list[i].deep.unsubscribe.topic_filter);
-                }
-                break;
-            default:
-                break;
             }
             rule_str += "\n";
             RuleFile.write(rule_str.toStdString().data());
@@ -496,27 +518,28 @@ void MainWindow::on_action_Import_rule_file_triggered()
             rule.smask = mask2rule(rule_items[4]);
             rule.daddr = addr2rule(rule_items[5]);
             rule.dmask = mask2rule(rule_items[6]);
+            rule.enabled_deep = (u_int8_t)rule_items[7].toUInt(&OK, 2);
 
             switch(rule.mtype){
             case CONNECT:
-                rule.deep.connect.flag = (u_int8_t)rule_items[7].toUInt(&OK, 2);
+                rule.deep.connect.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
                 break;
             case PUBLISH:
-                rule.deep.publish.flag = (u_int8_t)rule_items[7].toUInt(&OK, 2);
-                if(rule_items.size() > 8)
-                    rule.deep.publish.topic = new QString(rule_items[8]);
+                rule.deep.publish.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
                 if(rule_items.size() > 9)
-                    rule.deep.publish.keyword = new QString(rule_items[9]);
+                    rule.deep.publish.topic = new QString(rule_items[9]);
+                if(rule_items.size() > 10)
+                    rule.deep.publish.keyword = new QString(rule_items[10]);
                 break;
             case SUBSCRIBE:
-                if(rule_items.size() > 7){
-                    rule.deep.subscribe.topic_filter = new QString(rule_items[7]);
-                    rule.deep.subscribe.rqos = (u_int8_t)rule_items[8].toUInt(&OK, 2);
+                if(rule_items.size() > 8){
+                    rule.deep.subscribe.topic_filter = new QString(rule_items[8]);
+                    rule.deep.subscribe.rqos = (u_int8_t)rule_items[9].toUInt(&OK, 2);
                 }
                 break;
             case UNSUBSCRIBE:
-                if(rule_items.size() > 7){
-                    rule.deep.unsubscribe.topic_filter = new QString(rule_items[7]);
+                if(rule_items.size() > 8){
+                    rule.deep.unsubscribe.topic_filter = new QString(rule_items[8]);
                 }
                 break;
             default:
@@ -549,67 +572,95 @@ void MainWindow::setRuleListToBuffer(){
         *((u_int32_t *)ptr) = (rule_list[i].smask);	ptr += sizeof(u_int32_t);
         *((u_int32_t *)ptr) = (rule_list[i].daddr);	ptr += sizeof(u_int32_t);
         *((u_int32_t *)ptr) = (rule_list[i].dmask);	ptr += sizeof(u_int32_t);
+        *ptr = rule_list[i].enabled_deep; ptr += sizeof(u_int8_t);
 
-        switch(rule_list[i].mtype){
-        case CONNECT:
-            *ptr = rule_list[i].deep.connect.flag;
-            ptr += sizeof(u_int8_t);
-            break;
+        if(rule_list[i].enabled_deep == ENABLED){
+            switch(rule_list[i].mtype){
+            case CONNECT:
+                *ptr = rule_list[i].deep.connect.flag;
+                ptr += sizeof(u_int8_t);
+                break;
 
-        case PUBLISH:
-            *ptr = rule_list[i].deep.publish.flag;
-            ptr += sizeof(u_int8_t);
+            case PUBLISH:
+                *ptr = rule_list[i].deep.publish.flag;
+                ptr += sizeof(u_int8_t);
 
-            if(rule_list[i].deep.publish.topic != NULL){
-                ba = rule_list[i].deep.publish.topic->toLatin1();
-                pchar = ba.data();
-                strcpy((char *)ptr, pchar);
-                ptr += (strlen(pchar) + 1);
-            }
-            else{
-                *ptr = 0;
-                ptr += sizeof(u_int8_t);
-            }
+                if(rule_list[i].deep.publish.topic != NULL){
+                    ba = rule_list[i].deep.publish.topic->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
 
-            if(rule_list[i].deep.publish.topic != NULL){
-                ba = rule_list[i].deep.publish.keyword->toLatin1();
-                pchar = ba.data();
-                strcpy((char *)ptr, pchar);
-                ptr += (strlen(pchar) + 1);
+                if(rule_list[i].deep.publish.topic != NULL){
+                    ba = rule_list[i].deep.publish.keyword->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+                break;
+            case SUBSCRIBE:
+                if(rule_list[i].deep.subscribe.topic_filter != NULL){
+                    ba = rule_list[i].deep.subscribe.topic_filter->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                    *ptr = rule_list[i].deep.subscribe.rqos;
+                    ptr += sizeof(u_int8_t);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+                break;
+            case UNSUBSCRIBE:
+                if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
+                    ba = rule_list[i].deep.unsubscribe.topic_filter->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+                break;
+            default:
+                break;
             }
-            else{
-                *ptr = 0;
-                ptr += sizeof(u_int8_t);
-            }
-            break;
-        case SUBSCRIBE:
-            if(rule_list[i].deep.subscribe.topic_filter != NULL){
-                ba = rule_list[i].deep.subscribe.topic_filter->toLatin1();
-                pchar = ba.data();
-                strcpy((char *)ptr, pchar);
-                ptr += (strlen(pchar) + 1);
-                *ptr = rule_list[i].deep.subscribe.rqos;
-                ptr += sizeof(u_int8_t);
-            }
-            else{
-                *ptr = 0;
-                ptr += sizeof(u_int8_t);
-            }
-            break;
-        case UNSUBSCRIBE:
-            if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
-                ba = rule_list[i].deep.unsubscribe.topic_filter->toLatin1();
-                pchar = ba.data();
-                strcpy((char *)ptr, pchar);
-                ptr += (strlen(pchar) + 1);
-            }
-            else{
-                *ptr = 0;
-                ptr += sizeof(u_int8_t);
-            }
-            break;
-        default:
-            break;
         }
     }
+}
+
+void MainWindow::on_tableWidget_rule_itemEntered(QTableWidgetItem *item)
+{
+    QString str = item->text();
+    QStringList strlist;
+
+    for (int i = 0; i < str.length(); i += 64) {
+        strlist << str.mid(i, 64);
+    }
+
+    QToolTip::showText(QCursor::pos(), strlist.join("\n"));
+}
+
+
+void MainWindow::on_tableWidget_rule_doubleClicked(const QModelIndex &index)
+{
+    QString str = ui->tableWidget_rule->item(index.row(),index.column())->text();
+    QStringList strlist;
+
+    for (int i = 0; i < str.length(); i += 64) {
+        strlist << str.mid(i, 64);
+    }
+
+    QToolTip::showText(QCursor::pos(), strlist.join("\n"));
 }
