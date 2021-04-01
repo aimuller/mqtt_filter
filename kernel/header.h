@@ -35,6 +35,12 @@
 #include <linux/rtc.h>
 #include <linux/device.h>  
 
+
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include "libc.h"
+#include "pcre2.h"
+#include "pcre2posix.h"
+
 /*MQTT报文的14种定义*/
 #define CONNECT 0x10U
 #define CONNACK 0x20U

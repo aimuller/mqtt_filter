@@ -36,9 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-    //ui->tableWidget_rule->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    //if (vScrollBar != NULL)
-         //vScrollBar->setValue(ui->tableWidget_rule->verticalScrollBar()->maximum());
 
 
     ui->tableWidget_rule->setColumnWidth(0, 120);//设置固定宽
@@ -48,8 +45,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget_rule->setColumnWidth(4, 160);//设置固定宽
     //ui->tableWidget_rule->setColumnWidth(5, 500);//设置固定宽
 
-    //connect(this, SIGNAL(itemEntered(QTableWidgetItem *)),
-    //        this, SLOT(slotItemEnter(QTableWidgetItem *)));
     connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, int)),
             this, SLOT(addCommonRule(struct RULE_ST, int)));
     connect(modCommonRuleDialog, SIGNAL(modCommonRuleSignal(struct RULE_ST, int)),

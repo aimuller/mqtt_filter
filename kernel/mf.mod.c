@@ -22,17 +22,22 @@ __attribute__((section("__versions"))) = {
 	{ 0xa55617ab, __VMLINUX_SYMBOL_STR(kmalloc_caches) },
 	{ 0x12da5bb2, __VMLINUX_SYMBOL_STR(__kmalloc) },
 	{ 0x32183c74, __VMLINUX_SYMBOL_STR(cdev_init) },
+	{        0, __VMLINUX_SYMBOL_STR(regfree) },
 	{ 0xd0d8621b, __VMLINUX_SYMBOL_STR(strlen) },
 	{ 0xda24d0e4, __VMLINUX_SYMBOL_STR(nf_register_hook) },
 	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
+	{        0, __VMLINUX_SYMBOL_STR(regexec) },
 	{ 0x4f8b5ddb, __VMLINUX_SYMBOL_STR(_copy_to_user) },
+	{        0, __VMLINUX_SYMBOL_STR(regcomp) },
 	{ 0x50eedeb8, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0xb4390f9a, __VMLINUX_SYMBOL_STR(mcount) },
 	{ 0x3a3205a8, __VMLINUX_SYMBOL_STR(cdev_add) },
+	{ 0xdb7305a1, __VMLINUX_SYMBOL_STR(__stack_chk_fail) },
 	{ 0xef57dad7, __VMLINUX_SYMBOL_STR(kmem_cache_alloc_trace) },
 	{ 0x5d6734dc, __VMLINUX_SYMBOL_STR(nf_unregister_hook) },
 	{ 0x1e047854, __VMLINUX_SYMBOL_STR(warn_slowpath_fmt) },
 	{ 0x37a0cba, __VMLINUX_SYMBOL_STR(kfree) },
+	{ 0x4a619f83, __VMLINUX_SYMBOL_STR(memcpy) },
 	{ 0x4f6b400b, __VMLINUX_SYMBOL_STR(_copy_from_user) },
 	{ 0x88db9f48, __VMLINUX_SYMBOL_STR(__check_object_size) },
 	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
@@ -42,7 +47,7 @@ __attribute__((section("__versions"))) = {
 static const char __module_depends[]
 __used
 __attribute__((section(".modinfo"))) =
-"depends=";
+"depends=libpcre2-8";
 
 
-MODULE_INFO(srcversion, "F3B99A53681DAC78886DA28");
+MODULE_INFO(srcversion, "92137F3A6D458BCA6C19C80");

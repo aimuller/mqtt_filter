@@ -1230,6 +1230,21 @@ deps_/home/seed/mqtt_filter/kernel/mqtt_filter_mod.o := \
     $(wildcard include/config/rtc/intf/dev/uie/emul.h) \
     $(wildcard include/config/rtc/hctosys/device.h) \
   include/uapi/linux/rtc.h \
+  /home/seed/mqtt_filter/kernel/libc.h \
+  /home/seed/mqtt_filter/kernel/pcre2.h \
+    $(wildcard include/config/bsr.h) \
+    $(wildcard include/config/jit.h) \
+    $(wildcard include/config/jittarget.h) \
+    $(wildcard include/config/linksize.h) \
+    $(wildcard include/config/matchlimit.h) \
+    $(wildcard include/config/newline.h) \
+    $(wildcard include/config/parenslimit.h) \
+    $(wildcard include/config/recursionlimit.h) \
+    $(wildcard include/config/stackrecurse.h) \
+    $(wildcard include/config/unicode.h) \
+    $(wildcard include/config/unicode/version.h) \
+    $(wildcard include/config/version.h) \
+  /home/seed/mqtt_filter/kernel/pcre2posix.h \
 
 /home/seed/mqtt_filter/kernel/mqtt_filter_mod.o: $(deps_/home/seed/mqtt_filter/kernel/mqtt_filter_mod.o)
 

@@ -1,28 +1,39 @@
 #!/bin/bash
 
-#安装内核模块
+MF_MAIN_DIR=$PWD
+
+#安装依赖项 ./kpcre/pcre2/libpc.ko
+
+cd $MF_MAIN_DIR/kpcre/pcre2
+make
+insmod libc.ko
+
+#安装依赖项 ./kpcre/pcre2/libpcre2-8.ko
+
+
+
+#安装内核模块mf
 MF_MOD_NAME="mf"
 LS_MOD=$(lsmod | grep ${MF_MOD_NAME})
-#如果之前就安装过内核模块，则先卸载该模块
-if [ -n "${LS_MOD}" ]
+
+if [ -n "${LS_MOD}" ]	#如果之前就安装过内核模块，则先卸载该模块
 then
 	rmmod ${MF_MOD_NAME}
 fi
-#编译，安装内核模块
-make
+
+make		#编译，安装内核模块
 insmod "${MF_MOD_NAME}.ko"
-
-
 
 #创建字符设备节点
 MF_DEV_NAME="/dev/mf_dev0"
 DEV_NO=$(dmesg | grep MF: | grep -o "[0-9]\+ [0-9]\+" | tail -n 1)
 LS_DEV=$(ls /dev | grep mf_dev0)
-#如果之前存在设备节点，则删除该设备节点
-if [ -n "${LS_DEV}" ]
+
+if [ -n "${LS_DEV}" ]	#如果之前存在设备节点，则删除该设备节点
 then
 	rm ${MF_DEV_NAME}
 fi
-#创建设备节点，并改变权限使得用户态也能读取
 mknod ${MF_DEV_NAME} c ${DEV_NO}
+
+#创建设备节点，并改变权限使得用户态也能读取
 chmod 777 ${MF_DEV_NAME}

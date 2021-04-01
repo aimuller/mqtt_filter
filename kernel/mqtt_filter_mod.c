@@ -41,6 +41,7 @@ void test(void){
 	test->rule.mtype  = CONNECT;
 	test->rule.log   = YES;
 	test->rule.action = NF_ACCEPT;
+	test->rule.enabled_deep = ENABLED;
 	test->rule.deep.connect.flag = 0xF6;
 	add_node(test, 1);
 	
@@ -831,12 +832,40 @@ unsigned int mqtt_filter(void *priv,
 	return check(skb);
 }
 
+static void pcre_test(void)
+{
+    const char *str = "aabbccdd.com";
+    //因为C语言解析字符串时也会区分转义字符'\'，所以在源码中的正则表达式字符串需要在每个转义字符前再加一个'\'才可以，像"\\."
+    const char *pattern = "^(.+)\\.com$";
+    regex_t reg;
+    regmatch_t match[10];
+
+    int ret = 0;
+    ret = regcomp(&reg, pattern, REG_EXTENDED | REG_NEWLINE);
+    if(ret != 0)
+        printk("error\n");
+    else
+    {
+        ret = regexec(&reg, str, 10, match, 0);
+        if(ret != REG_NOMATCH)
+        {
+            int len = match[0].rm_eo - match[0].rm_so;
+            char buf[128] = {0};
+            memcpy(buf, str + match[0].rm_so, len);
+            printk("final buf %s\n", buf);
+        }
+    }
+    regfree(&reg);
+}
 
 /*mqtt过滤模块注册函数*/
 static int myfilter_init(void)
 { 
 	//struct RULE_LIST_ST *node;
 	//struct list_head *tmp;
+	
+	pcre_test();
+	
 	
 	/*初始化规则链表*/
 	rule_num = 0;
