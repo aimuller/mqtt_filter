@@ -1,0 +1,1 @@
+cmd_/home/seed/mqtt_filter/kpcre/libc/libc.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /home/seed/mqtt_filter/kpcre/libc/libc.ko /home/seed/mqtt_filter/kpcre/libc/libc.o /home/seed/mqtt_filter/kpcre/libc/libc.mod.o

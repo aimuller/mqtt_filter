@@ -1,0 +1,7 @@
+0x00000000	free	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL
+0x00000000	srandom	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL
+0x00000000	calloc	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL
+0x00000000	malloc	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL
+0x00000000	realloc	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL
+0x00000000	random	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL
+0x00000000	time	/home/seed/mqtt_filter/kpcre/libc/libc	EXPORT_SYMBOL

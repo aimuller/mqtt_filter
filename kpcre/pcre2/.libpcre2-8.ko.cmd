@@ -1,0 +1,1 @@
+cmd_/home/seed/mqtt_filter/kpcre/pcre2/libpcre2-8.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /home/seed/mqtt_filter/kpcre/pcre2/libpcre2-8.ko /home/seed/mqtt_filter/kpcre/pcre2/libpcre2-8.o /home/seed/mqtt_filter/kpcre/pcre2/libpcre2-8.mod.o
