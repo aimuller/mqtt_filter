@@ -1,13 +1,12 @@
 #!/bin/bash
 
-MF_MOD_NAME="mf"
 MF_DEV_NAME="/dev/mf_dev0"
 
 
-LS_MOD=$(lsmod | grep ${MF_MOD_NAME})
+LS_MOD=$(lsmod | grep mf)
 if [ -n "${LS_MOD}" ]
 then
-	rmmod ${MF_MOD_NAME}
+	rmmod mf
 fi
 
 

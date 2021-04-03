@@ -34,36 +34,16 @@ void test(void){
 	struct RULE_LIST_ST *test;
 	
 	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-	test->rule.saddr = 0x841fa8c0; /*192.168.33.131*/
+	test->rule.saddr = 0x80dea8c0;
 	test->rule.smask = 0xffffffff;
-	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
+	test->rule.daddr = 0x81dea8c0;
 	test->rule.dmask = 0xffffffff;
 	test->rule.mtype  = CONNECT;
 	test->rule.log   = YES;
-	test->rule.action = NF_ACCEPT;
-	test->rule.enabled_deep = ENABLED;
-	test->rule.deep.connect.flag = 0xF6;
-	add_node(test, 1);
-	
-	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-	test->rule.saddr = 0x851fa8c0; /*192.168.33.133*/
-	test->rule.smask = 0xffffffff;
-	test->rule.daddr = 0x831fa8c0; /*192.168.33.131*/
-	test->rule.dmask = 0xffffffff;
-	test->rule.mtype  = CONNACK;
-	test->rule.log   = YES;
-	test->rule.action = NF_ACCEPT;
-	add_node(test, 2);
-	
-	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-	test->rule.saddr = 0x831fa8c0; /*192.168.33.131*/
-	test->rule.smask = 0xffffffff;
-	test->rule.daddr = 0x851fa8c0; /*192.168.33.133*/
-	test->rule.dmask = 0xffffffff;
-	test->rule.mtype  = DISCONNECT;
-	test->rule.log   = YES;
 	test->rule.action = NF_DROP;
-	add_node(test, 3);
+	test->rule.enabled_deep = ENABLED;
+	test->rule.deep.connect.flag = 0x02;
+	add_node(test, 1);
 }
 
 
@@ -649,115 +629,112 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 }
 
 
-static int mqtt_connect_check(struct RULE_ST *rule, u_int8_t *mqtth){
-	unsigned int offset;
-	u_int8_t connect_flag = 0;
-	u_int8_t *ptr = mqtth;
-	
-	/*让ptr指向mqtt固定报头剩余长度字段*/
-	ptr++; 
-	
-	/*将剩余长度所占字节数存放在offset中*/
-	mqtt_remaining_len(ptr, &offset);
-	
-	/*ptr偏移offset个字节，指向协议名的长度MSB字段*/
-	ptr += offset;	
-	
-	/*ptr偏移(协议名MSB和LSB的2个字节 + 协议所占字节)个字节，指向level级别字段*/
-	ptr += *((u_int16_t *)ptr) + sizeof(u_int8_t) * 2;
-	
-	/*ptr偏移1个字节，指向连接标志(Connect Flags)字段，并取出连接标志*/
-	ptr++;
-	connect_flag = *ptr;
-	if(connect_flag != rule->deep.connect.flag)
+static int mqtt_connect_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
+	//printk("MF: packet_info-%x, rule-%x\n", packet_info->connect.flag, rule->deep.connect.flag);
+	if(packet_info->connect.flag != rule->deep.connect.flag)
 		return NO;
-		
 	return YES;
 }
 
-static int mqtt_publish_check(struct RULE_ST *rule, u_int8_t *mqtth){
-	unsigned int offset, remaining_len, len;
-	u_int8_t *ptr, *variable_hdr, *payload_hdr;
-	int result = FALSE, ret = TOPIC_MATCH_INVAL;
-	char *topic;
-	
-	
+static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
+	int ret, result;
+
 	/*检查publish_flag*/
-	ptr = mqtth;
-	if((*ptr & 0x0F) != (rule->deep.connect.flag & 0x0F));
+	if(packet_info->connect.flag != rule->deep.connect.flag);
 		return NO;
-	
-	/*让ptr指向mqtt固定报头剩余长度字段*/
-	ptr++; 
-	
-	/*将剩余长度所占字节数存放在offset中*/
-	remaining_len = mqtt_remaining_len(ptr, &offset);
-	
-	/*ptr偏移offset个字节，指向主题名MSB字段，同时也是可变报头开始的位置*/
-	ptr += offset;	
-	variable_hdr = ptr;
-	
-	/*取出主题名MSB和LSB字段中的长度, 再将ptr偏移2字节，指向主题名字段*/
-	len = *((u_int16_t *)ptr);
-	ptr += sizeof(u_int8_t) * 2;
-	
+			
 	/*如果publish规则中的topic非空，则需要进行更深入的匹配*/
 	if(rule->deep.publish.topic){
-		/*申请空间存放topic，并与规则中topic项进行匹配*/
-		topic = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
-		strcpy(topic, ptr);
-		topic[len] = '\0';
-	
-		ret = topic_matches(rule->deep.publish.topic, topic, &result);
-		kfree(topic);
-		
+		ret = topic_matches(rule->deep.publish.topic, packet_info->publish.topic, &result);	
+		/*topic匹配不合法，或者匹配不成功，返回NO*/	
 		if(ret == TOPIC_MATCH_INVAL || result == FALSE)
-			return NO;	/*topic匹配不合法，或者匹配不成功，返回NO*/
+			return NO;	
 	}	
-	ptr += len;
 	
-	/*取出报文标识符MSB和LSB字段, 再将ptr偏移2字节，指向payload字段*/
-	len = *((u_int16_t *)ptr);
-	ptr += sizeof(u_int8_t) * 2;
-	payload_hdr = ptr;
-	
-	/*计算payload字段的长度， payload长度 = 剩余长度 - 可变报头长度  */
-	len = remaining_len - (payload_hdr - variable_hdr);
+	/*如果publish规则中的keyword非空，则需要进行更深入的匹配*/
+	if(rule->deep.publish.keyword){
+		return YES;
+	}
 	
 	/*所有规则项匹配成功，返回YES*/
 	return YES;
 }
 
+
+
+static int mqtt_subscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
+	u_int16_t len, rule_len;
+	u_int8_t  *ptr;
+	
+	ptr = packet_info->subscribe.topic_filter;
+	len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+	ptr += 2;
+	
+	rule_len = strlen(rule->deep.subscribe.topic_filter);
+	//printk("MF: packet_len:%d, rule_len:%d\n", len, rule_len);
+	
+	while(len){
+		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
+		if(rule_len != len || memcmp(rule->deep.subscribe.topic_filter, ptr, len))
+			return NO;
+		ptr += len;
+		
+		/*将规则中的服务质量要求(rqos)与 MQTT Packet中的rqos进行比较*/	
+		if(rule->deep.subscribe.rqos != *ptr)
+			return NO;
+		ptr += 1;
+
+		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;
+	}
+	
+	return YES;
+}
+
+static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
+	u_int16_t len, rule_len;
+	u_int8_t *ptr;
+	
+	ptr = packet_info->unsubscribe.topic_filter;
+	len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+	ptr += 2;
+	
+	rule_len = strlen(rule->deep.unsubscribe.topic_filter);
+	
+	while(len){
+		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
+		if(memcmp(rule_len != len || rule->deep.unsubscribe.topic_filter, ptr, len))
+			return NO;
+		ptr += len;
+			
+		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;
+	}
+	
+	return YES;
+}
+
 /*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, u_int8_t *mqtth){
-	/*ptr指向mqtt报文的第一个字节*/
-	u_int8_t *ptr  = mqtth; 
-	
-	/*MQTT报文类型define值恰好可以作为其"掩码"*/
-	u_int8_t mtype = (*ptr & rule->mtype);
-	
+static int mqtt_check(struct RULE_ST *rule, u_int8_t mtype, union MQTT_UNION *packet_info){
 	if(rule->mtype == mtype){
 		if(rule->enabled_deep == ENABLED){
 			switch(mtype){
 			case CONNECT:
-				return mqtt_connect_check(rule, mqtth);
+				//printk("MF: mqtt_connect_check\n");
+				return mqtt_connect_check(rule, packet_info);
 			case PUBLISH:
-			
-				break;
+				printk("MF: mqtt_publish_check\n");
+				return mqtt_publish_check(rule, packet_info);
 			case SUBSCRIBE:
-		
-				break;
+				printk("MF: mqtt_subscribe_check\n");
+				return mqtt_subscribe_check(rule, packet_info); 
 			case UNSUBSCRIBE:
-		
-				break;
-			default:
-				return YES;
+				printk("MF: mqtt_unsubscribe_check\n");
+				return mqtt_unsubscribe_check(rule, packet_info);
 			}
 		}
-		else
-			return YES;
+		return YES;
 	}
-	
 	return NO;
 }
 
@@ -774,6 +751,119 @@ static int ip_check(struct RULE_ST *rule, struct iphdr *iph){
 	return NO;
 }
 
+static void mqtt_release(union MQTT_UNION *result, u_int8_t mtype){
+	switch(mtype){
+	case PUBLISH:
+		kfree(result->publish.topic);
+		kfree(result->publish.keyword);
+		break;
+	case SUBSCRIBE:
+		kfree(result->subscribe.topic_filter);
+		break; 
+	case UNSUBSCRIBE:
+		kfree(result->unsubscribe.topic_filter);	
+		break;
+	default:
+		break;
+	}
+}
+
+static void mqtt_analysis(union MQTT_UNION *result, u_int8_t *mqtth){
+	unsigned int offset, remaining_len, len;
+	u_int8_t *ptr, *variable_hdr, *payload_hdr;
+	char *topic, *payload;
+	
+	ptr = mqtth;	/*ptr指向固定报头*/
+	ptr++; 			/*让ptr指向mqtt固定报头剩余长度字段*/
+	
+	/*取出剩余长度, 并将剩余长度所占字节数存放在offset中*/
+	remaining_len = mqtt_remaining_len(ptr, &offset);
+	
+	/*ptr偏移offset个字节，指向可变报头*/
+	ptr += offset;	
+	variable_hdr = ptr;
+	
+	//printk("mtype-%x\n", *mqtth & 0xF0);
+	
+	switch(*mqtth & 0xF0){
+	case CONNECT:
+		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];	/*取出协议名长度*/
+		ptr += (2 + len + 1);		/*2字节的MSB+LSB, len字节的协议名长度, 1字节的协议级别, 此时ptr指向连接标志字段*/
+		result->connect.flag = *ptr;		/*取出连接标志*/
+		break;
+		
+	case PUBLISH:
+		result->publish.flag = (*mqtth & 0x0F);	/*取出publish报文标志*/
+		
+		/*取出主题名MSB和LSB字段中的长度, 再将ptr偏移2字节，指向主题名字段*/
+		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;
+		
+		/*申请空间存放主题名，check用完记得释放*/
+		topic = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
+		memcpy(topic, ptr, len);
+		topic[len] = '\0';
+		result->publish.topic = topic;
+		ptr += len;		/*ptr滑过主题名字段，指向下一字段*/
+		
+		/*判断是否为QoS1或者QoS2的报文，如果是的话则证明有报文标识符MSB和LSB字段*/
+		if((*mqtth & 0x06) == 1 || (*mqtth & 0x06) == 2){
+			ptr += 2;	/*ptr滑过报文标识符MSB和LSB字段，指向payload部分*/
+		}
+		payload_hdr = ptr;
+	
+		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
+		len = remaining_len - (payload_hdr - variable_hdr);
+		
+		//printk("MF: publish payload len: %d\n", len);
+		
+		payload = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
+		memcpy(payload, ptr, len);
+		payload[len] = '\0';
+		result->publish.keyword = payload;	/*借用keyword字段存放payload*/
+		break;
+		
+	case SUBSCRIBE:		
+		/*滑过报文标识符的MSB和LSB的2个字节，指向payload部分*/
+		ptr += 2;
+		payload_hdr = ptr;	
+		
+		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
+		len = remaining_len - (payload_hdr - variable_hdr);
+		printk("Mf: payload_len:%d\n", len);
+		
+		payload = (char *)kmalloc(sizeof(char) * len + 2, GFP_KERNEL);
+		memcpy(payload, ptr, len);
+		payload[len] = '\0';
+		payload[len + 1] = '\0';
+		
+		//printk("MF: payload:%s\n", payload + 2);
+		result->subscribe.topic_filter = payload;
+		
+		
+		break;
+		
+	case UNSUBSCRIBE:
+		/*滑过报文标识符的MSB和LSB的2个字节，指向payload部分*/
+		ptr += 2;
+		payload_hdr = ptr;	
+		
+		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
+		len = remaining_len - (payload_hdr - variable_hdr);
+		payload = (char *)kmalloc(sizeof(char) * len + 2, GFP_KERNEL);
+		memcpy(payload, ptr, len);
+		payload[len] = '\0';
+		payload[len + 1] = '\0';
+		
+		result->unsubscribe.topic_filter = payload;
+		break;
+		
+	default:
+		break;
+		
+	}
+}
+
 /*规则check函数*/
 static unsigned int check(struct sk_buff *skb)
 {
@@ -781,7 +871,10 @@ static unsigned int check(struct sk_buff *skb)
 	struct tcphdr *tcph;
 	struct list_head *tmp;
 	struct RULE_LIST_ST *node;
-	u_int8_t *mqtth, *ptr, *tail;
+	u_int8_t *mqtth, *tail, mtype;
+	
+	union MQTT_UNION packet_info;
+	
 	//printk("CHECK\n");
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
@@ -799,20 +892,26 @@ static unsigned int check(struct sk_buff *skb)
 
 		/*若是包含应用层，则通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
-			
-			printk("MF: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
+		
+			//printk("MF: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
 			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
-			ptr = (u_int8_t *)mqtth;
-			printk("MF: MQTT Type = %x\n", *ptr);
+			mtype = (*mqtth & 0xF0);	/*获取MQTT报文类型*/
+			//printk("MF: MQTT Type = %x\n", mtype);
 			
+			/*对MQTT Packet进行深入分析，并将结果存放到packet_info联合体*/
+			mqtt_analysis(&packet_info, mqtth);
+
 			/*将当前报文与规则链表进行匹配*/
 			list_for_each(tmp, &rules_head.list) {
 				node = list_entry(tmp, struct RULE_LIST_ST, list);
-				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, mqtth)){
+				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, mtype, &packet_info)){
 					printk("MF: action = %d\n", node->rule.action);
 					return node->rule.action;
 				}
 			}
+			
+			/*释放packet_info联合体中指针所指的空间*/
+			mqtt_release(&packet_info, mtype);
 			
 			return DEFAULT; /*默认策略*/
 		}
@@ -864,14 +963,13 @@ static int myfilter_init(void)
 	//struct RULE_LIST_ST *node;
 	//struct list_head *tmp;
 	
-	pcre_test();
-	
+	//pcre_test();
 	
 	/*初始化规则链表*/
 	rule_num = 0;
 	INIT_LIST_HEAD(&rules_head.list);
 	//printk(KERN_INFO "MF: rule_num before test()：%d\n", rule_num);
-	test();
+	//test();
 	//printk(KERN_INFO "MF: rule_num after test()：%d\n", rule_num);
 	
 	//list_for_each(tmp, &rules_head.list) {

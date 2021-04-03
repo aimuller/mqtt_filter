@@ -111,6 +111,13 @@ struct UNSUBSCRIBE_ST{
 	char *topic_filter;
 };
 
+union MQTT_UNION{				/*特别考虑的四种报文的补充规则结构*/
+    struct CONNECT_ST connect;
+    struct PUBLISH_ST publish;
+    struct SUBSCRIBE_ST subscribe;
+    struct UNSUBSCRIBE_ST unsubscribe;
+};
+
 struct RULE_ST{		/*规则结构定义*/
     u_int8_t mtype;		/*MQTT报文的类型*/
     u_int8_t action;	/*动作*/
@@ -119,14 +126,8 @@ struct RULE_ST{		/*规则结构定义*/
     u_int32_t smask;	/*源地址掩码*/
     u_int32_t daddr;	/*目的地址*/
     u_int32_t dmask;	/*目的地址掩码*/
-    u_int8_t enabled_deep;
-    union{				/*特别考虑的四种报文的补充规则结构*/
-        struct CONNECT_ST connect;
-        struct PUBLISH_ST publish;
-        struct SUBSCRIBE_ST subscribe;
-        struct UNSUBSCRIBE_ST unsubscribe;
-    }deep;
-
+    u_int8_t enabled_deep;	/*是否启用deep字段*/
+    union MQTT_UNION deep;	/*四种特殊报文的规则信息*/
 };
 
 struct RULE_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/
@@ -146,7 +147,7 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N);
 /*删除规则链表节点*/
 static int del_node(unsigned long N);
 /*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, u_int8_t *mqtth);
+static int mqtt_check(struct RULE_ST *rule, u_int8_t mtype, union MQTT_UNION *packet_info);
 /*ip_check函数*/
 static int ip_check(struct RULE_ST *rule, struct iphdr *iph);
 /*规则check函数*/
