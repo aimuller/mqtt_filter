@@ -82,16 +82,19 @@ void MainWindow::on_pushButton_add_rule_clicked()
     addCommonRuleDialog->setMode(ADD_RULE);
     addCommonRuleDialog->setWindowTitle("插入规则");
     addCommonRuleDialog->exec();
+
 }
 
 void MainWindow::addCommonRule(struct RULE_ST rule, int pos)
 {
+
     if(pos <= 0 || pos > ui->tableWidget_rule->rowCount() + 1)
         pos = ui->tableWidget_rule->rowCount() + 1;
 
     setRuleToBuffer(rule, pos);
 
     ioctl(fd, MF_ADD_RULE, buf);
+
     rule_list.insert(pos - 1, rule);
 
     getRuleFromKernel();
@@ -107,7 +110,7 @@ void MainWindow::on_pushButton_mod_rule_clicked()
         return;
     }
 
-    modCommonRuleDialog->setSourceRule(rule_list[pos], pos);
+    modCommonRuleDialog->setSourceRule(rule_list[pos], pos + 1);
 
     modCommonRuleDialog->setMode(MOD_RULE);
     modCommonRuleDialog->setWindowTitle("修改规则");
@@ -143,7 +146,6 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
         case PUBLISH:
             *ptr = rule.deep.publish.flag;
             ptr += sizeof(u_int8_t);
-
             if(rule.deep.publish.topic != NULL){
                 ba = rule.deep.publish.topic->toLatin1();
                 pchar = ba.data();
@@ -155,7 +157,7 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
                 ptr += sizeof(u_int8_t);
             }
 
-            if(rule.deep.publish.topic != NULL){
+            if(rule.deep.publish.keyword != NULL){
                 ba = rule.deep.publish.keyword->toLatin1();
                 pchar = ba.data();
                 strcpy((char *)ptr, pchar);

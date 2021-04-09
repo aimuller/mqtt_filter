@@ -377,7 +377,7 @@ static int rules2buf(void){
 					ptr += sizeof(u_int8_t);
 				}
 
-				if(node->rule.deep.publish.topic != NULL){
+				if(node->rule.deep.publish.keyword != NULL){
 					strcpy((char *)ptr, node->rule.deep.publish.keyword);
 					ptr += (strlen(node->rule.deep.publish.keyword) + 1);
 				}
@@ -628,6 +628,31 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 	return TOPIC_MATCH_VAILD;
 }
 
+static int pcre_match(char *str, char *pattern)
+{
+    //const char *str = "aabbccdd.com";
+    //因为C语言解析字符串时也会区分转义字符'\'，所以在源码中的正则表达式字符串需要在每个转义字符前再加一个'\'才可以，像"\\."
+    //const char *pattern = "^(.+)\\.com$";
+    
+    int result = NO;
+    regex_t reg;
+    regmatch_t match[10];
+
+    int ret = 0;
+    ret = regcomp(&reg, pattern, REG_EXTENDED | REG_NEWLINE);
+    if(ret != 0){
+        printk("MF: regcomp error\n");
+        result = ERR;
+    }
+    else{
+        ret = regexec(&reg, str, 10, match, 0);
+        if(ret != REG_NOMATCH){
+            result = YES;
+        }
+    }
+    regfree(&reg);
+    return result;
+}
 
 static int mqtt_connect_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
 	//printk("MF: packet_info-%x, rule-%x\n", packet_info->connect.flag, rule->deep.connect.flag);
@@ -640,9 +665,13 @@ static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_inf
 	int ret, result;
 
 	/*检查publish_flag*/
-	if(packet_info->connect.flag != rule->deep.connect.flag);
+	printk("MF: packet_flag: %d 	rule_flag: %d\n", packet_info->publish.flag, rule->deep.publish.flag);
+	if(packet_info->publish.flag != rule->deep.publish.flag){
+		printk("MF: publish check 0\n");
 		return NO;
-			
+	}
+	printk("MF: publish check 1\n");
+	
 	/*如果publish规则中的topic非空，则需要进行更深入的匹配*/
 	if(rule->deep.publish.topic){
 		ret = topic_matches(rule->deep.publish.topic, packet_info->publish.topic, &result);	
@@ -650,11 +679,16 @@ static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_inf
 		if(ret == TOPIC_MATCH_INVAL || result == FALSE)
 			return NO;	
 	}	
+	printk("MF: publish check 2\n");
+	
 	
 	/*如果publish规则中的keyword非空，则需要进行更深入的匹配*/
 	if(rule->deep.publish.keyword){
-		return YES;
+		ret = pcre_match(packet_info->publish.keyword, rule->deep.publish.keyword);
+		if(ret == NO || ret == ERR)
+			return NO;
 	}
+	printk("MF: publish check 3\n");
 	
 	/*所有规则项匹配成功，返回YES*/
 	return YES;
@@ -701,12 +735,16 @@ static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet
 	
 	rule_len = strlen(rule->deep.unsubscribe.topic_filter);
 	
+	//printk("MF: packet_len:%d, rule_len:%d\n", len, rule_len);
+	
 	while(len){
 		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
-		if(memcmp(rule_len != len || rule->deep.unsubscribe.topic_filter, ptr, len))
+		if(rule_len != len || memcmp(rule->deep.unsubscribe.topic_filter, ptr, len))
 			return NO;
 		ptr += len;
-			
+		
+		//printk("MF: unsubscribe check 1\n");
+		
 		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 		ptr += 2;
 	}
@@ -929,32 +967,6 @@ unsigned int mqtt_filter(void *priv,
 	if(!active)
 		return NF_ACCEPT;
 	return check(skb);
-}
-
-static void pcre_test(void)
-{
-    const char *str = "aabbccdd.com";
-    //因为C语言解析字符串时也会区分转义字符'\'，所以在源码中的正则表达式字符串需要在每个转义字符前再加一个'\'才可以，像"\\."
-    const char *pattern = "^(.+)\\.com$";
-    regex_t reg;
-    regmatch_t match[10];
-
-    int ret = 0;
-    ret = regcomp(&reg, pattern, REG_EXTENDED | REG_NEWLINE);
-    if(ret != 0)
-        printk("error\n");
-    else
-    {
-        ret = regexec(&reg, str, 10, match, 0);
-        if(ret != REG_NOMATCH)
-        {
-            int len = match[0].rm_eo - match[0].rm_so;
-            char buf[128] = {0};
-            memcpy(buf, str + match[0].rm_so, len);
-            printk("final buf %s\n", buf);
-        }
-    }
-    regfree(&reg);
 }
 
 /*mqtt过滤模块注册函数*/

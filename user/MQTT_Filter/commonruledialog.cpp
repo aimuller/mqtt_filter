@@ -154,6 +154,7 @@ void CommonRuleDialog::on_buttonBox_accepted()
                 rule.deep.publish.topic = NULL;
             else
                 rule.deep.publish.topic = new QString(ui->lineEdit_publish_topic->text());
+
             if(ui->lineEdit_publish_keyword->text().isEmpty())
                 rule.deep.publish.keyword = NULL;
             else
@@ -182,6 +183,7 @@ void CommonRuleDialog::on_buttonBox_accepted()
     else{
         rule.enabled_deep = DISABLED;
     }
+
     if(mode == ADD_RULE)
         emit addCommonRuleSignal(rule, pos);
     else if(mode == MOD_RULE)
