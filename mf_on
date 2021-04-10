@@ -47,7 +47,7 @@ insmod "${MF_MOD_NAME}.ko"
 
 #创建字符设备节点 /dev/mf_dev0
 MF_DEV_NAME="/dev/mf_dev0"
-DEV_NO=$(dmesg | grep MF: | grep -o "[0-9]\+ [0-9]\+" | tail -n 1)
+DEV_NO=$(dmesg | grep "<MF> MOD_INIT: 主次设备号" | grep -o "[0-9]\+ [0-9]\+" | tail -n 1)
 LS_DEV=$(ls /dev | grep mf_dev0)
 if [ -n "${LS_DEV}" ]	#如果之前存在设备节点，则删除该设备节点
 then

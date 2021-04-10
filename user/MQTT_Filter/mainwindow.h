@@ -26,9 +26,11 @@ public:
     ~MainWindow();
     
 private slots:
-    void on_pushButton_add_rule_clicked();
     void addCommonRule(struct RULE_ST, int);
+
     void modCommonRule(struct RULE_ST, int);
+
+    void on_pushButton_add_rule_clicked();
 
     void on_pushButton_mod_rule_clicked();
 
@@ -58,6 +60,7 @@ private:
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
 
+    void getSystemState();
     void showUserRuleList();
     void getRuleFromKernel();
     void setRuleListToBuffer();

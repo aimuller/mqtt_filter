@@ -16,14 +16,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_mf_state->setText("系统状态: 关闭");
     fd = open_mf_dev();
 
-    //if(fd < 0){
-    //    QMessageBox::information(NULL, "错误", "打开设备文件失败！");
-    //    exit(-1);
-    //}
+    if(fd < 0){
+        QMessageBox::information(NULL, "错误", "打开设备文件失败！");
+        exit(-1);
+    }
 
-    getRuleFromKernel();
+    getSystemState();       //获取系统开启状态
+    getRuleFromKernel();    //获取当前内核模块中的规则链表，存放到rule_list中
     //update_kdate = 0;
-    showUserRuleList();
+    showUserRuleList();     //打印rule_list中的规则链表
 
     addCommonRuleDialog = new CommonRuleDialog(this);
     modCommonRuleDialog = new CommonRuleDialog(this);
@@ -35,7 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget_rule->setMouseTracking(true);   //对鼠标进行监控，使得可以调用QtoolTip
 
     //ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-
 
 
     ui->tableWidget_rule->setColumnWidth(0, 120);//设置固定宽
@@ -55,6 +55,14 @@ MainWindow::~MainWindow()
 {
     close_mf_dev(fd);
     delete ui;
+}
+
+void MainWindow::getSystemState(){
+    ioctl(fd, MF_SYS_STATE, &active);
+    if(active)
+        ui->label_mf_state->setText("系统状态: 开启");
+    else
+        ui->label_mf_state->setText("系统状态: 关闭");
 }
 
 void MainWindow::on_pushButton_mf_open_clicked()
@@ -436,7 +444,7 @@ void MainWindow::on_action_export_rule_file_triggered()
     }
 
     QFile RuleFile(FilePath);
-    if(RuleFile.open(QIODevice::ReadWrite | QIODevice::Text)){
+    if(RuleFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)){
         for(int i = 0; i < rule_list.size(); i++){
             QString rule_str;
 
@@ -456,19 +464,27 @@ void MainWindow::on_action_export_rule_file_triggered()
                     rule_str += DEVIDE + QString::number(rule_list[i].deep.publish.flag, 2);
                     if(rule_list[i].deep.publish.topic != NULL)
                         rule_str += DEVIDE + *(rule_list[i].deep.publish.topic);
+                    else
+                        rule_str += DEVIDE + QString("---");
                     if(rule_list[i].deep.publish.keyword != NULL)
                         rule_str += DEVIDE + *(rule_list[i].deep.publish.keyword);
+                    else
+                        rule_str += DEVIDE + QString("---");
                     break;
                 case SUBSCRIBE:
                     if(rule_list[i].deep.subscribe.topic_filter != NULL){
                         rule_str += DEVIDE + *(rule_list[i].deep.subscribe.topic_filter);
                         rule_str += DEVIDE + QString::number(rule_list[i].deep.subscribe.rqos, 2);
                     }
+                    else
+                        rule_str += DEVIDE + QString("---");
                     break;
                 case UNSUBSCRIBE:
                     if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
                        rule_str += DEVIDE + *(rule_list[i].deep.unsubscribe.topic_filter);
                     }
+                    else
+                        rule_str += DEVIDE + QString("---");
                     break;
                 default:
                     break;
@@ -501,9 +517,11 @@ void MainWindow::on_action_Import_rule_file_triggered()
     }
 
     QFile RuleFile(FilePath);
-    if(RuleFile.open(QIODevice::ReadWrite | QIODevice::Text)){
+    if(RuleFile.open(QIODevice::ReadOnly | QIODevice::Text)){
         while(RuleFile.atEnd() == false){
             QString rule_str = RuleFile.readLine();
+            rule_str = rule_str.trimmed();
+
             QStringList rule_items = rule_str.split(DEVIDE);
             struct RULE_ST rule;
             bool OK;
@@ -523,21 +541,33 @@ void MainWindow::on_action_Import_rule_file_triggered()
                 break;
             case PUBLISH:
                 rule.deep.publish.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
-                if(rule_items.size() > 9)
+
+                if(rule_items[9] == QString("---"))
+                    rule.deep.publish.topic = NULL;
+                else
                     rule.deep.publish.topic = new QString(rule_items[9]);
-                if(rule_items.size() > 10)
+                if(rule_items[10] == QString("---")){
+                    rule.deep.publish.keyword = NULL;
+                }
+                else
                     rule.deep.publish.keyword = new QString(rule_items[10]);
                 break;
+
             case SUBSCRIBE:
-                if(rule_items.size() > 8){
+                if(rule_items[8] == QString("---")){
+                    rule.deep.subscribe.topic_filter = NULL;
+                    rule.deep.subscribe.rqos = 0;
+                }
+                else{
                     rule.deep.subscribe.topic_filter = new QString(rule_items[8]);
                     rule.deep.subscribe.rqos = (u_int8_t)rule_items[9].toUInt(&OK, 2);
                 }
                 break;
             case UNSUBSCRIBE:
-                if(rule_items.size() > 8){
+                if(rule_items[8] == QString("---"))
+                    rule.deep.unsubscribe.topic_filter = NULL;
+                else
                     rule.deep.unsubscribe.topic_filter = new QString(rule_items[8]);
-                }
                 break;
             default:
                 break;
@@ -545,7 +575,6 @@ void MainWindow::on_action_Import_rule_file_triggered()
             rule_list.append(rule);
         }
     }
-
     RuleFile.close();
 
     setRuleListToBuffer();
@@ -593,7 +622,7 @@ void MainWindow::setRuleListToBuffer(){
                     ptr += sizeof(u_int8_t);
                 }
 
-                if(rule_list[i].deep.publish.topic != NULL){
+                if(rule_list[i].deep.publish.keyword != NULL){
                     ba = rule_list[i].deep.publish.keyword->toLatin1();
                     pchar = ba.data();
                     strcpy((char *)ptr, pchar);

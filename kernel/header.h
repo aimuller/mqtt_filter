@@ -82,7 +82,7 @@
 
 /*IOCTL控制命令定义*/
 #define MF_MAGIC 'x'
-#define FW_MAX_NR 8
+#define FW_MAX_NR 9
 #define MF_SYS_OPEN		_IO(MF_MAGIC, 1)
 #define MF_SYS_CLOSE 	_IO(MF_MAGIC, 2)
 #define MF_ADD_RULE 	_IO(MF_MAGIC, 3)
@@ -91,6 +91,7 @@
 #define MF_CLEAR_RULE 	_IO(MF_MAGIC, 6)
 #define MF_GET_RULE 	_IO(MF_MAGIC, 7)
 #define MF_GET_LOG 		_IO(MF_MAGIC, 8)
+#define MF_SYS_STATE	_IO(MF_MAGIC, 9)
 
 struct CONNECT_ST{
 	u_int8_t flag;

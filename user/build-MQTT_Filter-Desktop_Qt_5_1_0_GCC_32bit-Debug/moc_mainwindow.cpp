@@ -30,11 +30,11 @@ struct qt_meta_stringdata_MainWindow_t {
 static const qt_meta_stringdata_MainWindow_t qt_meta_stringdata_MainWindow = {
     {
 QT_MOC_LITERAL(0, 0, 10),
-QT_MOC_LITERAL(1, 11, 30),
-QT_MOC_LITERAL(2, 42, 0),
-QT_MOC_LITERAL(3, 43, 13),
-QT_MOC_LITERAL(4, 57, 7),
-QT_MOC_LITERAL(5, 65, 13),
+QT_MOC_LITERAL(1, 11, 13),
+QT_MOC_LITERAL(2, 25, 0),
+QT_MOC_LITERAL(3, 26, 7),
+QT_MOC_LITERAL(4, 34, 13),
+QT_MOC_LITERAL(5, 48, 30),
 QT_MOC_LITERAL(6, 79, 30),
 QT_MOC_LITERAL(7, 110, 29),
 QT_MOC_LITERAL(8, 140, 30),
@@ -48,8 +48,8 @@ QT_MOC_LITERAL(15, 359, 4),
 QT_MOC_LITERAL(16, 364, 33),
 QT_MOC_LITERAL(17, 398, 5)
     },
-    "MainWindow\0on_pushButton_add_rule_clicked\0"
-    "\0addCommonRule\0RULE_ST\0modCommonRule\0"
+    "MainWindow\0addCommonRule\0\0RULE_ST\0"
+    "modCommonRule\0on_pushButton_add_rule_clicked\0"
     "on_pushButton_mod_rule_clicked\0"
     "on_pushButton_mf_open_clicked\0"
     "on_pushButton_mf_close_clicked\0"
@@ -78,9 +78,9 @@ static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   74,    2, 0x08,
-       3,    2,   75,    2, 0x08,
-       5,    2,   80,    2, 0x08,
+       1,    2,   74,    2, 0x08,
+       4,    2,   79,    2, 0x08,
+       5,    0,   84,    2, 0x08,
        6,    0,   85,    2, 0x08,
        7,    0,   86,    2, 0x08,
        8,    0,   87,    2, 0x08,
@@ -92,9 +92,9 @@ static const uint qt_meta_data_MainWindow[] = {
       16,    1,   95,    2, 0x08,
 
  // slots: parameters
+    QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    2,    2,
+    QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    2,    2,
     QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 4, QMetaType::Int,    2,    2,
-    QMetaType::Void, 0x80000000 | 4, QMetaType::Int,    2,    2,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -113,9 +113,9 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
     if (_c == QMetaObject::InvokeMetaMethod) {
         MainWindow *_t = static_cast<MainWindow *>(_o);
         switch (_id) {
-        case 0: _t->on_pushButton_add_rule_clicked(); break;
-        case 1: _t->addCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
-        case 2: _t->modCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 0: _t->addCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 1: _t->modCommonRule((*reinterpret_cast< RULE_ST(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 2: _t->on_pushButton_add_rule_clicked(); break;
         case 3: _t->on_pushButton_mod_rule_clicked(); break;
         case 4: _t->on_pushButton_mf_open_clicked(); break;
         case 5: _t->on_pushButton_mf_close_clicked(); break;

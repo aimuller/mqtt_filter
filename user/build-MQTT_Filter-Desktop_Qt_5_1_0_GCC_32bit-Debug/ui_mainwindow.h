@@ -24,6 +24,7 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTextBrowser>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -53,6 +54,9 @@ public:
     QGridLayout *gridLayout_3;
     QTableWidget *tableWidget_rule;
     QWidget *tab_log;
+    QGridLayout *gridLayout_5;
+    QGridLayout *gridLayout_4;
+    QTextBrowser *textBrowser;
     QGridLayout *gridLayout;
     QMenuBar *menuBar;
     QMenu *menu;
@@ -160,6 +164,21 @@ public:
         tabWidget->addTab(tab_rule, QString());
         tab_log = new QWidget();
         tab_log->setObjectName(QStringLiteral("tab_log"));
+        gridLayout_5 = new QGridLayout(tab_log);
+        gridLayout_5->setSpacing(6);
+        gridLayout_5->setContentsMargins(11, 11, 11, 11);
+        gridLayout_5->setObjectName(QStringLiteral("gridLayout_5"));
+        gridLayout_4 = new QGridLayout();
+        gridLayout_4->setSpacing(6);
+        gridLayout_4->setObjectName(QStringLiteral("gridLayout_4"));
+        textBrowser = new QTextBrowser(tab_log);
+        textBrowser->setObjectName(QStringLiteral("textBrowser"));
+
+        gridLayout_4->addWidget(textBrowser, 0, 0, 1, 1);
+
+
+        gridLayout_5->addLayout(gridLayout_4, 0, 0, 1, 1);
+
         tabWidget->addTab(tab_log, QString());
 
         verticalLayout_2->addWidget(tabWidget);
@@ -174,7 +193,6 @@ public:
         verticalLayout_3->addLayout(gridLayout);
 
         MainWindow->setCentralWidget(centralWidget);
-        pushButton_mf_open->raise();
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
         menuBar->setGeometry(QRect(0, 0, 791, 23));
@@ -197,7 +215,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -206,8 +224,8 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
-        action_Import_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\205\245\350\247\204\345\210\231\346\226\207\344\273\266", 0));
-        action_export_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\207\272\350\247\204\345\210\231\346\226\207\344\273\266", 0));
+        action_Import_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\205\245\350\247\204\345\210\231", 0));
+        action_export_rule_file->setText(QApplication::translate("MainWindow", "\345\257\274\345\207\272\350\247\204\345\210\231", 0));
         pushButton_mf_open->setText(QApplication::translate("MainWindow", "\345\274\200\345\220\257\350\277\207\346\273\244", 0));
         pushButton_mf_close->setText(QApplication::translate("MainWindow", "\345\205\263\351\227\255\350\277\207\346\273\244", 0));
         label_mf_state->setText(QApplication::translate("MainWindow", " TextLabel", 0));

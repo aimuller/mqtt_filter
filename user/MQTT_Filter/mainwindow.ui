@@ -45,7 +45,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_rule">
          <attribute name="title">
@@ -128,6 +128,15 @@
          <attribute name="title">
           <string>日志审查</string>
          </attribute>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <widget class="QTextBrowser" name="textBrowser"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </widget>
        </widget>
       </item>
@@ -137,14 +146,6 @@
      <layout class="QGridLayout" name="gridLayout"/>
     </item>
    </layout>
-   <zorder>gridLayoutWidget</zorder>
-   <zorder>horizontalSpacer</zorder>
-   <zorder>horizontalSpacer_2</zorder>
-   <zorder>pushButton_mf_open</zorder>
-   <zorder>verticalLayoutWidget</zorder>
-   <zorder>horizontalLayoutWidget</zorder>
-   <zorder>verticalLayoutWidget_2</zorder>
-   <zorder>gridLayoutWidget</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -178,12 +179,12 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="action_Import_rule_file">
    <property name="text">
-    <string>导入规则文件</string>
+    <string>导入规则</string>
    </property>
   </action>
   <action name="action_export_rule_file">
    <property name="text">
-    <string>导出规则文件</string>
+    <string>导出规则</string>
    </property>
   </action>
  </widget>

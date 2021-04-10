@@ -51,14 +51,14 @@ void test(void){
 /*字符设备驱动open函数*/
 static int mf_open(struct inode *inode, struct file *file)  
 {  
-	printk(KERN_INFO "MF: 成功打开字符设备\n");
+	printk(KERN_INFO "<MF> 成功打开字符设备\n");
 	return 0;  
 }  
  
 /*字符设备驱动release函数*/ 
 static int mf_release(struct inode *inode, struct file *file)  
 {  
-	printk(KERN_INFO "MF: 成功关闭字符设备\n");
+	printk(KERN_INFO "<MF> 成功关闭字符设备\n");
 	return 0;  
 }
 
@@ -68,7 +68,7 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 	struct list_head *pos;
 	int i;
 	if(N <= 0 || N > rule_num + 1){
-		printk("MF: 插入位置违法! \n");
+		printk("<MF> 插入位置违法! \n");
 		return ERR;
 	}
 	pos = &rules_head.list;
@@ -123,12 +123,12 @@ static int del_node(unsigned long N)
 	int i;
 	
 	if(N <= 0 || N > rule_num){
-		printk("MF: 删除位置违法! \n");
+		printk("<MF> 删除位置违法! \n");
 		return ERR;
 	}
 	
 	if(list_empty(&rules_head.list)){
-		printk("MF: 规则链表为空! \n");
+		printk("<MF> 规则链表为空! \n");
 		return ERR;
 	}
 	
@@ -158,7 +158,7 @@ static int add_rule(unsigned long arg){
 	pos = *((unsigned int *)ptr);
 	ptr = ptr + sizeof(unsigned int);
 
-	//printk("MF: pos: %d\n", pos);
+	//printk("<MF> pos: %d\n", pos);
 
 	/*生成并填充新的规则链表节点*/
 	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
@@ -227,7 +227,7 @@ static int add_rule(unsigned long arg){
 			break;
 		}
 	}
-	//printk("MF: saddr:%x smask:%x daddr:%x dmask:%x mtype:%x log:%d action:%d\n", node->rule.saddr, node->rule.smask, node->rule.daddr, node->rule.dmask, node->rule.mtype, node->rule.log, node->rule.action);
+	//printk("<MF> saddr:%x smask:%x daddr:%x dmask:%x mtype:%x log:%d action:%d\n", node->rule.saddr, node->rule.smask, node->rule.daddr, node->rule.dmask, node->rule.mtype, node->rule.log, node->rule.action);
 	
 	//return OK;
 	/*将新节点插入*/
@@ -330,7 +330,7 @@ static void clear_rule_list(void){
 	list_for_each_safe(pos, tmp, &rules_head.list) {
 		list_del(pos);
 		node = list_entry(pos, struct RULE_LIST_ST, list);
-		//printk(KERN_INFO "MF: clear: %x\n", node->rule.saddr);
+		//printk(KERN_INFO "<MF> clear: %x\n", node->rule.saddr);
 		free_node(node);
 	}
 	rule_num = 0;
@@ -421,12 +421,12 @@ static void get_rule_list(unsigned long arg){
 	int ret, len;
 
 	len = rules2buf();
-	//printk("MF: get_rule_list: rule_num: %d\n", rule_num);
-	//printk("MF: get_rule_list: buf: %d\n", *buf);
+	//printk("<MF> get_rule_list: rule_num: %d\n", rule_num);
+	//printk("<MF> get_rule_list: buf: %d\n", *buf);
 
 	ret = copy_to_user((u_int8_t *)arg, buf, len);
 	if(ret < 0)
-		printk("MF: copy_to_user ERROR\n");
+		printk("<MF> copy_to_user ERROR\n");
 }
 
 /*字符设备驱动ioctl函数*/
@@ -435,51 +435,54 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	int ret = 0;
 	
 	switch (cmd) {  
+	case MF_SYS_STATE:
+		printk("<MF> USER_CMD: 获取系统状态\n");
+		copy_to_user((u_int8_t *)arg, &active, sizeof(int));
+		break;
 	case MF_SYS_OPEN:  
 		active = 1;
-		printk("MF: MF_SYS_OPEN\n");
+		printk("<MF> USER_CMD: 开启系统过滤\n");
  		break;
  		
 	case MF_SYS_CLOSE:
 		active = 0;
-		printk("MF: MF_SYS_CLOSE\n");
+		printk("<MF> USER_CMD: 关闭系统过滤\n");
 		break;  
 		
 	case MF_ADD_RULE:
-		printk("MF: MF_ADD_RULE\n");
+		printk("<MF> USER_CMD: 导入单条规则\n");
 		add_rule(arg);
 		break;  
 
 	case MF_ADD_LIST:
-		printk("MF: MF_ADD_RULE\n");
+		printk("<MF> USER_CMD: 导入规则链表\n");
 		add_rule_list(arg);
 		break;  
 		
 	case MF_DELETE_RULE:
-		printk("MF: MF_DELETE_RULE\n");
+		printk("<MF> USER_CMD: 删除单条规则\n");
 		del_node(arg);
 		break;
 		
 	case MF_CLEAR_RULE:
-		printk("MF: MF_CLEAR_RULE\n");
+		printk("<MF> USER_CMD: 清除规则链表\n");
 		clear_rule_list();
 		break;  
 		
 	case MF_GET_RULE: 
-		printk("MF: MF_GET_RULE\n");
+		printk("<MF> USER_CMD: 获取规则链表\n");
 		get_rule_list(arg);
 		break; 
 		
 	case MF_GET_LOG: 
-		printk("MF: MF_GET_LOG\n");
-		
+		printk("<MF> MF_GET_LOG\n");
 		break; 
  
 	default:  
 	  	break;  
    	};  
    	
-	printk("MF: rule_num:%d\n", rule_num);
+	printk("<MF> rule_num:%d\n", rule_num);
    	return ret;  
 }  
 
@@ -641,7 +644,7 @@ static int pcre_match(char *str, char *pattern)
     int ret = 0;
     ret = regcomp(&reg, pattern, REG_EXTENDED | REG_NEWLINE);
     if(ret != 0){
-        printk("MF: regcomp error\n");
+        printk("<MF> regcomp error\n");
         result = ERR;
     }
     else{
@@ -655,7 +658,7 @@ static int pcre_match(char *str, char *pattern)
 }
 
 static int mqtt_connect_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
-	//printk("MF: packet_info-%x, rule-%x\n", packet_info->connect.flag, rule->deep.connect.flag);
+	//printk("<MF> packet_info-%x, rule-%x\n", packet_info->connect.flag, rule->deep.connect.flag);
 	if(packet_info->connect.flag != rule->deep.connect.flag)
 		return NO;
 	return YES;
@@ -665,12 +668,10 @@ static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_inf
 	int ret, result;
 
 	/*检查publish_flag*/
-	printk("MF: packet_flag: %d 	rule_flag: %d\n", packet_info->publish.flag, rule->deep.publish.flag);
+	//printk("<MF> packet_flag: %d 	rule_flag: %d\n", packet_info->publish.flag, rule->deep.publish.flag);
 	if(packet_info->publish.flag != rule->deep.publish.flag){
-		printk("MF: publish check 0\n");
 		return NO;
 	}
-	printk("MF: publish check 1\n");
 	
 	/*如果publish规则中的topic非空，则需要进行更深入的匹配*/
 	if(rule->deep.publish.topic){
@@ -679,7 +680,6 @@ static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_inf
 		if(ret == TOPIC_MATCH_INVAL || result == FALSE)
 			return NO;	
 	}	
-	printk("MF: publish check 2\n");
 	
 	
 	/*如果publish规则中的keyword非空，则需要进行更深入的匹配*/
@@ -688,7 +688,6 @@ static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_inf
 		if(ret == NO || ret == ERR)
 			return NO;
 	}
-	printk("MF: publish check 3\n");
 	
 	/*所有规则项匹配成功，返回YES*/
 	return YES;
@@ -705,7 +704,7 @@ static int mqtt_subscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet_i
 	ptr += 2;
 	
 	rule_len = strlen(rule->deep.subscribe.topic_filter);
-	//printk("MF: packet_len:%d, rule_len:%d\n", len, rule_len);
+	//printk("<MF> packet_len:%d, rule_len:%d\n", len, rule_len);
 	
 	while(len){
 		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
@@ -735,7 +734,7 @@ static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet
 	
 	rule_len = strlen(rule->deep.unsubscribe.topic_filter);
 	
-	//printk("MF: packet_len:%d, rule_len:%d\n", len, rule_len);
+	//printk("<MF> packet_len:%d, rule_len:%d\n", len, rule_len);
 	
 	while(len){
 		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
@@ -743,7 +742,7 @@ static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet
 			return NO;
 		ptr += len;
 		
-		//printk("MF: unsubscribe check 1\n");
+		//printk("<MF> unsubscribe check 1\n");
 		
 		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 		ptr += 2;
@@ -758,16 +757,16 @@ static int mqtt_check(struct RULE_ST *rule, u_int8_t mtype, union MQTT_UNION *pa
 		if(rule->enabled_deep == ENABLED){
 			switch(mtype){
 			case CONNECT:
-				//printk("MF: mqtt_connect_check\n");
+				printk("<MF> mqtt_connect_check\n");
 				return mqtt_connect_check(rule, packet_info);
 			case PUBLISH:
-				printk("MF: mqtt_publish_check\n");
+				printk("<MF> mqtt_publish_check\n");
 				return mqtt_publish_check(rule, packet_info);
 			case SUBSCRIBE:
-				printk("MF: mqtt_subscribe_check\n");
+				printk("<MF> mqtt_subscribe_check\n");
 				return mqtt_subscribe_check(rule, packet_info); 
 			case UNSUBSCRIBE:
-				printk("MF: mqtt_unsubscribe_check\n");
+				printk("<MF> mqtt_unsubscribe_check\n");
 				return mqtt_unsubscribe_check(rule, packet_info);
 			}
 		}
@@ -853,7 +852,7 @@ static void mqtt_analysis(union MQTT_UNION *result, u_int8_t *mqtth){
 		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
 		len = remaining_len - (payload_hdr - variable_hdr);
 		
-		//printk("MF: publish payload len: %d\n", len);
+		//printk("<MF> publish payload len: %d\n", len);
 		
 		payload = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
 		memcpy(payload, ptr, len);
@@ -868,14 +867,14 @@ static void mqtt_analysis(union MQTT_UNION *result, u_int8_t *mqtth){
 		
 		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
 		len = remaining_len - (payload_hdr - variable_hdr);
-		printk("Mf: payload_len:%d\n", len);
+		//printk("<MF> payload_len:%d\n", len);
 		
 		payload = (char *)kmalloc(sizeof(char) * len + 2, GFP_KERNEL);
 		memcpy(payload, ptr, len);
 		payload[len] = '\0';
 		payload[len + 1] = '\0';
 		
-		//printk("MF: payload:%s\n", payload + 2);
+		//printk("<MF> payload:%s\n", payload + 2);
 		result->subscribe.topic_filter = payload;
 		
 		
@@ -910,9 +909,7 @@ static unsigned int check(struct sk_buff *skb)
 	struct list_head *tmp;
 	struct RULE_LIST_ST *node;
 	u_int8_t *mqtth, *tail, mtype;
-	
 	union MQTT_UNION packet_info;
-	
 	//printk("CHECK\n");
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
@@ -931,10 +928,10 @@ static unsigned int check(struct sk_buff *skb)
 		/*若是包含应用层，则通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
 		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 		
-			//printk("MF: %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
+			//printk("<MF> %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
 			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
 			mtype = (*mqtth & 0xF0);	/*获取MQTT报文类型*/
-			//printk("MF: MQTT Type = %x\n", mtype);
+			//printk("<MF> MQTT Type = %x\n", mtype);
 			
 			/*对MQTT Packet进行深入分析，并将结果存放到packet_info联合体*/
 			mqtt_analysis(&packet_info, mqtth);
@@ -943,7 +940,7 @@ static unsigned int check(struct sk_buff *skb)
 			list_for_each(tmp, &rules_head.list) {
 				node = list_entry(tmp, struct RULE_LIST_ST, list);
 				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, mtype, &packet_info)){
-					printk("MF: action = %d\n", node->rule.action);
+					printk("<MF> action = %d\n", node->rule.action);
 					return node->rule.action;
 				}
 			}
@@ -972,31 +969,16 @@ unsigned int mqtt_filter(void *priv,
 /*mqtt过滤模块注册函数*/
 static int myfilter_init(void)
 { 
-	//struct RULE_LIST_ST *node;
-	//struct list_head *tmp;
-	
-	//pcre_test();
-	
 	/*初始化规则链表*/
 	rule_num = 0;
 	INIT_LIST_HEAD(&rules_head.list);
-	//printk(KERN_INFO "MF: rule_num before test()：%d\n", rule_num);
-	//test();
-	//printk(KERN_INFO "MF: rule_num after test()：%d\n", rule_num);
-	
-	//list_for_each(tmp, &rules_head.list) {
-	//	node = list_entry(tmp, struct RULE_LIST_ST, list);
-	//	printk(KERN_INFO "MF: rule_mtype: %d\n", node->rule.mtype);
-	//}
-	
 	
 	/*注册字符设备*/
-	printk(KERN_INFO "MF: 正在注册字符设备驱动...\n");
+	printk(KERN_INFO "<MF> MOD_INIT: 正在注册字符设备驱动...\n");
 	alloc_chrdev_region(&devid, 0, 10, "mf_dev_drv");
 	cdev_init(&cdev, &mf_fops);
-	printk(KERN_INFO "MF: 主次设备号: %d %d\n",MAJOR(devid), MINOR(devid));
+	printk(KERN_INFO "<MF> MOD_INIT: 主次设备号 %d %d\n",MAJOR(devid), MINOR(devid));
 	cdev_add(&cdev, devid, 10);
-
 
 	/* 填充nf_hook_ops结构，在hook点挂钩相应的处理函数 */  
 	nfho[0].hook = mqtt_filter;
@@ -1010,10 +992,10 @@ static int myfilter_init(void)
 	nfho[1].priority = NF_IP_PRI_FIRST;
 	
 	/*注册MOQTT过滤模块*/
-	printk(KERN_INFO "MF: 正在注册MQTT过滤模块...\n");
+	printk(KERN_INFO "<MF> MOD_INIT: 正在注册MQTT过滤模块...\n");
 	nf_register_hook(&nfho[0]);
 	nf_register_hook(&nfho[1]);
-	printk(KERN_INFO "MF: 模块注册成功.\n");
+	printk(KERN_INFO "<MF> MOD_INIT: 模块注册成功.\n");
 
 	return 0;
 }
@@ -1024,16 +1006,17 @@ static void myfilter_exit(void){
 	clear_rule_list();
 	
 	/*注销MOQTT过滤模块*/
-	printk(KERN_INFO "MF: 正在注销MQTT过滤模块...\n");
+	printk(KERN_INFO "<MF> MOD_EXIT: 正在注销MQTT过滤模块...\n");
 	nf_unregister_hook(&nfho[0]);
 	nf_unregister_hook(&nfho[1]);
-	printk(KERN_INFO "MF: 模块注销成功.\n");
+	printk(KERN_INFO "<MF> MOD_EXIT: 模块注销成功.\n");
 	
 	/*注销字符设备*/	
-	printk(KERN_INFO "MF: 正在注销字符设备驱动...\n");
+	printk(KERN_INFO "<MF> MOD_EXIT: 正在注销字符设备驱动...\n");
 	cdev_del(&cdev);    
 	unregister_chrdev_region(devid, 10);
-	printk(KERN_INFO "MF: 字符设备驱动注销成功.\n\n\n");
+	printk(KERN_INFO "<MF> MOD_EXIT: 字符设备驱动注销成功.\n");
+	printk(KERN_INFO "<MF> MOD_EXIT: 成功注销MQTT过滤系统内核模块.\n\n\n");
 }
 
 module_init(myfilter_init);
