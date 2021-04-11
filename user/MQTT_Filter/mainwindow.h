@@ -6,6 +6,8 @@
 #include <QDesktopWidget>
 #include <QToolTip>
 #include <QTableWidget>
+#include <QProcess>
+#include <QTimer>
 #include <QList>
 
 #include "commonruledialog.h"
@@ -30,6 +32,8 @@ private slots:
 
     void modCommonRule(struct RULE_ST, int);
 
+    void updateSystemLog();
+
     void on_pushButton_add_rule_clicked();
 
     void on_pushButton_mod_rule_clicked();
@@ -52,15 +56,21 @@ private slots:
 
     void on_tableWidget_rule_doubleClicked(const QModelIndex &index);
 
+    void on_pushButton_clicked();
+
 private:
     int fd;
     int active;
+
+    qint64 log_size;
     QList<struct RULE_ST> rule_list;
     Ui::MainWindow *ui;
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
+    QTimer *logTimer;
 
     void getSystemState();
+    void runShell(QString cmd);
     void showUserRuleList();
     void getRuleFromKernel();
     void setRuleListToBuffer();

@@ -26,6 +26,7 @@ __attribute__((section("__versions"))) = {
 	{ 0xd0d8621b, __VMLINUX_SYMBOL_STR(strlen) },
 	{ 0xda24d0e4, __VMLINUX_SYMBOL_STR(nf_register_hook) },
 	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
+	{ 0x91715312, __VMLINUX_SYMBOL_STR(sprintf) },
 	{        0, __VMLINUX_SYMBOL_STR(regexec) },
 	{ 0x4f8b5ddb, __VMLINUX_SYMBOL_STR(_copy_to_user) },
 	{        0, __VMLINUX_SYMBOL_STR(regcomp) },
@@ -51,4 +52,4 @@ __attribute__((section(".modinfo"))) =
 "depends=libpcre2-8";
 
 
-MODULE_INFO(srcversion, "4DCB56BD6B63F9B95E0889B");
+MODULE_INFO(srcversion, "784A6A6ED00A9D02E515EF4");

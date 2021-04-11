@@ -11,11 +11,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
     active = 0;
-    ui->label_mf_state->setText("系统状态: 关闭");
-    fd = open_mf_dev();
 
+    ui->setupUi(this);
+    ui->label_mf_state->setText("系统状态: 关闭");
+
+    fd = open_mf_dev();
     if(fd < 0){
         QMessageBox::information(NULL, "错误", "打开设备文件失败！");
         exit(-1);
@@ -23,11 +24,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     getSystemState();       //获取系统开启状态
     getRuleFromKernel();    //获取当前内核模块中的规则链表，存放到rule_list中
-    //update_kdate = 0;
     showUserRuleList();     //打印rule_list中的规则链表
 
     addCommonRuleDialog = new CommonRuleDialog(this);
     modCommonRuleDialog = new CommonRuleDialog(this);
+    logTimer = new QTimer(this);
 
     ui->tableWidget_rule->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
     ui->tableWidget_rule->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
@@ -37,7 +38,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-
     ui->tableWidget_rule->setColumnWidth(0, 120);//设置固定宽
     ui->tableWidget_rule->setColumnWidth(1, 70);//设置固定宽
     ui->tableWidget_rule->setColumnWidth(2, 60);//设置固定宽
@@ -45,10 +45,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget_rule->setColumnWidth(4, 160);//设置固定宽
     //ui->tableWidget_rule->setColumnWidth(5, 500);//设置固定宽
 
+    logTimer->start(500);
+
     connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, int)),
             this, SLOT(addCommonRule(struct RULE_ST, int)));
     connect(modCommonRuleDialog, SIGNAL(modCommonRuleSignal(struct RULE_ST, int)),
             this, SLOT(modCommonRule(struct RULE_ST, int)));
+    connect(logTimer, SIGNAL(timeout()), this, SLOT(updateSystemLog()));
+
 }
 
 MainWindow::~MainWindow()
@@ -70,8 +74,8 @@ void MainWindow::on_pushButton_mf_open_clicked()
     ioctl(fd, MF_SYS_OPEN);
     active = 1;
     ui->label_mf_state->setText("系统状态: 开启");
-    getRuleFromKernel();
-    showUserRuleList();
+    //getRuleFromKernel();
+    //showUserRuleList();
 }
 
 void MainWindow::on_pushButton_mf_close_clicked()
@@ -207,6 +211,37 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
         }
     }
     //qDebug() << "buf len: " << (ptr - (u_int8_t *)buf);
+}
+
+void MainWindow::runShell(QString cmd){
+    QProcess *shell = new QProcess(this);
+    shell->setWorkingDirectory("../../sh");
+    shell->start(cmd);
+    shell->waitForFinished();
+}
+
+void MainWindow::updateSystemLog(){
+    QString cmd = "log.sh";
+    runShell(cmd);
+
+    QFile logFile("../../data/log.txt");
+    if(logFile.size() == log_size){
+        logFile.close();
+        return;
+    }
+
+    log_size = logFile.size();
+
+    if(logFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+        ui->textBrowser->clear();
+        QString text = logFile.readAll();
+        ui->textBrowser->setText(text);
+    }
+    else{
+        QMessageBox::critical(this, "错误", "无法打开log.txt！");
+        logTimer->stop();
+    }
+    logFile.close();
 }
 
 void MainWindow::modCommonRule(struct RULE_ST rule, int mod_pos)
@@ -689,4 +724,19 @@ void MainWindow::on_tableWidget_rule_doubleClicked(const QModelIndex &index)
     }
 
     QToolTip::showText(QCursor::pos(), strlist.join("\n"));
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    QMessageBox::StandardButton choose = QMessageBox::question(NULL, "清除日志", "是否清除当前日志？", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if(choose == QMessageBox::No){
+        return;
+    }
+    QFile logFile("../../data/log.txt");
+    bool ok = logFile.remove();
+    if(ok)
+        ui->textBrowser->clear();
+    else{
+        QMessageBox::information(NULL, "错误", "删除日志文件失败！");
+    }
 }

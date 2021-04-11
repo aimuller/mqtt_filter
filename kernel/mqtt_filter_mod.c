@@ -6,6 +6,12 @@ unsigned int rule_num;				/*当前的规则条数*/
 static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
 static int active = 0;	/*active=1表示开启, active=0表示关闭, 默认开启*/
 
+static char mtype_map[16][16] = {"ANY", "CONNECT", "CONNACK", "PUBLISH", "PUBACK", "PUBREC", "PUBREL", "PUBCOMP", "SUBSCRIBE", "SUBACK", "UNSUBSCRIBE", "UNSUBACK", "PINGREQ", "PINGRESP", "DISCONNECT", "AUTH"};	/*MQTT类型字符串*/
+
+static char action_map[2][8] = {"ACCEPT", "DROP"};
+
+char ipstr[2][16];	/*用于存放点分十进制IP地址，源地址+目的地址*/
+
 dev_t devid;		/*字符设备号*/
 struct cdev cdev;	/*描述字符设备*/
 
@@ -19,46 +25,73 @@ static struct file_operations mf_fops = {
 	.release = mf_release, 
 };
 
+/*mqtt类型字符串转换函数*/
+char *mtype_str(u_int8_t mtype){
+	//u_int8_t idx = (mtype >> 4);
+	//return mtype_map[idx]
 
-/*
-static struct RULE_LIST_ST *byte2node(char *ptr){
-	ptr = (struct RULE_LIST_ST *)ptr;
-	node = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST));
-	memcpy(node, ptr, sizeof(struct RULE_LIST_ST));
-	return node;
+    switch(mtype){
+    case CONNECT:
+        return mtype_map[1];
+    case CONNACK:
+        return mtype_map[2];
+    case PUBLISH:
+        return mtype_map[3];
+    case PUBACK:
+        return mtype_map[4];
+    case PUBREC:
+        return mtype_map[5];
+    case PUBREL:
+        return mtype_map[6];
+    case PUBCOMP:
+        return mtype_map[7];
+    case SUBSCRIBE:
+       return mtype_map[8];
+    case SUBACK:
+        return mtype_map[9];
+    case UNSUBSCRIBE:
+        return mtype_map[10];
+    case UNSUBACK:
+        return mtype_map[11];
+    case PINGREQ:
+       return mtype_map[12];
+    case PINGRESP:
+        return mtype_map[13];
+    case DISCONNECT:
+        return mtype_map[14];
+    case AUTH:
+    	return mtype_map[15];
+    default:
+        return mtype_map[0];
+    }
 }
-*/
 
-/*规则测试函数*/
-void test(void){
-	struct RULE_LIST_ST *test;
-	
-	test = (struct RULE_LIST_ST *)kmalloc(sizeof(struct RULE_LIST_ST), GFP_KERNEL);
-	test->rule.saddr = 0x80dea8c0;
-	test->rule.smask = 0xffffffff;
-	test->rule.daddr = 0x81dea8c0;
-	test->rule.dmask = 0xffffffff;
-	test->rule.mtype  = CONNECT;
-	test->rule.log   = YES;
-	test->rule.action = NF_DROP;
-	test->rule.enabled_deep = ENABLED;
-	test->rule.deep.connect.flag = 0x02;
-	add_node(test, 1);
+/*action字符串转换函数*/
+char *action_str(u_int8_t action){
+	if(action == PERMIT)
+		return action_map[0];
+	else
+		return action_map[1];
 }
 
-
+/*将大端IP地址转换为点分十进制IP地址*/
+char *ip_str(unsigned int in, int idx){
+    unsigned char *bytes = (unsigned char *) &in;
+    sprintf(ipstr[idx], "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+    return ipstr[idx];
+}
 
 /*字符设备驱动open函数*/
 static int mf_open(struct inode *inode, struct file *file)  
 {  
-	printk(KERN_INFO "<MF> 成功打开字符设备\n");
+	printk(KERN_INFO "<MF> CDEV_OPEN: 成功打开字符设备\n");
 	return 0;  
 }  
  
 /*字符设备驱动release函数*/ 
 static int mf_release(struct inode *inode, struct file *file)  
 {  
-	printk(KERN_INFO "<MF> 成功关闭字符设备\n");
+	printk(KERN_INFO "<MF> CDEV_CLOSE: 成功关闭字符设备\n");
 	return 0;  
 }
 
@@ -68,7 +101,7 @@ static int add_node(struct RULE_LIST_ST *node, unsigned int N)
 	struct list_head *pos;
 	int i;
 	if(N <= 0 || N > rule_num + 1){
-		printk("<MF> 插入位置违法! \n");
+		printk("<MF> ERR: 插入位置违法! \n");
 		return ERR;
 	}
 	pos = &rules_head.list;
@@ -123,12 +156,12 @@ static int del_node(unsigned long N)
 	int i;
 	
 	if(N <= 0 || N > rule_num){
-		printk("<MF> 删除位置违法! \n");
+		printk("<MF> ERR: 删除位置违法! \n");
 		return ERR;
 	}
 	
 	if(list_empty(&rules_head.list)){
-		printk("<MF> 规则链表为空! \n");
+		printk("<MF> ERR: 规则链表为空! \n");
 		return ERR;
 	}
 	
@@ -426,7 +459,7 @@ static void get_rule_list(unsigned long arg){
 
 	ret = copy_to_user((u_int8_t *)arg, buf, len);
 	if(ret < 0)
-		printk("<MF> copy_to_user ERROR\n");
+		printk("<MF> ERR: copy_to_user ERROR\n");
 }
 
 /*字符设备驱动ioctl函数*/
@@ -482,7 +515,7 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	  	break;  
    	};  
    	
-	printk("<MF> rule_num:%d\n", rule_num);
+	//printk("<MF> USER_CMD：当前规则数 %d\n", rule_num);
    	return ret;  
 }  
 
@@ -644,7 +677,7 @@ static int pcre_match(char *str, char *pattern)
     int ret = 0;
     ret = regcomp(&reg, pattern, REG_EXTENDED | REG_NEWLINE);
     if(ret != 0){
-        printk("<MF> regcomp error\n");
+        printk("<MF> ERR: regcomp error\n");
         result = ERR;
     }
     else{
@@ -757,16 +790,16 @@ static int mqtt_check(struct RULE_ST *rule, u_int8_t mtype, union MQTT_UNION *pa
 		if(rule->enabled_deep == ENABLED){
 			switch(mtype){
 			case CONNECT:
-				printk("<MF> mqtt_connect_check\n");
+				printk("<MF> DEBUG: mqtt_connect_check\n");
 				return mqtt_connect_check(rule, packet_info);
 			case PUBLISH:
-				printk("<MF> mqtt_publish_check\n");
+				printk("<MF> DEBUG: mqtt_publish_check\n");
 				return mqtt_publish_check(rule, packet_info);
 			case SUBSCRIBE:
-				printk("<MF> mqtt_subscribe_check\n");
+				printk("<MF> DEBUG: mqtt_subscribe_check\n");
 				return mqtt_subscribe_check(rule, packet_info); 
 			case UNSUBSCRIBE:
-				printk("<MF> mqtt_unsubscribe_check\n");
+				printk("<MF> DEBUG: mqtt_unsubscribe_check\n");
 				return mqtt_unsubscribe_check(rule, packet_info);
 			}
 		}
@@ -918,9 +951,6 @@ static unsigned int check(struct sk_buff *skb)
 	if(iph -> protocol == IPPROTO_TCP){
 		tcph = tcp_hdr(skb);	/*获取TCP头*/
 				
-		//printk("tcp-%p	tail-%p	len-%d\n",tcph , tail, tcph -> doff * 4);
-		//printk("Packet port: src-%d dest-%d\n", ntohs(tcph->source), ntohs(tcph->dest));
-		
 		/*若是不包含应用层，则当做普通的TCP报文，不进行过滤*/
 		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
 			return NF_ACCEPT;
@@ -931,7 +961,6 @@ static unsigned int check(struct sk_buff *skb)
 			//printk("<MF> %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
 			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
 			mtype = (*mqtth & 0xF0);	/*获取MQTT报文类型*/
-			//printk("<MF> MQTT Type = %x\n", mtype);
 			
 			/*对MQTT Packet进行深入分析，并将结果存放到packet_info联合体*/
 			mqtt_analysis(&packet_info, mqtth);
@@ -940,7 +969,12 @@ static unsigned int check(struct sk_buff *skb)
 			list_for_each(tmp, &rules_head.list) {
 				node = list_entry(tmp, struct RULE_LIST_ST, list);
 				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, mtype, &packet_info)){
-					printk("<MF> action = %d\n", node->rule.action);
+					if(node->rule.log == YES){
+						printk(KERN_INFO "<MF> PACKET_INFO:	 [%s]  [%s]  [%s]  [%s]\n",	mtype_str(mtype), \
+																		 				action_str(node->rule.action), \
+																		 				ip_str(iph->saddr, 0),	\
+																		 				ip_str(iph->daddr, 1));
+					}
 					return node->rule.action;
 				}
 			}

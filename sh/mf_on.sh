@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ..
 MF_MAIN_DIR=$PWD
 
 

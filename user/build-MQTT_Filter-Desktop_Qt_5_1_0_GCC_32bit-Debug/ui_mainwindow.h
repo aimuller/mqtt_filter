@@ -21,6 +21,7 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableWidget>
@@ -39,9 +40,13 @@ public:
     QWidget *centralWidget;
     QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout;
+    QSpacerItem *horizontalSpacer;
     QPushButton *pushButton_mf_open;
+    QSpacerItem *horizontalSpacer_2;
     QPushButton *pushButton_mf_close;
+    QSpacerItem *horizontalSpacer_3;
     QLabel *label_mf_state;
+    QSpacerItem *horizontalSpacer_4;
     QVBoxLayout *verticalLayout_2;
     QTabWidget *tabWidget;
     QWidget *tab_rule;
@@ -54,8 +59,10 @@ public:
     QGridLayout *gridLayout_3;
     QTableWidget *tableWidget_rule;
     QWidget *tab_log;
-    QGridLayout *gridLayout_5;
-    QGridLayout *gridLayout_4;
+    QGridLayout *gridLayout_6;
+    QHBoxLayout *horizontalLayout_6;
+    QPushButton *pushButton;
+    QPushButton *pushButton_2;
     QTextBrowser *textBrowser;
     QGridLayout *gridLayout;
     QMenuBar *menuBar;
@@ -81,20 +88,36 @@ public:
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(6);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
+        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        horizontalLayout->addItem(horizontalSpacer);
+
         pushButton_mf_open = new QPushButton(centralWidget);
         pushButton_mf_open->setObjectName(QStringLiteral("pushButton_mf_open"));
 
-        horizontalLayout->addWidget(pushButton_mf_open, 0, Qt::AlignRight);
+        horizontalLayout->addWidget(pushButton_mf_open);
+
+        horizontalSpacer_2 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        horizontalLayout->addItem(horizontalSpacer_2);
 
         pushButton_mf_close = new QPushButton(centralWidget);
         pushButton_mf_close->setObjectName(QStringLiteral("pushButton_mf_close"));
 
-        horizontalLayout->addWidget(pushButton_mf_close, 0, Qt::AlignHCenter);
+        horizontalLayout->addWidget(pushButton_mf_close);
+
+        horizontalSpacer_3 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        horizontalLayout->addItem(horizontalSpacer_3);
 
         label_mf_state = new QLabel(centralWidget);
         label_mf_state->setObjectName(QStringLiteral("label_mf_state"));
 
-        horizontalLayout->addWidget(label_mf_state, 0, Qt::AlignLeft);
+        horizontalLayout->addWidget(label_mf_state);
+
+        horizontalSpacer_4 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        horizontalLayout->addItem(horizontalSpacer_4);
 
 
         verticalLayout_3->addLayout(horizontalLayout);
@@ -164,20 +187,30 @@ public:
         tabWidget->addTab(tab_rule, QString());
         tab_log = new QWidget();
         tab_log->setObjectName(QStringLiteral("tab_log"));
-        gridLayout_5 = new QGridLayout(tab_log);
-        gridLayout_5->setSpacing(6);
-        gridLayout_5->setContentsMargins(11, 11, 11, 11);
-        gridLayout_5->setObjectName(QStringLiteral("gridLayout_5"));
-        gridLayout_4 = new QGridLayout();
-        gridLayout_4->setSpacing(6);
-        gridLayout_4->setObjectName(QStringLiteral("gridLayout_4"));
+        gridLayout_6 = new QGridLayout(tab_log);
+        gridLayout_6->setSpacing(6);
+        gridLayout_6->setContentsMargins(11, 11, 11, 11);
+        gridLayout_6->setObjectName(QStringLiteral("gridLayout_6"));
+        horizontalLayout_6 = new QHBoxLayout();
+        horizontalLayout_6->setSpacing(6);
+        horizontalLayout_6->setObjectName(QStringLiteral("horizontalLayout_6"));
+        pushButton = new QPushButton(tab_log);
+        pushButton->setObjectName(QStringLiteral("pushButton"));
+
+        horizontalLayout_6->addWidget(pushButton);
+
+        pushButton_2 = new QPushButton(tab_log);
+        pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
+
+        horizontalLayout_6->addWidget(pushButton_2);
+
+
+        gridLayout_6->addLayout(horizontalLayout_6, 0, 0, 1, 1);
+
         textBrowser = new QTextBrowser(tab_log);
         textBrowser->setObjectName(QStringLiteral("textBrowser"));
 
-        gridLayout_4->addWidget(textBrowser, 0, 0, 1, 1);
-
-
-        gridLayout_5->addLayout(gridLayout_4, 0, 0, 1, 1);
+        gridLayout_6->addWidget(textBrowser, 1, 0, 1, 1);
 
         tabWidget->addTab(tab_log, QString());
 
@@ -246,6 +279,8 @@ public:
         QTableWidgetItem *___qtablewidgetitem5 = tableWidget_rule->horizontalHeaderItem(5);
         ___qtablewidgetitem5->setText(QApplication::translate("MainWindow", "\345\205\266\344\273\226", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_rule), QApplication::translate("MainWindow", "\350\247\204\345\210\231\347\256\241\347\220\206", 0));
+        pushButton->setText(QApplication::translate("MainWindow", "\346\270\205\351\231\244\346\227\245\345\277\227", 0));
+        pushButton_2->setText(QApplication::translate("MainWindow", "PushButton", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_log), QApplication::translate("MainWindow", "\346\227\245\345\277\227\345\256\241\346\237\245", 0));
         menu->setTitle(QApplication::translate("MainWindow", "\346\226\207\344\273\266", 0));
     } // retranslateUi
