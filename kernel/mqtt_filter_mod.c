@@ -16,6 +16,7 @@ dev_t devid;		/*字符设备号*/
 struct cdev cdev;	/*描述字符设备*/
 
 static u_int8_t buf[BUF_SIZE];
+static char log[LOG_LEN];
 
 /*通过file_operations结构来定义字符设备驱动提供的接口函数*/
 static struct file_operations mf_fops = {  
@@ -72,6 +73,31 @@ char *action_str(u_int8_t action){
 		return action_map[0];
 	else
 		return action_map[1];
+}
+
+/*connect flags字符串转换函数*/
+char *cflags_str(u_int8_t flags){
+	int str_len = 0, offset = 0;
+	
+	str_len = sprintf(buf + offset, "[UNF = %d]  ", (flags & 0x80) >> 7);	offset += str_len;
+	str_len = sprintf(buf + offset, "[PF = %d]  ", (flags & 0x40) >> 6);	offset += str_len;
+	str_len = sprintf(buf + offset, "[WR = %d]  ", (flags & 0x20) >> 5);	offset += str_len;
+	str_len = sprintf(buf + offset, "[WQoS = %d]  ", (flags & 0x18) >> 3);	offset += str_len;
+	str_len = sprintf(buf + offset, "[WF = %d]  ", (flags & 0x04) >> 2);	offset += str_len;
+	str_len = sprintf(buf + offset, "[CS = %d]", (flags & 0x02) >> 1);	offset += str_len;
+	
+	return buf;
+}
+
+/*connect flags字符串转换函数*/
+char *pflags_str(u_int8_t flags){
+	int str_len = 0, offset = 0;
+	
+	str_len = sprintf(buf + offset, "[DUP = %d]  ", (flags & 0x08) >> 3);	offset += str_len;
+	str_len = sprintf(buf + offset, "[QoS = %d]  ", (flags & 0x06) >> 1);	offset += str_len;
+	str_len = sprintf(buf + offset, "[RETAIN = %d]", (flags & 0x01));		offset += str_len;
+	
+	return buf;
 }
 
 /*将大端IP地址转换为点分十进制IP地址*/
@@ -785,22 +811,22 @@ static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet
 }
 
 /*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, u_int8_t mtype, union MQTT_UNION *packet_info){
-	if(rule->mtype == mtype){
+static int mqtt_check(struct RULE_ST *rule, struct PACKET_ST *packet_info){
+	if(rule->mtype == packet_info->mtype){
 		if(rule->enabled_deep == ENABLED){
-			switch(mtype){
+			switch(rule->mtype){
 			case CONNECT:
 				printk("<MF> DEBUG: mqtt_connect_check\n");
-				return mqtt_connect_check(rule, packet_info);
+				return mqtt_connect_check(rule, &(packet_info->deep));
 			case PUBLISH:
 				printk("<MF> DEBUG: mqtt_publish_check\n");
-				return mqtt_publish_check(rule, packet_info);
+				return mqtt_publish_check(rule, &(packet_info->deep));
 			case SUBSCRIBE:
 				printk("<MF> DEBUG: mqtt_subscribe_check\n");
-				return mqtt_subscribe_check(rule, packet_info); 
+				return mqtt_subscribe_check(rule, &(packet_info->deep)); 
 			case UNSUBSCRIBE:
 				printk("<MF> DEBUG: mqtt_unsubscribe_check\n");
-				return mqtt_unsubscribe_check(rule, packet_info);
+				return mqtt_unsubscribe_check(rule, &(packet_info->deep));
 			}
 		}
 		return YES;
@@ -821,17 +847,17 @@ static int ip_check(struct RULE_ST *rule, struct iphdr *iph){
 	return NO;
 }
 
-static void mqtt_release(union MQTT_UNION *result, u_int8_t mtype){
-	switch(mtype){
+static void mqtt_release(struct PACKET_ST *packet_info){
+	switch(packet_info->mtype){
 	case PUBLISH:
-		kfree(result->publish.topic);
-		kfree(result->publish.keyword);
+		kfree(packet_info->deep.publish.topic);
+		kfree(packet_info->deep.publish.keyword);
 		break;
 	case SUBSCRIBE:
-		kfree(result->subscribe.topic_filter);
+		kfree(packet_info->deep.subscribe.topic_filter);
 		break; 
 	case UNSUBSCRIBE:
-		kfree(result->unsubscribe.topic_filter);	
+		kfree(packet_info->deep.unsubscribe.topic_filter);	
 		break;
 	default:
 		break;
@@ -934,6 +960,74 @@ static void mqtt_analysis(union MQTT_UNION *result, u_int8_t *mqtth){
 	}
 }
 
+static void write_log(struct PACKET_ST *packet_info, u_int8_t action){
+	int str_len, offset, len;
+	char *ptr;
+	
+	str_len = sprintf(log, "<MF> PACKET_INFO:	 [%s]  [%s]  [%s]  [%s]  ", action_str(action), \
+				mtype_str(packet_info->mtype), \
+				ip_str(packet_info->saddr, 0), \
+				ip_str(packet_info->daddr, 1));
+				
+	offset = str_len;
+				
+	switch(packet_info->mtype){
+	case CONNECT:
+		sprintf(log + offset, "%s", cflags_str(packet_info->deep.connect.flag));
+		break;
+	case PUBLISH:
+		sprintf(log + offset, "%s  [topic = \"%s\"]  [keyword = \"%s\"]", 	pflags_str(packet_info->deep.publish.flag), \
+																			packet_info->deep.publish.topic, \
+																			packet_info->deep.publish.keyword);
+		break;
+	case SUBSCRIBE:
+		ptr = packet_info->deep.subscribe.topic_filter;
+		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;
+		
+		while(len){
+			str_len = sprintf(log + offset, "[topic_filter = \"");
+			offset += str_len;
+			
+			snprintf(log + offset, len + 1, "%s", ptr);
+			offset += len;
+			ptr += len;
+		
+			str_len = sprintf(log + offset, "\",  rqos = %d]", *ptr);
+			offset += str_len;
+
+			len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+			ptr += 2;
+		}
+		
+		break; 
+	case UNSUBSCRIBE:
+		ptr = packet_info->deep.unsubscribe.topic_filter;
+		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;
+		
+		while(len){
+			str_len = sprintf(log + offset, "[topic_filter = \"");
+			offset += str_len;
+			
+			snprintf(log + offset, len + 1, "%s", ptr);
+			offset += len;
+			ptr += len;
+		
+			str_len = sprintf(log + offset, "\"]");
+			offset += str_len;
+
+			len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+			ptr += 2;
+		}
+		break;
+	default:
+		break;
+	}
+	
+	printk(KERN_INFO "%s\n", log);
+}
+
 /*规则check函数*/
 static unsigned int check(struct sk_buff *skb)
 {
@@ -941,9 +1035,10 @@ static unsigned int check(struct sk_buff *skb)
 	struct tcphdr *tcph;
 	struct list_head *tmp;
 	struct RULE_LIST_ST *node;
+	struct PACKET_ST packet_info;
 	u_int8_t *mqtth, *tail, mtype;
-	union MQTT_UNION packet_info;
-	//printk("CHECK\n");
+
+	//printk("FUNCTION CHECK \n");
 	
 	iph = ip_hdr(skb);	/*获取IP头*/
 	tail = (u_int8_t *)skb->tail;	/*tail指向数据区结束的位置，数据区包括各层协议头和*/
@@ -962,25 +1057,25 @@ static unsigned int check(struct sk_buff *skb)
 			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
 			mtype = (*mqtth & 0xF0);	/*获取MQTT报文类型*/
 			
-			/*对MQTT Packet进行深入分析，并将结果存放到packet_info联合体*/
-			mqtt_analysis(&packet_info, mqtth);
+			/*填充packet_info信息, 并对MQTT Packet进行深入分析，并将结果存放到packet_info*/
+			packet_info.mtype = mtype;
+			packet_info.saddr = iph -> saddr;
+			packet_info.daddr = iph -> daddr;
+			mqtt_analysis(&packet_info.deep, mqtth);
 
 			/*将当前报文与规则链表进行匹配*/
 			list_for_each(tmp, &rules_head.list) {
 				node = list_entry(tmp, struct RULE_LIST_ST, list);
-				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, mtype, &packet_info)){
+				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, &packet_info)){
 					if(node->rule.log == YES){
-						printk(KERN_INFO "<MF> PACKET_INFO:	 [%s]  [%s]  [%s]  [%s]\n",	mtype_str(mtype), \
-																		 				action_str(node->rule.action), \
-																		 				ip_str(iph->saddr, 0),	\
-																		 				ip_str(iph->daddr, 1));
+						write_log(&packet_info, node->rule.action);
 					}
 					return node->rule.action;
 				}
 			}
 			
-			/*释放packet_info联合体中指针所指的空间*/
-			mqtt_release(&packet_info, mtype);
+			/*释放packet_info中deep联合体中指针所指的空间*/
+			mqtt_release(&packet_info);
 			
 			return DEFAULT; /*默认策略*/
 		}

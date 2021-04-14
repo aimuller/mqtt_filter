@@ -40,6 +40,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x1e047854, __VMLINUX_SYMBOL_STR(warn_slowpath_fmt) },
 	{ 0x37a0cba, __VMLINUX_SYMBOL_STR(kfree) },
 	{ 0x4a619f83, __VMLINUX_SYMBOL_STR(memcpy) },
+	{ 0xb81960ca, __VMLINUX_SYMBOL_STR(snprintf) },
 	{ 0x4f6b400b, __VMLINUX_SYMBOL_STR(_copy_from_user) },
 	{ 0x88db9f48, __VMLINUX_SYMBOL_STR(__check_object_size) },
 	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
@@ -52,4 +53,4 @@ __attribute__((section(".modinfo"))) =
 "depends=libpcre2-8";
 
 
-MODULE_INFO(srcversion, "784A6A6ED00A9D02E515EF4");
+MODULE_INFO(srcversion, "2E5C31FA4E5FA3E174F4E59");
