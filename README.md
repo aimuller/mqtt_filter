@@ -38,9 +38,9 @@
                 |-- main.cpp（主函数，程序入口）
                 |-- mainwindow.cpp（主界面类定义）
                 |-- commonruledialog.cpp（对话窗口类定义）
-                |-- helper.cpp（辅助函数）
-                |-- mainwindow.ui（主界面设计ui文件）
-                |-- commonruledialog.ui（对话窗口设计ui文件）
+                |-- helper.cpp（定义一些辅助函数）
+                |-- mainwindow.ui（设计主界面的ui文件）
+                |-- commonruledialog.ui（设计规则对话框界面的ui文件）
                 |-- ...
             |-- build-MQTT_Filter-Desktop_Qt_5_1_0_GCC_32bit-Debug（存放可执行程序）
             |-- ...
