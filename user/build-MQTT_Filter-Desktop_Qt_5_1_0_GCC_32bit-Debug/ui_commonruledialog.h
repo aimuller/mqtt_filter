@@ -34,22 +34,22 @@ public:
     QGridLayout *gridLayout_8;
     QDialogButtonBox *buttonBox;
     QGridLayout *gridLayout;
-    QLineEdit *lineEdit_common_dmask;
+    QLabel *label_2;
     QLabel *label_3;
-    QComboBox *comboBox_common_mtype;
     QLabel *label_8;
     QLabel *label_7;
+    QLineEdit *lineEdit_common_sport;
+    QLineEdit *lineEdit_common_dport;
     QLabel *label_5;
     QComboBox *comboBox_common_action;
     QLabel *label;
-    QLabel *label_2;
-    QLineEdit *lineEdit_common_saddr;
     QLabel *label_4;
-    QLineEdit *lineEdit_common_smask;
     QComboBox *comboBox_common_log;
-    QLabel *label_6;
     QLineEdit *lineEdit_common_daddr;
+    QLabel *label_6;
     QLineEdit *lineEdit_add_pos;
+    QComboBox *comboBox_common_mtype;
+    QLineEdit *lineEdit_common_saddr;
     QStackedWidget *stackedWidget;
     QWidget *page_common;
     QWidget *page_connect;
@@ -69,8 +69,15 @@ public:
     QComboBox *comboBox_connect_wf;
     QComboBox *comboBox_connect_cs;
     QLabel *label_18;
-    QSpacerItem *verticalSpacer_2;
-    QSpacerItem *verticalSpacer_9;
+    QGridLayout *gridLayout_6;
+    QLineEdit *lineEdit_connect_username;
+    QLabel *label_12;
+    QLabel *label_24;
+    QLineEdit *lineEdit_connect_will_topic;
+    QLabel *label_26;
+    QLineEdit *lineEdit_connect_will_message;
+    QLabel *label_27;
+    QLineEdit *lineEdit_connect_clientid;
     QWidget *page_publish;
     QGridLayout *gridLayout_9;
     QSpacerItem *verticalSpacer_4;
@@ -113,7 +120,7 @@ public:
     {
         if (CommonRuleDialog->objectName().isEmpty())
             CommonRuleDialog->setObjectName(QStringLiteral("CommonRuleDialog"));
-        CommonRuleDialog->resize(650, 441);
+        CommonRuleDialog->resize(650, 466);
         gridLayout_8 = new QGridLayout(CommonRuleDialog);
         gridLayout_8->setObjectName(QStringLiteral("gridLayout_8"));
         buttonBox = new QDialogButtonBox(CommonRuleDialog);
@@ -125,20 +132,15 @@ public:
 
         gridLayout = new QGridLayout();
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        lineEdit_common_dmask = new QLineEdit(CommonRuleDialog);
-        lineEdit_common_dmask->setObjectName(QStringLiteral("lineEdit_common_dmask"));
+        label_2 = new QLabel(CommonRuleDialog);
+        label_2->setObjectName(QStringLiteral("label_2"));
 
-        gridLayout->addWidget(lineEdit_common_dmask, 3, 3, 1, 1);
+        gridLayout->addWidget(label_2, 0, 0, 1, 1);
 
         label_3 = new QLabel(CommonRuleDialog);
         label_3->setObjectName(QStringLiteral("label_3"));
 
         gridLayout->addWidget(label_3, 2, 1, 1, 1);
-
-        comboBox_common_mtype = new QComboBox(CommonRuleDialog);
-        comboBox_common_mtype->setObjectName(QStringLiteral("comboBox_common_mtype"));
-
-        gridLayout->addWidget(comboBox_common_mtype, 1, 0, 1, 1);
 
         label_8 = new QLabel(CommonRuleDialog);
         label_8->setObjectName(QStringLiteral("label_8"));
@@ -149,6 +151,16 @@ public:
         label_7->setObjectName(QStringLiteral("label_7"));
 
         gridLayout->addWidget(label_7, 0, 1, 1, 1);
+
+        lineEdit_common_sport = new QLineEdit(CommonRuleDialog);
+        lineEdit_common_sport->setObjectName(QStringLiteral("lineEdit_common_sport"));
+
+        gridLayout->addWidget(lineEdit_common_sport, 5, 1, 1, 1);
+
+        lineEdit_common_dport = new QLineEdit(CommonRuleDialog);
+        lineEdit_common_dport->setObjectName(QStringLiteral("lineEdit_common_dport"));
+
+        gridLayout->addWidget(lineEdit_common_dport, 5, 3, 1, 1);
 
         label_5 = new QLabel(CommonRuleDialog);
         label_5->setObjectName(QStringLiteral("label_5"));
@@ -165,45 +177,40 @@ public:
 
         gridLayout->addWidget(label, 2, 0, 1, 1);
 
-        label_2 = new QLabel(CommonRuleDialog);
-        label_2->setObjectName(QStringLiteral("label_2"));
-
-        gridLayout->addWidget(label_2, 0, 0, 1, 1);
-
-        lineEdit_common_saddr = new QLineEdit(CommonRuleDialog);
-        lineEdit_common_saddr->setObjectName(QStringLiteral("lineEdit_common_saddr"));
-
-        gridLayout->addWidget(lineEdit_common_saddr, 3, 0, 1, 1);
-
         label_4 = new QLabel(CommonRuleDialog);
         label_4->setObjectName(QStringLiteral("label_4"));
 
         gridLayout->addWidget(label_4, 2, 2, 1, 1);
-
-        lineEdit_common_smask = new QLineEdit(CommonRuleDialog);
-        lineEdit_common_smask->setObjectName(QStringLiteral("lineEdit_common_smask"));
-
-        gridLayout->addWidget(lineEdit_common_smask, 3, 1, 1, 1);
 
         comboBox_common_log = new QComboBox(CommonRuleDialog);
         comboBox_common_log->setObjectName(QStringLiteral("comboBox_common_log"));
 
         gridLayout->addWidget(comboBox_common_log, 1, 2, 1, 1);
 
+        lineEdit_common_daddr = new QLineEdit(CommonRuleDialog);
+        lineEdit_common_daddr->setObjectName(QStringLiteral("lineEdit_common_daddr"));
+
+        gridLayout->addWidget(lineEdit_common_daddr, 5, 2, 1, 1);
+
         label_6 = new QLabel(CommonRuleDialog);
         label_6->setObjectName(QStringLiteral("label_6"));
 
         gridLayout->addWidget(label_6, 0, 2, 1, 1);
 
-        lineEdit_common_daddr = new QLineEdit(CommonRuleDialog);
-        lineEdit_common_daddr->setObjectName(QStringLiteral("lineEdit_common_daddr"));
-
-        gridLayout->addWidget(lineEdit_common_daddr, 3, 2, 1, 1);
-
         lineEdit_add_pos = new QLineEdit(CommonRuleDialog);
         lineEdit_add_pos->setObjectName(QStringLiteral("lineEdit_add_pos"));
 
         gridLayout->addWidget(lineEdit_add_pos, 1, 3, 1, 1);
+
+        comboBox_common_mtype = new QComboBox(CommonRuleDialog);
+        comboBox_common_mtype->setObjectName(QStringLiteral("comboBox_common_mtype"));
+
+        gridLayout->addWidget(comboBox_common_mtype, 1, 0, 1, 1);
+
+        lineEdit_common_saddr = new QLineEdit(CommonRuleDialog);
+        lineEdit_common_saddr->setObjectName(QStringLiteral("lineEdit_common_saddr"));
+
+        gridLayout->addWidget(lineEdit_common_saddr, 5, 0, 1, 1);
 
 
         gridLayout_8->addLayout(gridLayout, 1, 0, 1, 1);
@@ -213,7 +220,6 @@ public:
         page_common = new QWidget();
         page_common->setObjectName(QStringLiteral("page_common"));
         stackedWidget->addWidget(page_common);
-        buttonBox->raise();
         page_connect = new QWidget();
         page_connect->setObjectName(QStringLiteral("page_connect"));
         gridLayout_7 = new QGridLayout(page_connect);
@@ -289,15 +295,52 @@ public:
         gridLayout_2->addWidget(label_18, 4, 2, 1, 1);
 
 
-        gridLayout_7->addLayout(gridLayout_2, 2, 0, 1, 1);
+        gridLayout_7->addLayout(gridLayout_2, 1, 0, 1, 1);
 
-        verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        gridLayout_6 = new QGridLayout();
+        gridLayout_6->setObjectName(QStringLiteral("gridLayout_6"));
+        lineEdit_connect_username = new QLineEdit(page_connect);
+        lineEdit_connect_username->setObjectName(QStringLiteral("lineEdit_connect_username"));
 
-        gridLayout_7->addItem(verticalSpacer_2, 3, 0, 1, 1);
+        gridLayout_6->addWidget(lineEdit_connect_username, 1, 1, 1, 1);
 
-        verticalSpacer_9 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        label_12 = new QLabel(page_connect);
+        label_12->setObjectName(QStringLiteral("label_12"));
 
-        gridLayout_7->addItem(verticalSpacer_9, 1, 0, 1, 1);
+        gridLayout_6->addWidget(label_12, 1, 0, 1, 1);
+
+        label_24 = new QLabel(page_connect);
+        label_24->setObjectName(QStringLiteral("label_24"));
+
+        gridLayout_6->addWidget(label_24, 2, 0, 1, 1);
+
+        lineEdit_connect_will_topic = new QLineEdit(page_connect);
+        lineEdit_connect_will_topic->setObjectName(QStringLiteral("lineEdit_connect_will_topic"));
+
+        gridLayout_6->addWidget(lineEdit_connect_will_topic, 2, 1, 1, 1);
+
+        label_26 = new QLabel(page_connect);
+        label_26->setObjectName(QStringLiteral("label_26"));
+
+        gridLayout_6->addWidget(label_26, 3, 0, 1, 1);
+
+        lineEdit_connect_will_message = new QLineEdit(page_connect);
+        lineEdit_connect_will_message->setObjectName(QStringLiteral("lineEdit_connect_will_message"));
+
+        gridLayout_6->addWidget(lineEdit_connect_will_message, 3, 1, 1, 1);
+
+        label_27 = new QLabel(page_connect);
+        label_27->setObjectName(QStringLiteral("label_27"));
+
+        gridLayout_6->addWidget(label_27, 0, 0, 1, 1);
+
+        lineEdit_connect_clientid = new QLineEdit(page_connect);
+        lineEdit_connect_clientid->setObjectName(QStringLiteral("lineEdit_connect_clientid"));
+
+        gridLayout_6->addWidget(lineEdit_connect_clientid, 0, 1, 1, 1);
+
+
+        gridLayout_7->addLayout(gridLayout_6, 2, 0, 1, 1);
 
         stackedWidget->addWidget(page_connect);
         page_publish = new QWidget();
@@ -466,14 +509,13 @@ public:
         gridLayout_8->addItem(verticalSpacer_5, 0, 0, 1, 1);
 
         stackedWidget->raise();
-        label_2->raise();
         buttonBox->raise();
 
         retranslateUi(CommonRuleDialog);
         QObject::connect(buttonBox, SIGNAL(accepted()), CommonRuleDialog, SLOT(accept()));
         QObject::connect(buttonBox, SIGNAL(rejected()), CommonRuleDialog, SLOT(reject()));
 
-        stackedWidget->setCurrentIndex(1);
+        stackedWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(CommonRuleDialog);
@@ -482,7 +524,24 @@ public:
     void retranslateUi(QDialog *CommonRuleDialog)
     {
         CommonRuleDialog->setWindowTitle(QApplication::translate("CommonRuleDialog", "Dialog", 0));
-        label_3->setText(QApplication::translate("CommonRuleDialog", "\346\272\220\345\234\260\345\235\200\346\216\251\347\240\201", 0));
+        label_2->setText(QApplication::translate("CommonRuleDialog", "MQTT\347\261\273\345\236\213 ", 0));
+        label_3->setText(QApplication::translate("CommonRuleDialog", "\346\272\220\347\253\257\345\217\243", 0));
+        label_8->setText(QApplication::translate("CommonRuleDialog", "\344\275\215\347\275\256 (\351\273\230\350\256\244\346\234\200\345\220\216)", 0));
+        label_7->setText(QApplication::translate("CommonRuleDialog", "\345\212\250\344\275\234", 0));
+        label_5->setText(QApplication::translate("CommonRuleDialog", "\347\233\256\347\232\204\347\253\257\345\217\243", 0));
+        comboBox_common_action->clear();
+        comboBox_common_action->insertItems(0, QStringList()
+         << QApplication::translate("CommonRuleDialog", "DENY", 0)
+         << QApplication::translate("CommonRuleDialog", "PERMIT", 0)
+        );
+        label->setText(QApplication::translate("CommonRuleDialog", "\346\272\220\345\234\260\345\235\200", 0));
+        label_4->setText(QApplication::translate("CommonRuleDialog", "\347\233\256\347\232\204\345\234\260\345\235\200", 0));
+        comboBox_common_log->clear();
+        comboBox_common_log->insertItems(0, QStringList()
+         << QApplication::translate("CommonRuleDialog", "YES", 0)
+         << QApplication::translate("CommonRuleDialog", "NO", 0)
+        );
+        label_6->setText(QApplication::translate("CommonRuleDialog", "\346\227\245\345\277\227", 0));
         comboBox_common_mtype->clear();
         comboBox_common_mtype->insertItems(0, QStringList()
          << QApplication::translate("CommonRuleDialog", "ANY", 0)
@@ -501,24 +560,7 @@ public:
          << QApplication::translate("CommonRuleDialog", "PINGRESP", 0)
          << QApplication::translate("CommonRuleDialog", "DISCONNECT", 0)
         );
-        label_8->setText(QApplication::translate("CommonRuleDialog", "\344\275\215\347\275\256 (\351\273\230\350\256\244\346\234\200\345\220\216)", 0));
-        label_7->setText(QApplication::translate("CommonRuleDialog", "\345\212\250\344\275\234", 0));
-        label_5->setText(QApplication::translate("CommonRuleDialog", "\347\233\256\347\232\204\345\234\260\345\235\200\346\216\251\347\240\201", 0));
-        comboBox_common_action->clear();
-        comboBox_common_action->insertItems(0, QStringList()
-         << QApplication::translate("CommonRuleDialog", "DENY", 0)
-         << QApplication::translate("CommonRuleDialog", "PERMIT", 0)
-        );
-        label->setText(QApplication::translate("CommonRuleDialog", "\346\272\220\345\234\260\345\235\200", 0));
-        label_2->setText(QApplication::translate("CommonRuleDialog", "MQTT\347\261\273\345\236\213", 0));
         lineEdit_common_saddr->setText(QString());
-        label_4->setText(QApplication::translate("CommonRuleDialog", "\347\233\256\347\232\204\345\234\260\345\235\200", 0));
-        comboBox_common_log->clear();
-        comboBox_common_log->insertItems(0, QStringList()
-         << QApplication::translate("CommonRuleDialog", "YES", 0)
-         << QApplication::translate("CommonRuleDialog", "NO", 0)
-        );
-        label_6->setText(QApplication::translate("CommonRuleDialog", "\346\227\245\345\277\227", 0));
         comboBox_connect_pf->clear();
         comboBox_connect_pf->insertItems(0, QStringList()
          << QApplication::translate("CommonRuleDialog", "0", 0)
@@ -556,6 +598,10 @@ public:
          << QApplication::translate("CommonRuleDialog", "1", 0)
         );
         label_18->setText(QApplication::translate("CommonRuleDialog", "WF (Will Flag)", 0));
+        label_12->setText(QApplication::translate("CommonRuleDialog", "\347\224\250\346\210\267\345\220\215", 0));
+        label_24->setText(QApplication::translate("CommonRuleDialog", "\351\201\227\345\230\261\344\270\273\351\242\230", 0));
+        label_26->setText(QApplication::translate("CommonRuleDialog", "\351\201\227\345\230\261\346\266\210\346\201\257", 0));
+        label_27->setText(QApplication::translate("CommonRuleDialog", "\345\256\242\346\210\267\347\253\257\346\240\207\350\257\206\347\254\246", 0));
         label_20->setText(QApplication::translate("CommonRuleDialog", "\350\277\207\346\273\244\344\270\273\351\242\230", 0));
         label_21->setText(QApplication::translate("CommonRuleDialog", "\350\277\207\346\273\244\345\205\263\351\224\256\350\257\215", 0));
         label_9->setText(QApplication::translate("CommonRuleDialog", "DUP (\351\207\215\345\217\221\346\240\207\345\277\227)", 0));

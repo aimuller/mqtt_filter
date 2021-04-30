@@ -15,7 +15,6 @@ class CommonRuleDialog : public QDialog
     
 public:
     void setMode(int arg);
-    void setSourceRule(QString, int);
     void setSourceRule(struct RULE_ST &, int pos);
     explicit CommonRuleDialog(QWidget *parent = 0);
     ~CommonRuleDialog();
@@ -28,6 +27,12 @@ private slots:
     void on_comboBox_common_mtype_activated(const QString &mtype);
 
     void on_checkBox_clicked(bool checked);
+
+    void on_comboBox_connect_unf_currentIndexChanged(const QString &arg1);
+
+    //void on_comboBox_connect_unf_activated(const QString &arg1);
+
+    void on_comboBox_connect_wf_currentIndexChanged(const QString &arg1);
 
 private:
     int mode;

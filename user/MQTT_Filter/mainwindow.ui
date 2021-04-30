@@ -97,7 +97,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_rule">
          <attribute name="title">
@@ -176,6 +176,72 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="tab_connect">
+         <attribute name="title">
+          <string>连接查看</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <widget class="QPushButton" name="pushButton_update_connect">
+              <property name="text">
+               <string>刷新</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <item row="0" column="0">
+             <widget class="QTableWidget" name="tableWidget_connect">
+              <column>
+               <property name="text">
+                <string>源地址</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>目的地址</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>连接标志</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Keep Alive</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>客户端标识符</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>用户名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>遗嘱主题</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>遗嘱消息</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="tab_log">
          <attribute name="title">
           <string>日志审查</string>
@@ -187,13 +253,6 @@
              <widget class="QPushButton" name="pushButton">
               <property name="text">
                <string>清除日志</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_2">
-              <property name="text">
-               <string>PushButton</string>
               </property>
              </widget>
             </item>

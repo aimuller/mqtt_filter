@@ -34,6 +34,8 @@ private slots:
 
     void updateSystemLog();
 
+    void updateConnectList();
+
     void on_pushButton_add_rule_clicked();
 
     void on_pushButton_mod_rule_clicked();
@@ -58,6 +60,10 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_pushButton_update_connect_clicked();
+
+    void on_tableWidget_connect_itemEntered(QTableWidgetItem *item);
+
 private:
     int fd;
     int active;
@@ -68,11 +74,14 @@ private:
     CommonRuleDialog *addCommonRuleDialog;
     CommonRuleDialog *modCommonRuleDialog;
     QTimer *logTimer;
+    QTimer *connectTimer;
 
     void getSystemState();
     void runShell(QString cmd);
     void showUserRuleList();
     void getRuleFromKernel();
+    void showConnectList();
+    void getConnectFromKernel();
     void setRuleListToBuffer();
     void setRuleToBuffer(struct RULE_ST &rule, unsigned int pos);
     void setRuleItem(struct RULE_ST *, int);

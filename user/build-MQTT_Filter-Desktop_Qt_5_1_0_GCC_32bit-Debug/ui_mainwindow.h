@@ -58,11 +58,16 @@ public:
     QPushButton *pushButton_clear_rule;
     QGridLayout *gridLayout_3;
     QTableWidget *tableWidget_rule;
+    QWidget *tab_connect;
+    QVBoxLayout *verticalLayout;
+    QHBoxLayout *horizontalLayout_7;
+    QPushButton *pushButton_update_connect;
+    QGridLayout *gridLayout_7;
+    QTableWidget *tableWidget_connect;
     QWidget *tab_log;
     QGridLayout *gridLayout_6;
     QHBoxLayout *horizontalLayout_6;
     QPushButton *pushButton;
-    QPushButton *pushButton_2;
     QTextBrowser *textBrowser;
     QGridLayout *gridLayout;
     QMenuBar *menuBar;
@@ -185,6 +190,53 @@ public:
         gridLayout_2->addLayout(gridLayout_3, 1, 0, 1, 1);
 
         tabWidget->addTab(tab_rule, QString());
+        tab_connect = new QWidget();
+        tab_connect->setObjectName(QStringLiteral("tab_connect"));
+        verticalLayout = new QVBoxLayout(tab_connect);
+        verticalLayout->setSpacing(6);
+        verticalLayout->setContentsMargins(11, 11, 11, 11);
+        verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
+        horizontalLayout_7 = new QHBoxLayout();
+        horizontalLayout_7->setSpacing(6);
+        horizontalLayout_7->setObjectName(QStringLiteral("horizontalLayout_7"));
+        pushButton_update_connect = new QPushButton(tab_connect);
+        pushButton_update_connect->setObjectName(QStringLiteral("pushButton_update_connect"));
+
+        horizontalLayout_7->addWidget(pushButton_update_connect);
+
+
+        verticalLayout->addLayout(horizontalLayout_7);
+
+        gridLayout_7 = new QGridLayout();
+        gridLayout_7->setSpacing(6);
+        gridLayout_7->setObjectName(QStringLiteral("gridLayout_7"));
+        tableWidget_connect = new QTableWidget(tab_connect);
+        if (tableWidget_connect->columnCount() < 8)
+            tableWidget_connect->setColumnCount(8);
+        QTableWidgetItem *__qtablewidgetitem6 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(0, __qtablewidgetitem6);
+        QTableWidgetItem *__qtablewidgetitem7 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(1, __qtablewidgetitem7);
+        QTableWidgetItem *__qtablewidgetitem8 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(2, __qtablewidgetitem8);
+        QTableWidgetItem *__qtablewidgetitem9 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(3, __qtablewidgetitem9);
+        QTableWidgetItem *__qtablewidgetitem10 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(4, __qtablewidgetitem10);
+        QTableWidgetItem *__qtablewidgetitem11 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(5, __qtablewidgetitem11);
+        QTableWidgetItem *__qtablewidgetitem12 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(6, __qtablewidgetitem12);
+        QTableWidgetItem *__qtablewidgetitem13 = new QTableWidgetItem();
+        tableWidget_connect->setHorizontalHeaderItem(7, __qtablewidgetitem13);
+        tableWidget_connect->setObjectName(QStringLiteral("tableWidget_connect"));
+
+        gridLayout_7->addWidget(tableWidget_connect, 0, 0, 1, 1);
+
+
+        verticalLayout->addLayout(gridLayout_7);
+
+        tabWidget->addTab(tab_connect, QString());
         tab_log = new QWidget();
         tab_log->setObjectName(QStringLiteral("tab_log"));
         gridLayout_6 = new QGridLayout(tab_log);
@@ -198,11 +250,6 @@ public:
         pushButton->setObjectName(QStringLiteral("pushButton"));
 
         horizontalLayout_6->addWidget(pushButton);
-
-        pushButton_2 = new QPushButton(tab_log);
-        pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
-
-        horizontalLayout_6->addWidget(pushButton_2);
 
 
         gridLayout_6->addLayout(horizontalLayout_6, 0, 0, 1, 1);
@@ -248,7 +295,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -279,8 +326,25 @@ public:
         QTableWidgetItem *___qtablewidgetitem5 = tableWidget_rule->horizontalHeaderItem(5);
         ___qtablewidgetitem5->setText(QApplication::translate("MainWindow", "\345\205\266\344\273\226", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_rule), QApplication::translate("MainWindow", "\350\247\204\345\210\231\347\256\241\347\220\206", 0));
+        pushButton_update_connect->setText(QApplication::translate("MainWindow", "\345\210\267\346\226\260", 0));
+        QTableWidgetItem *___qtablewidgetitem6 = tableWidget_connect->horizontalHeaderItem(0);
+        ___qtablewidgetitem6->setText(QApplication::translate("MainWindow", "\346\272\220\345\234\260\345\235\200", 0));
+        QTableWidgetItem *___qtablewidgetitem7 = tableWidget_connect->horizontalHeaderItem(1);
+        ___qtablewidgetitem7->setText(QApplication::translate("MainWindow", "\347\233\256\347\232\204\345\234\260\345\235\200", 0));
+        QTableWidgetItem *___qtablewidgetitem8 = tableWidget_connect->horizontalHeaderItem(2);
+        ___qtablewidgetitem8->setText(QApplication::translate("MainWindow", "\350\277\236\346\216\245\346\240\207\345\277\227", 0));
+        QTableWidgetItem *___qtablewidgetitem9 = tableWidget_connect->horizontalHeaderItem(3);
+        ___qtablewidgetitem9->setText(QApplication::translate("MainWindow", "Keep Alive", 0));
+        QTableWidgetItem *___qtablewidgetitem10 = tableWidget_connect->horizontalHeaderItem(4);
+        ___qtablewidgetitem10->setText(QApplication::translate("MainWindow", "\345\256\242\346\210\267\347\253\257\346\240\207\350\257\206\347\254\246", 0));
+        QTableWidgetItem *___qtablewidgetitem11 = tableWidget_connect->horizontalHeaderItem(5);
+        ___qtablewidgetitem11->setText(QApplication::translate("MainWindow", "\347\224\250\346\210\267\345\220\215", 0));
+        QTableWidgetItem *___qtablewidgetitem12 = tableWidget_connect->horizontalHeaderItem(6);
+        ___qtablewidgetitem12->setText(QApplication::translate("MainWindow", "\351\201\227\345\230\261\344\270\273\351\242\230", 0));
+        QTableWidgetItem *___qtablewidgetitem13 = tableWidget_connect->horizontalHeaderItem(7);
+        ___qtablewidgetitem13->setText(QApplication::translate("MainWindow", "\351\201\227\345\230\261\346\266\210\346\201\257", 0));
+        tabWidget->setTabText(tabWidget->indexOf(tab_connect), QApplication::translate("MainWindow", "\350\277\236\346\216\245\346\237\245\347\234\213", 0));
         pushButton->setText(QApplication::translate("MainWindow", "\346\270\205\351\231\244\346\227\245\345\277\227", 0));
-        pushButton_2->setText(QApplication::translate("MainWindow", "PushButton", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_log), QApplication::translate("MainWindow", "\346\227\245\345\277\227\345\256\241\346\237\245", 0));
         menu->setTitle(QApplication::translate("MainWindow", "\346\226\207\344\273\266", 0));
     } // retranslateUi

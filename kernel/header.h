@@ -75,8 +75,9 @@
 
 #define DEFAULT NF_ACCEPT  /*默认策略*/
 #define MAX_COPY_NUM 32
-#define BUF_SIZE 4096
+#define BUF_SIZE 8192
 #define LOG_LEN 1024
+#define HASH_MAX 1024
 
 
 #define MF_DEV_NAME "/dev/mf_dev0" 
@@ -95,40 +96,53 @@
 #define MF_DELETE_RULE 	_IO(MF_MAGIC, 5)
 #define MF_CLEAR_RULE 	_IO(MF_MAGIC, 6)
 #define MF_GET_RULE 	_IO(MF_MAGIC, 7)
-#define MF_GET_LOG 		_IO(MF_MAGIC, 8)
+#define MF_GET_CONNECT  _IO(MF_MAGIC, 8)
 #define MF_SYS_STATE	_IO(MF_MAGIC, 9)
 
-struct CONNECT_ST{
-	u_int8_t flag;
-};
-
-struct PUBLISH_ST{
-	u_int8_t flag;
-	char *topic;
-	char *keyword;
-};
-
-struct SUBSCRIBE_ST{
-	char *topic_filter;
-	u_int8_t rqos;
-};
-
-struct UNSUBSCRIBE_ST{
-	char *topic_filter;
-};
-
-union MQTT_UNION{				/*特别考虑的四种报文的补充规则结构*/
-    struct CONNECT_ST connect;
-    struct PUBLISH_ST publish;
-    struct SUBSCRIBE_ST subscribe;
-    struct UNSUBSCRIBE_ST unsubscribe;
-};
-
-struct PACKET_ST{		/*规则结构定义*/
-    u_int8_t mtype;		/*MQTT报文的类型*/
-    u_int32_t saddr;	/*源地址*/
-    u_int32_t daddr;	/*目的地址*/
-    union MQTT_UNION deep;	/*四种特殊报文的规则信息*/
+struct MQTT_INFO_ST{
+	struct FIXED_HEADER_ST{	/*固定报文头*/
+		u_int8_t mtype;		/*MQTT报文类型*/
+		u_int8_t flags;		/*报文标志*/
+		unsigned int remaining_len;	/*剩余长度*/
+	}fixed_header;
+	
+	union VARIABLE_HEADER_ST{	/*可变报文头*/
+		struct CONNECT_VARIABLE_HEADER_ST{	/*CONNECT报文的可变报头结构*/
+			char *protocol_name;	/*协议名*/
+			u_int8_t level;			/*协议级别*/
+			u_int8_t connect_flags;	/*连接标志*/
+			u_int16_t keep_alive;	/*保持连接系数*/
+		}connect;
+		struct PUBLISH_VARIABLE_HEADER_ST{	/*PUBLISH报文的可变报头结构*/
+			char *topic;					/*主题名*/
+			u_int16_t packet_identifier;	/*报文标识符*/
+		}publish;
+		struct SUBSCRIBE_VARIABLE_HEADER_ST{	/*SUBSCRIBE报文的可变报头结构*/
+			u_int16_t packet_identifier;		/*报文标识符*/
+		}subscribe;
+		struct UNSUBSCRIBE_VARIABLE_HEADER_ST{	/*UNSUBSCRIBE报文的可变报头结构*/
+			u_int16_t packet_identifier;		/*报文标识符*/
+		}unsubscribe;
+	}variable_header;
+	
+	union PAYLOAD_ST{	/*有效载荷*/
+		struct CONNECT_PAYLOAD{	/*CONNECT报文的有效载荷*/
+			char *client_id;	/*客户端标识符*/
+			char *will_topic;	/*遗嘱主题*/
+			char *will_message;	/*遗嘱消息*/
+			char *username;		/*用户名*/
+			char *password;		/*密码*/
+		}connect;
+		struct PUBLISH_PAYLOAD{	/*CONNECT报文的有效载荷*/
+			char *message;		/*用户发布的消息*/
+		}publish;
+		struct SUBSCRIBE_PAYLOAD{	/*SUBSCRIBE报文的有效载荷*/
+			char *topic_filters;	/*订阅报文 主题过滤器＋服务质量要求*/
+		}subscribe;
+		struct UNSUBSCRIBE_PAYLOAD{	/*UNSUBSCRIBE报文的有效载荷*/
+			char *topic_filters;	/*取消订阅报文 主题过滤器*/
+		}unsubscribe;
+	}payload;
 };
 
 struct RULE_ST{		/*规则结构定义*/
@@ -137,15 +151,54 @@ struct RULE_ST{		/*规则结构定义*/
     u_int8_t log;		/*是否记录日志*/
     u_int32_t saddr;	/*源地址*/
     u_int32_t smask;	/*源地址掩码*/
+    u_int16_t sport;	/*源端口*/
     u_int32_t daddr;	/*目的地址*/
     u_int32_t dmask;	/*目的地址掩码*/
-    u_int8_t enabled_deep;	/*是否启用deep字段*/
-    union MQTT_UNION deep;	/*四种特殊报文的规则信息*/
+    u_int16_t dport;	/*目的端口*/
+    u_int8_t enabled_deep;	/*是否启用深入过滤规则项*/
+    union MQTT_UNION{	/*需要深入过滤的报文规则项*/
+		struct CONNECT_ST{	/*CONNECT报文规则项*/
+			u_int8_t flag;		/*连接标志*/
+			char *client_id;	/*客户端标识符*/
+			char *username;		/*用户名*/
+			char *will_topic;	/*遗嘱主题*/
+			char *will_message;	/*遗嘱消息*/
+		}connect;
+		struct PUBLISH_ST{	/*PUBLISH报文规则项*/
+			u_int8_t flag;	/*报文标志*/
+			char *topic;	/*主题过滤器*/
+			char *keyword;	/*过滤关键字*/
+		}publish;
+		struct SUBSCRIBE_ST{	/*SUBSCRIBE报文规则项*/
+			char *topic_filter;		/*主题过滤器*/
+			u_int16_t filter_len;	
+			u_int8_t rqos;			/*要求服务质量*/
+		}subscribe;
+		struct UNSUBSCRIBE_ST{	/*UNSUBSCRIBE报文规则项*/
+			char *topic_filter;		/*主题过滤器*/
+			u_int16_t filter_len;	/**/
+		}unsubscribe;
+    }deep;	/*四种特殊报文的规则信息*/
 };
 
-struct RULE_LIST_ST{	/*规则链表定义，使用Linux内核提供的链表list*/
+struct PACKET_ST{		/*包结构定义*/
+	u_int32_t saddr;	/*源地址*/
+    u_int16_t sport;	/*源端口*/
+    u_int32_t daddr;	/*目的地址*/
+    u_int16_t dport;	/*目的端口*/
+    struct MQTT_INFO_ST mqtt;	/*MQTT报文信息*/
+};
+
+struct RULE_LIST_ST{	/*规则链表定义，使用Linux内核提供的双链表list*/
 	struct list_head list;	/*内核链表结构*/
-	struct RULE_ST rule;		/*表示一条规则*/
+	struct RULE_ST rule;	/*表示一条规则*/
+};
+
+struct CONNECT_LIST_ST{		/*连接链表定义，使用Linux内核提供的哈希链表hlist*/
+	u_int32_t key;
+	struct hlist_node list; 	/*内核哈希链表结构*/
+	struct timer_list timer;	/*定时器*/
+	struct PACKET_ST packet;	/*表示一条连接*/
 };
 
 
@@ -159,10 +212,12 @@ static long mf_ioctl( struct file *file, unsigned int cmd, unsigned long arg);
 static int add_node(struct RULE_LIST_ST *node, unsigned int N);
 /*删除规则链表节点*/
 static int del_node(unsigned long N);
+
+static void mqtt_release(struct MQTT_INFO_ST *mqtt);
 /*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, struct PACKET_ST *packet_info);
+//static int mqtt_check(struct RULE_ST *rule, struct PACKET_ST *packet_info);
 /*ip_check函数*/
-static int ip_check(struct RULE_ST *rule, struct iphdr *iph);
+//static int ip_check(struct RULE_ST *rule, struct iphdr *iph);
 /*规则check函数*/
-static unsigned int check(struct sk_buff *skb);
+//static unsigned int check(struct sk_buff *skb);
 

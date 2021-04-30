@@ -1,7 +1,11 @@
 #include "header.h"
 
-struct RULE_LIST_ST rules_head;	/*定义规则链表头结点*/
+struct RULE_LIST_ST rules_head;			/*定义规则链表头结点*/
+struct CONNECT_LIST_ST connects_head;	/*定义连接链表头结点*/
+
+struct hlist_head hashTable[HASH_MAX];
 unsigned int rule_num;				/*当前的规则条数*/
+unsigned int connect_num;			/*当前的连接数*/
 
 static struct nf_hook_ops nfho[2];	/*nf_hook_ops结构声明*/
 static int active = 0;	/*active=1表示开启, active=0表示关闭, 默认开启*/
@@ -149,6 +153,20 @@ static void free_node(struct RULE_LIST_ST *node){
 		return;
 
 	switch(node->rule.mtype){
+	case CONNECT:
+		if(node->rule.deep.connect.client_id != NULL)
+			kfree(node->rule.deep.connect.client_id);
+		if(node->rule.deep.connect.username != NULL)
+			kfree(node->rule.deep.connect.username);
+		if(node->rule.deep.connect.will_topic != NULL)
+			kfree(node->rule.deep.connect.will_topic);
+		if(node->rule.deep.connect.will_message != NULL)
+			kfree(node->rule.deep.connect.will_message);
+		node->rule.deep.connect.client_id = NULL;
+		node->rule.deep.connect.username = NULL;
+		node->rule.deep.connect.will_topic = NULL;
+		node->rule.deep.connect.will_message = NULL;
+	
 	case PUBLISH:
 		if(node->rule.deep.publish.topic != NULL)
 			kfree(node->rule.deep.publish.topic);
@@ -226,8 +244,10 @@ static int add_rule(unsigned long arg){
 	node->rule.log = *ptr;		ptr += sizeof(u_int8_t);
 	node->rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
 	node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+	node->rule.sport = *((u_int16_t *)ptr); ptr += sizeof(u_int16_t);
 	node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
 	node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+	node->rule.dport = *((u_int16_t *)ptr); ptr += sizeof(u_int16_t);
 	node->rule.enabled_deep = *ptr;	ptr += sizeof(u_int8_t);
 
 	if(node->rule.enabled_deep == ENABLED){
@@ -235,6 +255,46 @@ static int add_rule(unsigned long arg){
 		case CONNECT:
 			node->rule.deep.connect.flag = *ptr;	
 			ptr += sizeof(u_int8_t);
+			
+			if(*ptr){
+				node->rule.deep.connect.client_id = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.connect.client_id, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.connect.client_id = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			
+			if(*ptr){
+				node->rule.deep.connect.username = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.connect.username, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.connect.username = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			
+			if(*ptr){
+				node->rule.deep.connect.will_topic = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.connect.will_topic, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.connect.will_topic = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			if(*ptr){
+				node->rule.deep.connect.will_message = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+				strcpy(node->rule.deep.connect.will_message, ptr);
+				ptr += (strlen(ptr) + 1);
+			}
+			else{
+				node->rule.deep.connect.will_message = NULL;
+				ptr += sizeof(u_int8_t);
+			}
+			
 			break;
 		case PUBLISH:
 			node->rule.deep.publish.flag = *ptr;
@@ -262,11 +322,14 @@ static int add_rule(unsigned long arg){
 			if(*ptr){
 				node->rule.deep.subscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
 				strcpy(node->rule.deep.subscribe.topic_filter, ptr);
+				node->rule.deep.subscribe.filter_len = strlen(ptr);
 				ptr += (strlen(ptr) + 1);
+				
 				node->rule.deep.subscribe.rqos = *ptr;
 				ptr += sizeof(u_int8_t);
 			}
 			else{
+				node->rule.deep.subscribe.filter_len = 0;
 				node->rule.deep.subscribe.topic_filter = NULL;
 				ptr += sizeof(u_int8_t);
 			}
@@ -275,9 +338,11 @@ static int add_rule(unsigned long arg){
 			if(*ptr){
 				node->rule.deep.unsubscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
 				strcpy(node->rule.deep.unsubscribe.topic_filter, ptr);
+				node->rule.deep.unsubscribe.filter_len = strlen(ptr);
 				ptr += (strlen(ptr) + 1);
 			}
 			else{
+				node->rule.deep.unsubscribe.filter_len = 0;
 				node->rule.deep.unsubscribe.topic_filter = NULL;
 				ptr += sizeof(u_int8_t);
 			}
@@ -314,8 +379,10 @@ static int add_rule_list(unsigned long arg){
 		node->rule.log = *ptr;		ptr += sizeof(u_int8_t);
 		node->rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
 		node->rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.sport = *((u_int16_t *)ptr); ptr += sizeof(u_int16_t);
 		node->rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
 		node->rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+		node->rule.dport = *((u_int16_t *)ptr); ptr += sizeof(u_int16_t);
 		node->rule.enabled_deep = *ptr;	ptr += sizeof(u_int8_t);
 
 		if(node->rule.enabled_deep == ENABLED){
@@ -323,6 +390,46 @@ static int add_rule_list(unsigned long arg){
 			case CONNECT:
 				node->rule.deep.connect.flag = *ptr;	
 				ptr += sizeof(u_int8_t);
+				
+				if(*ptr){
+					node->rule.deep.connect.client_id = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.connect.client_id, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.connect.client_id = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				
+				if(*ptr){
+					node->rule.deep.connect.username = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.connect.username, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.connect.username = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+			
+				if(*ptr){
+					node->rule.deep.connect.will_topic = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.connect.will_topic, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.connect.will_topic = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				if(*ptr){
+					node->rule.deep.connect.will_message = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
+					strcpy(node->rule.deep.connect.will_message, ptr);
+					ptr += (strlen(ptr) + 1);
+				}
+				else{
+					node->rule.deep.connect.will_message = NULL;
+					ptr += sizeof(u_int8_t);
+				}
+				
 				break;
 			case PUBLISH:
 				node->rule.deep.publish.flag = *ptr;
@@ -350,11 +457,14 @@ static int add_rule_list(unsigned long arg){
 				if(*ptr){
 					node->rule.deep.subscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
 					strcpy(node->rule.deep.subscribe.topic_filter, ptr);
+					node->rule.deep.subscribe.filter_len = strlen(ptr);
 					ptr += (strlen(ptr) + 1);
+					
 					node->rule.deep.subscribe.rqos = *ptr;
 					ptr += sizeof(u_int8_t);
 				}
 				else{
+					node->rule.deep.subscribe.filter_len = 0;
 					node->rule.deep.subscribe.topic_filter = NULL;
 					ptr += sizeof(u_int8_t);
 				}
@@ -363,9 +473,11 @@ static int add_rule_list(unsigned long arg){
 				if(*ptr){
 					node->rule.deep.unsubscribe.topic_filter = (char *)kmalloc(sizeof(char) * (strlen(ptr) + 1), GFP_KERNEL);
 					strcpy(node->rule.deep.unsubscribe.topic_filter, ptr);
+					node->rule.deep.unsubscribe.filter_len = strlen(ptr);
 					ptr += (strlen(ptr) + 1);
 				}
 				else{
+					node->rule.deep.unsubscribe.filter_len = 0;
 					node->rule.deep.unsubscribe.topic_filter = NULL;
 					ptr += sizeof(u_int8_t);
 				}
@@ -413,8 +525,10 @@ static int rules2buf(void){
 		*ptr = node->rule.log; 		ptr += sizeof(u_int8_t);
 		*((u_int32_t *)ptr) = (node->rule.saddr);	ptr += sizeof(u_int32_t);
 		*((u_int32_t *)ptr) = (node->rule.smask);	ptr += sizeof(u_int32_t);
+		*((u_int16_t *)ptr) = (node->rule.sport);	ptr += sizeof(u_int16_t);
 		*((u_int32_t *)ptr) = (node->rule.daddr);	ptr += sizeof(u_int32_t);
 		*((u_int32_t *)ptr) = (node->rule.dmask);	ptr += sizeof(u_int32_t);
+		*((u_int16_t *)ptr) = (node->rule.dport);	ptr += sizeof(u_int16_t);
 		*ptr = node->rule.enabled_deep;	ptr += sizeof(u_int8_t);
 
 		if(node->rule.enabled_deep == ENABLED){
@@ -422,6 +536,43 @@ static int rules2buf(void){
 			case CONNECT:
 				*ptr = node->rule.deep.connect.flag; 
 				ptr += sizeof(u_int8_t);
+				
+				if(node->rule.deep.connect.client_id != NULL){
+					strcpy((char *)ptr, node->rule.deep.connect.client_id);
+					ptr += (strlen(node->rule.deep.connect.client_id) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				
+				if(node->rule.deep.connect.username != NULL){
+					strcpy((char *)ptr, node->rule.deep.connect.username);
+					ptr += (strlen(node->rule.deep.connect.username) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				
+				if(node->rule.deep.connect.will_topic != NULL){
+					strcpy((char *)ptr, node->rule.deep.connect.will_topic);
+					ptr += (strlen(node->rule.deep.connect.will_topic) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				
+				if(node->rule.deep.connect.will_message != NULL){
+					strcpy((char *)ptr, node->rule.deep.connect.will_message);
+					ptr += (strlen(node->rule.deep.connect.will_message) + 1);
+				}
+				else{
+					*ptr = 0;
+					ptr += sizeof(u_int8_t);
+				}
+				
 				break;
 			case PUBLISH:
 				*ptr = node->rule.deep.publish.flag;
@@ -488,6 +639,180 @@ static void get_rule_list(unsigned long arg){
 		printk("<MF> ERR: copy_to_user ERROR\n");
 }
 
+static void init_hashTable(void){
+	int i;
+    for(i = 0; i < HASH_MAX; i++)
+        INIT_HLIST_HEAD(&hashTable[i]);
+}
+
+/*清除连接链表*/
+static void del_hashTable(void){
+	int i;
+	struct CONNECT_LIST_ST *hnode = NULL;
+    struct hlist_node *hlist = NULL;
+    
+	for(i = 0; i < HASH_MAX; i++){
+		//遍历每一个槽，有结点就删除
+		hlist_for_each_entry_safe(hnode, hlist, &hashTable[i], list){           
+				hlist_del(&hnode->list); 
+				del_timer(&hnode->timer);
+				mqtt_release(&hnode->packet.mqtt);
+				kfree(hnode);
+				hnode = NULL;
+		}
+    }
+    
+    connect_num = 0;
+}
+
+//计时器超过规定时间，删除节点
+void timer_function(unsigned long arg){
+	struct CONNECT_LIST_ST *hnode = (struct CONNECT_LIST_ST *)arg;
+	
+	hlist_del(&hnode->list);
+	del_timer(&hnode->timer);
+	mqtt_release(&hnode->packet.mqtt);
+	kfree(hnode);
+	hnode = NULL;
+	
+	connect_num--;
+}
+
+static void add_connect_node(struct PACKET_ST *packet_info){
+	struct CONNECT_LIST_ST *hnode;
+	unsigned int timeout;
+	u_int32_t key;
+	
+	timeout = (unsigned int)(packet_info->mqtt.variable_header.connect.keep_alive * 3 / 2);
+	key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	
+	hnode = (struct CONNECT_LIST_ST *)kmalloc(sizeof(struct CONNECT_LIST_ST), GFP_KERNEL);
+	
+	hnode->key = key;
+	memcpy(&hnode->packet, packet_info, sizeof(struct PACKET_ST));
+	
+	//初始化计时器
+	init_timer(&hnode->timer);
+	(hnode->timer).data = (unsigned long)hnode;
+	(hnode->timer).expires = jiffies + (timeout * HZ);
+	(hnode->timer).function = timer_function;
+	add_timer(&hnode->timer);
+	
+	hlist_add_head(&hnode->list, &hashTable[key % HASH_MAX]);
+	
+	connect_num++;
+}
+
+static void del_connect_node(struct PACKET_ST *packet_info){
+	struct CONNECT_LIST_ST *hnode;
+	u_int32_t key;
+	
+	key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
+		//遍历节点
+		hlist_for_each_entry(hnode, &hashTable[key % HASH_MAX], list){
+			if(hnode->key == key){	//状态表中找到当前连接
+				hlist_del(&hnode->list);
+				del_timer(&hnode->timer);
+				mqtt_release(&hnode->packet.mqtt);
+				kfree(hnode);
+				connect_num--;
+				return;
+			}
+		}
+	}
+}
+
+static void update_connect_list(struct PACKET_ST *packet_info){
+	struct CONNECT_LIST_ST *hnode;
+
+	u_int32_t key, timeout;
+	
+	if(connect_num <= 0)
+		return;
+	
+	key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	
+	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
+		//遍历节点
+		hlist_for_each_entry(hnode, &hashTable[key % HASH_MAX], list){
+			if(hnode->key == key){	//状态表中找到当前连接
+				timeout = hnode->packet.mqtt.variable_header.connect.keep_alive * 3 / 2;
+				//printk(KERN_INFO "<MF> DEBUG: update_connect_node Time = %d\n", timeout);
+				mod_timer(&hnode->timer, jiffies + (timeout * HZ)); //更新计时器
+			}
+		}
+	}
+}
+
+/*将连接状态链表拷贝到用户空间*/
+static void get_connect_list(unsigned int arg){	
+	struct CONNECT_LIST_ST *hnode = NULL;
+    struct hlist_node *hlist = NULL;
+    
+	u_int8_t *ptr = buf;
+	int ret, len, i;
+
+	/*将规则数量填充在前四个字节*/
+	*((unsigned int *)ptr) = connect_num;
+	ptr += sizeof(unsigned int);
+	
+	for(i = 0; i < HASH_MAX; i++){
+		if(hlist_empty(&hashTable[i % HASH_MAX]))
+			continue;
+		hlist_for_each_entry_safe(hnode, hlist, &hashTable[i], list){
+			*((u_int32_t *)ptr) = (hnode->packet.saddr);	ptr += sizeof(u_int32_t);
+			*((u_int32_t *)ptr) = (hnode->packet.sport);	ptr += sizeof(u_int16_t);
+			*((u_int32_t *)ptr) = (hnode->packet.daddr);	ptr += sizeof(u_int32_t);
+			*((u_int32_t *)ptr) = (hnode->packet.dport);	ptr += sizeof(u_int16_t);
+			*((u_int8_t *)ptr)  = (hnode->packet.mqtt.variable_header.connect.connect_flags);	ptr += sizeof(u_int8_t);
+			*((u_int16_t *)ptr) = (hnode->packet.mqtt.variable_header.connect.keep_alive);	ptr += sizeof(u_int16_t);
+		
+			if(hnode->packet.mqtt.payload.connect.client_id != NULL){
+				strcpy((char *)ptr, hnode->packet.mqtt.payload.connect.client_id);
+				ptr += (strlen(hnode->packet.mqtt.payload.connect.client_id) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
+		
+			if(hnode->packet.mqtt.payload.connect.username != NULL){
+				strcpy((char *)ptr, hnode->packet.mqtt.payload.connect.username);
+				ptr += (strlen(hnode->packet.mqtt.payload.connect.username) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
+		
+			if(hnode->packet.mqtt.payload.connect.will_topic != NULL){
+				strcpy((char *)ptr, hnode->packet.mqtt.payload.connect.will_topic);
+				ptr += (strlen(hnode->packet.mqtt.payload.connect.will_topic) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
+		
+			if(hnode->packet.mqtt.payload.connect.will_message != NULL){
+				strcpy((char *)ptr, hnode->packet.mqtt.payload.connect.will_message);
+				ptr += (strlen(hnode->packet.mqtt.payload.connect.will_message) + 1);
+			}
+			else{
+				*ptr = 0;
+				ptr += sizeof(u_int8_t);
+			}
+		}
+	}
+	
+	len = ptr - buf;
+	
+	ret = copy_to_user((u_int8_t *)arg, buf, len);
+	if(ret < 0)
+		printk("<MF> ERR: copy_to_user ERROR\n");
+}
+
 /*字符设备驱动ioctl函数*/
 static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)  
 {  
@@ -533,8 +858,8 @@ static long mf_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		get_rule_list(arg);
 		break; 
 		
-	case MF_GET_LOG: 
-		printk("<MF> MF_GET_LOG\n");
+	case MF_GET_CONNECT: 
+		get_connect_list(arg);
 		break; 
  
 	default:  
@@ -716,34 +1041,51 @@ static int pcre_match(char *str, char *pattern)
     return result;
 }
 
-static int mqtt_connect_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
+static int mqtt_connect_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
 	//printk("<MF> packet_info-%x, rule-%x\n", packet_info->connect.flag, rule->deep.connect.flag);
-	if(packet_info->connect.flag != rule->deep.connect.flag)
+	if(mqtt_packet->variable_header.connect.connect_flags != rule->deep.connect.flag)
 		return NO;
+	//printk("<MF> DEBUG: mqtt_connect_check Point 1\n");
+	
+	if(rule->deep.connect.client_id && strcmp(rule->deep.connect.client_id, mqtt_packet->payload.connect.client_id))
+		return NO;
+	//printk("<MF> DEBUG: mqtt_connect_check Point 2\n");
+	//printk("<MF> DEBUG: %s %s \n", rule->deep.connect.username, mqtt_packet->payload.connect.username);
+	
+	if(rule->deep.connect.username && strcmp(rule->deep.connect.username, mqtt_packet->payload.connect.username))
+		return NO;
+	//printk("<MF> DEBUG: mqtt_connect_check Point 3\n");	
+	
+	if(rule->deep.connect.will_topic && strcmp(rule->deep.connect.will_topic, mqtt_packet->payload.connect.will_topic))
+		return NO;
+	//printk("<MF> DEBUG: mqtt_connect_check Point 4\n");	
+	
+	if(rule->deep.connect.will_message && strcmp(rule->deep.connect.will_message, mqtt_packet->payload.connect.will_message))
+		return NO;
+
 	return YES;
 }
 
-static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
+static int mqtt_publish_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
 	int ret, result;
 
 	/*检查publish_flag*/
 	//printk("<MF> packet_flag: %d 	rule_flag: %d\n", packet_info->publish.flag, rule->deep.publish.flag);
-	if(packet_info->publish.flag != rule->deep.publish.flag){
+	if(mqtt_packet->fixed_header.flags != rule->deep.publish.flag){
 		return NO;
 	}
 	
 	/*如果publish规则中的topic非空，则需要进行更深入的匹配*/
 	if(rule->deep.publish.topic){
-		ret = topic_matches(rule->deep.publish.topic, packet_info->publish.topic, &result);	
+		ret = topic_matches(rule->deep.publish.topic, mqtt_packet->variable_header.publish.topic, &result);	
 		/*topic匹配不合法，或者匹配不成功，返回NO*/	
 		if(ret == TOPIC_MATCH_INVAL || result == FALSE)
 			return NO;	
 	}	
 	
-	
 	/*如果publish规则中的keyword非空，则需要进行更深入的匹配*/
 	if(rule->deep.publish.keyword){
-		ret = pcre_match(packet_info->publish.keyword, rule->deep.publish.keyword);
+		ret = pcre_match(mqtt_packet->payload.publish.message, rule->deep.publish.keyword);
 		if(ret == NO || ret == ERR)
 			return NO;
 	}
@@ -752,22 +1094,17 @@ static int mqtt_publish_check(struct RULE_ST *rule, union MQTT_UNION *packet_inf
 	return YES;
 }
 
-
-
-static int mqtt_subscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
-	u_int16_t len, rule_len;
+static int mqtt_subscribe_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
+	u_int16_t len;
 	u_int8_t  *ptr;
 	
-	ptr = packet_info->subscribe.topic_filter;
+	ptr = mqtt_packet->payload.subscribe.topic_filters;
 	len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 	ptr += 2;
 	
-	rule_len = strlen(rule->deep.subscribe.topic_filter);
-	//printk("<MF> packet_len:%d, rule_len:%d\n", len, rule_len);
-	
 	while(len){
 		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
-		if(rule_len != len || memcmp(rule->deep.subscribe.topic_filter, ptr, len))
+		if(rule->deep.subscribe.filter_len != len || memcmp(rule->deep.subscribe.topic_filter, ptr, len))
 			return NO;
 		ptr += len;
 		
@@ -783,21 +1120,17 @@ static int mqtt_subscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet_i
 	return YES;
 }
 
-static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet_info){
-	u_int16_t len, rule_len;
+static int mqtt_unsubscribe_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
+	u_int16_t len;
 	u_int8_t *ptr;
 	
-	ptr = packet_info->unsubscribe.topic_filter;
+	ptr = mqtt_packet->payload.unsubscribe.topic_filters;
 	len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 	ptr += 2;
 	
-	rule_len = strlen(rule->deep.unsubscribe.topic_filter);
-	
-	//printk("<MF> packet_len:%d, rule_len:%d\n", len, rule_len);
-	
 	while(len){
 		/*将规则中主题过滤器与MQTT Packet中的主题过滤器进行比较, 不同则返回NO*/	
-		if(rule_len != len || memcmp(rule->deep.unsubscribe.topic_filter, ptr, len))
+		if(rule->deep.unsubscribe.filter_len != len || memcmp(rule->deep.unsubscribe.topic_filter, ptr, len))
 			return NO;
 		ptr += len;
 		
@@ -811,22 +1144,40 @@ static int mqtt_unsubscribe_check(struct RULE_ST *rule, union MQTT_UNION *packet
 }
 
 /*mqtt_check函数*/
-static int mqtt_check(struct RULE_ST *rule, struct PACKET_ST *packet_info){
-	if(rule->mtype == packet_info->mtype){
+static int mqtt_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
+	if(rule->mtype == ANYTYPE || rule->mtype == mqtt_packet->fixed_header.mtype){
 		if(rule->enabled_deep == ENABLED){
 			switch(rule->mtype){
 			case CONNECT:
-				printk("<MF> DEBUG: mqtt_connect_check\n");
-				return mqtt_connect_check(rule, &(packet_info->deep));
+				printk("<MF> DEBUG: protocol_name: %s, level: %d, connect_flags: %x, keep_alive: %d, will_topic: %s, will_message: %s, username: %s, password: %s, client_id: %s\n", \
+						mqtt_packet->variable_header.connect.protocol_name, \
+						mqtt_packet->variable_header.connect.level, \
+						mqtt_packet->variable_header.connect.connect_flags, \
+						mqtt_packet->variable_header.connect.keep_alive, \
+						mqtt_packet->payload.connect.will_topic, \
+						mqtt_packet->payload.connect.will_message, \
+						mqtt_packet->payload.connect.username, \
+						mqtt_packet->payload.connect.password, \
+						mqtt_packet->payload.connect.client_id); 
+				return mqtt_connect_check(rule, mqtt_packet);
 			case PUBLISH:
-				printk("<MF> DEBUG: mqtt_publish_check\n");
-				return mqtt_publish_check(rule, &(packet_info->deep));
+				/* printk("<MF> DEBUG: publish_flags: %x, topic: %s, packet_identifier: %x, message: %s\n",\
+						mqtt_packet->fixed_header.flags, \
+						mqtt_packet->variable_header.publish.topic, \
+						mqtt_packet->variable_header.publish.packet_identifier, \
+						mqtt_packet->payload.publish.message); */
+				return mqtt_publish_check(rule, mqtt_packet);
 			case SUBSCRIBE:
-				printk("<MF> DEBUG: mqtt_subscribe_check\n");
-				return mqtt_subscribe_check(rule, &(packet_info->deep)); 
+				/*printk("<MF> DEBUG: packet_identifier: %x, topic_filters: %s\n", \
+						mqtt_packet->variable_header.subscribe.packet_identifier, \
+						mqtt_packet->payload.subscribe.topic_filters + 2); */
+				return mqtt_subscribe_check(rule, mqtt_packet); 
 			case UNSUBSCRIBE:
-				printk("<MF> DEBUG: mqtt_unsubscribe_check\n");
-				return mqtt_unsubscribe_check(rule, &(packet_info->deep));
+				/*printk("<MF> DEBUG: mqtt_unsubscribe_check\n");
+				printk("<MF> DEBUG: packet_identifier: %x, topic_filters: %s\n", \
+						mqtt_packet->variable_header.unsubscribe.packet_identifier, \
+						mqtt_packet->payload.unsubscribe.topic_filters + 2); */
+				return mqtt_unsubscribe_check(rule, mqtt_packet);
 			}
 		}
 		return YES;
@@ -834,124 +1185,189 @@ static int mqtt_check(struct RULE_ST *rule, struct PACKET_ST *packet_info){
 	return NO;
 }
 
+static int port_check(struct RULE_ST *rule, struct tcphdr *tcph)
+{
+
+	if( (rule->sport == ANY_ADDR || rule->sport == tcph->source) &&
+		(rule->dport == ANY_ADDR || rule->dport == tcph->dest))
+		return YES;
+
+	return NO;
+}
+
 /*ip_check函数*/
 static int ip_check(struct RULE_ST *rule, struct iphdr *iph){
-	u_int32_t *saddr = (u_int32_t *)&iph->saddr;
-	u_int32_t *daddr = (u_int32_t *)&iph->daddr;
+	u_int32_t saddr = iph->saddr;
+	u_int32_t daddr = iph->daddr;
 
-	if( (rule->saddr == ANY_ADDR || (rule->saddr & rule->smask) == (*saddr & rule->smask)) &&
-	    (rule->daddr == ANY_ADDR || (rule->daddr & rule->dmask) == (*daddr & rule->dmask)) )
+	if( (rule->saddr == ANY_ADDR || (rule->saddr & rule->smask) == (saddr & rule->smask)) &&
+	    (rule->daddr == ANY_ADDR || (rule->daddr & rule->dmask) == (daddr & rule->dmask)))
 		return YES;
 	//printk("src_ip: %x, %x\n", node->src_ip, *src_ip);
 	//printk("dest_ip: %x, %x\n", node->dest_ip, *dest_ip);
 	return NO;
 }
 
-static void mqtt_release(struct PACKET_ST *packet_info){
-	switch(packet_info->mtype){
+static void mqtt_release(struct MQTT_INFO_ST *mqtt){
+	switch(mqtt->fixed_header.mtype){
+	case CONNECT:
+		kfree(mqtt->variable_header.connect.protocol_name);
+		kfree(mqtt->payload.connect.client_id);
+		if(mqtt->payload.connect.will_topic)
+			kfree(mqtt->payload.connect.will_topic);
+		if(mqtt->payload.connect.will_message)
+			kfree(mqtt->payload.connect.will_message);
+		if(mqtt->payload.connect.username)
+			kfree(mqtt->payload.connect.username);
+		if(mqtt->payload.connect.password)
+			kfree(mqtt->payload.connect.password);
+		break;
 	case PUBLISH:
-		kfree(packet_info->deep.publish.topic);
-		kfree(packet_info->deep.publish.keyword);
+		kfree(mqtt->variable_header.publish.topic);
+		if(mqtt->payload.publish.message)
+			kfree(mqtt->payload.publish.message);
 		break;
 	case SUBSCRIBE:
-		kfree(packet_info->deep.subscribe.topic_filter);
+		if(mqtt->payload.subscribe.topic_filters)
+			kfree(mqtt->payload.subscribe.topic_filters);
 		break; 
 	case UNSUBSCRIBE:
-		kfree(packet_info->deep.unsubscribe.topic_filter);	
+		if(mqtt->payload.unsubscribe.topic_filters)
+			kfree(mqtt->payload.unsubscribe.topic_filters);	
 		break;
 	default:
 		break;
 	}
 }
 
-static void mqtt_analysis(union MQTT_UNION *result, u_int8_t *mqtth){
+static unsigned int utf8_to_str(char **str, u_int8_t *ptr){
+	unsigned int len;
+	len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];	 /*取出utf-8字符串长度*/
+	ptr += 2;
+	
+	str[0] = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
+	memcpy(str[0], ptr, len);
+	str[0][len] = '\0';
+	return (len + 2);
+}
+
+static void mqtt_analysis(struct MQTT_INFO_ST *mqtt, u_int8_t *mqtth){
 	unsigned int offset, remaining_len, len;
 	u_int8_t *ptr, *variable_hdr, *payload_hdr;
-	char *topic, *payload;
+	char *payload;
 	
 	ptr = mqtth;	/*ptr指向固定报头*/
-	ptr++; 			/*让ptr指向mqtt固定报头剩余长度字段*/
+	
+	mqtt->fixed_header.mtype = *ptr & 0xF0;
+	mqtt->fixed_header.flags = *ptr & 0x0F;
+	ptr++; 		/*让ptr指向mqtt固定报头剩余长度字段*/
 	
 	/*取出剩余长度, 并将剩余长度所占字节数存放在offset中*/
 	remaining_len = mqtt_remaining_len(ptr, &offset);
-	
-	/*ptr偏移offset个字节，指向可变报头*/
-	ptr += offset;	
+	mqtt->fixed_header.remaining_len = remaining_len;
+
+	ptr += offset;	/*ptr偏移offset个字节，指向可变报头*/
 	variable_hdr = ptr;
 	
 	//printk("mtype-%x\n", *mqtth & 0xF0);
 	
-	switch(*mqtth & 0xF0){
+	switch(mqtt->fixed_header.mtype){
 	case CONNECT:
-		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];	/*取出协议名长度*/
-		ptr += (2 + len + 1);		/*2字节的MSB+LSB, len字节的协议名长度, 1字节的协议级别, 此时ptr指向连接标志字段*/
-		result->connect.flag = *ptr;		/*取出连接标志*/
+		mqtt->variable_header.connect.protocol_name = NULL;
+		len = utf8_to_str(&mqtt->variable_header.connect.protocol_name, ptr);
+		ptr += len;
+		
+		mqtt->variable_header.connect.level = *ptr;
+		ptr += 1;
+		mqtt->variable_header.connect.connect_flags = *ptr;		/*取出连接标志*/
+		ptr += 1;
+		mqtt->variable_header.connect.keep_alive = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];	 /*取出keep_alive*/
+		ptr += 2;
+		
+		mqtt->payload.connect.client_id = NULL;
+		len = utf8_to_str(&mqtt->payload.connect.client_id, ptr);
+		ptr += len;
+		
+		mqtt->payload.connect.will_topic = NULL;
+		mqtt->payload.connect.will_message = NULL;
+		if(mqtt->variable_header.connect.connect_flags & 0x04){
+			len = utf8_to_str(&mqtt->payload.connect.will_topic, ptr);
+			ptr += len;
+			
+			len = utf8_to_str(&mqtt->payload.connect.will_message, ptr);
+			ptr += len;
+		}
+		
+		mqtt->payload.connect.username = NULL;
+		if(mqtt->variable_header.connect.connect_flags & 0x80){
+			len = utf8_to_str(&mqtt->payload.connect.username, ptr);
+			ptr += len;
+		}
+		
+		mqtt->payload.connect.password = NULL;
+		if(mqtt->variable_header.connect.connect_flags & 0x40){	
+			len = utf8_to_str(&mqtt->payload.connect.password, ptr);
+			ptr += len;
+		}
+		
 		break;
 		
 	case PUBLISH:
-		result->publish.flag = (*mqtth & 0x0F);	/*取出publish报文标志*/
-		
-		/*取出主题名MSB和LSB字段中的长度, 再将ptr偏移2字节，指向主题名字段*/
-		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
-		ptr += 2;
-		
-		/*申请空间存放主题名，check用完记得释放*/
-		topic = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
-		memcpy(topic, ptr, len);
-		topic[len] = '\0';
-		result->publish.topic = topic;
-		ptr += len;		/*ptr滑过主题名字段，指向下一字段*/
+		mqtt->variable_header.publish.topic = NULL;
+		len = utf8_to_str(&mqtt->variable_header.publish.topic, ptr);
+		ptr += len;
 		
 		/*判断是否为QoS1或者QoS2的报文，如果是的话则证明有报文标识符MSB和LSB字段*/
-		if((*mqtth & 0x06) == 1 || (*mqtth & 0x06) == 2){
+		if((mqtt->fixed_header.flags >> 1) >= 1){
+			mqtt->variable_header.publish.packet_identifier = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 			ptr += 2;	/*ptr滑过报文标识符MSB和LSB字段，指向payload部分*/
 		}
 		payload_hdr = ptr;
 	
 		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
-		len = remaining_len - (payload_hdr - variable_hdr);
+		len = remaining_len - (payload_hdr - variable_hdr);		
 		
-		//printk("<MF> publish payload len: %d\n", len);
-		
+		mqtt->payload.publish.message = NULL;
 		payload = (char *)kmalloc(sizeof(char) * len + 1, GFP_KERNEL);
 		memcpy(payload, ptr, len);
 		payload[len] = '\0';
-		result->publish.keyword = payload;	/*借用keyword字段存放payload*/
+		mqtt->payload.publish.message = payload;
 		break;
 		
 	case SUBSCRIBE:		
 		/*滑过报文标识符的MSB和LSB的2个字节，指向payload部分*/
-		ptr += 2;
+		mqtt->variable_header.subscribe.packet_identifier = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;	/*ptr滑过报文标识符MSB和LSB字段，指向payload部分*/
 		payload_hdr = ptr;	
 		
 		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
 		len = remaining_len - (payload_hdr - variable_hdr);
-		//printk("<MF> payload_len:%d\n", len);
-		
+
+		mqtt->payload.subscribe.topic_filters = NULL;
 		payload = (char *)kmalloc(sizeof(char) * len + 2, GFP_KERNEL);
 		memcpy(payload, ptr, len);
 		payload[len] = '\0';
 		payload[len + 1] = '\0';
 		
-		//printk("<MF> payload:%s\n", payload + 2);
-		result->subscribe.topic_filter = payload;
-		
+		mqtt->payload.subscribe.topic_filters = payload;
 		
 		break;
 		
 	case UNSUBSCRIBE:
-		/*滑过报文标识符的MSB和LSB的2个字节，指向payload部分*/
-		ptr += 2;
+		mqtt->variable_header.subscribe.packet_identifier = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
+		ptr += 2;	/*ptr滑过报文标识符MSB和LSB字段，指向payload部分*/
 		payload_hdr = ptr;	
 		
 		/*计算payload字段的长度，payload长度 = 剩余长度 - 可变报头长度 */
 		len = remaining_len - (payload_hdr - variable_hdr);
+		
+		mqtt->payload.unsubscribe.topic_filters = NULL;
 		payload = (char *)kmalloc(sizeof(char) * len + 2, GFP_KERNEL);
 		memcpy(payload, ptr, len);
 		payload[len] = '\0';
 		payload[len + 1] = '\0';
 		
-		result->unsubscribe.topic_filter = payload;
+		mqtt->payload.unsubscribe.topic_filters = payload;
 		break;
 		
 	default:
@@ -965,23 +1381,41 @@ static void write_log(struct PACKET_ST *packet_info, u_int8_t action){
 	char *ptr;
 	
 	str_len = sprintf(log, "<MF> PACKET_INFO:	 [%s]  [%s]  [%s]  [%s]  ", action_str(action), \
-				mtype_str(packet_info->mtype), \
+				mtype_str(packet_info->mqtt.fixed_header.mtype), \
 				ip_str(packet_info->saddr, 0), \
 				ip_str(packet_info->daddr, 1));
 				
 	offset = str_len;
 				
-	switch(packet_info->mtype){
-	case CONNECT:
-		sprintf(log + offset, "%s", cflags_str(packet_info->deep.connect.flag));
+	switch(packet_info->mqtt.fixed_header.mtype){
+	case CONNECT:														
+		str_len = sprintf(log + offset, "%s  [client_id = \"%s\"]", cflags_str(packet_info->mqtt.variable_header.connect.connect_flags), \
+																	packet_info->mqtt.payload.connect.client_id);
+		offset += str_len;
+		
+		if(packet_info->mqtt.payload.connect.username){
+			str_len = sprintf(log + offset, "  [username = \"%s\"]", packet_info->mqtt.payload.connect.username);
+			offset += str_len;
+		}
+		
+		if(packet_info->mqtt.payload.connect.will_topic){
+			str_len = sprintf(log + offset, "  [will_topic = \"%s\"]", packet_info->mqtt.payload.connect.will_topic);
+			offset += str_len;
+		}
+		
+		if(packet_info->mqtt.payload.connect.will_message){
+			str_len = sprintf(log + offset, "  [will_message = \"%s\"]", packet_info->mqtt.payload.connect.will_message);
+			offset += str_len;
+		}
+				
 		break;
 	case PUBLISH:
-		sprintf(log + offset, "%s  [topic = \"%s\"]  [keyword = \"%s\"]", 	pflags_str(packet_info->deep.publish.flag), \
-																			packet_info->deep.publish.topic, \
-																			packet_info->deep.publish.keyword);
+		sprintf(log + offset, "%s  [topic = \"%s\"]  [message = \"%s\"]", 	pflags_str(packet_info->mqtt.fixed_header.flags), \
+																			packet_info->mqtt.variable_header.publish.topic, \
+																			packet_info->mqtt.payload.publish.message);
 		break;
 	case SUBSCRIBE:
-		ptr = packet_info->deep.subscribe.topic_filter;
+		ptr = packet_info->mqtt.payload.subscribe.topic_filters;
 		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 		ptr += 2;
 		
@@ -1002,7 +1436,7 @@ static void write_log(struct PACKET_ST *packet_info, u_int8_t action){
 		
 		break; 
 	case UNSUBSCRIBE:
-		ptr = packet_info->deep.unsubscribe.topic_filter;
+		ptr = packet_info->mqtt.payload.unsubscribe.topic_filters;
 		len = ((u_int16_t)ptr[0] << 8) | (u_int16_t)ptr[1];
 		ptr += 2;
 		
@@ -1022,6 +1456,7 @@ static void write_log(struct PACKET_ST *packet_info, u_int8_t action){
 		}
 		break;
 	default:
+		
 		break;
 	}
 	
@@ -1036,7 +1471,8 @@ static unsigned int check(struct sk_buff *skb)
 	struct list_head *tmp;
 	struct RULE_LIST_ST *node;
 	struct PACKET_ST packet_info;
-	u_int8_t *mqtth, *tail, mtype;
+	u_int8_t *mqtth, *tail;
+	u_int8_t action = DEFAULT;	/*默认策略*/
 
 	//printk("FUNCTION CHECK \n");
 	
@@ -1055,29 +1491,47 @@ static unsigned int check(struct sk_buff *skb)
 		
 			//printk("<MF> %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
 			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
-			mtype = (*mqtth & 0xF0);	/*获取MQTT报文类型*/
 			
 			/*填充packet_info信息, 并对MQTT Packet进行深入分析，并将结果存放到packet_info*/
-			packet_info.mtype = mtype;
 			packet_info.saddr = iph -> saddr;
+			packet_info.sport = tcph -> source;
 			packet_info.daddr = iph -> daddr;
-			mqtt_analysis(&packet_info.deep, mqtth);
-
+			packet_info.dport = tcph -> dest;
+			mqtt_analysis(&packet_info.mqtt, mqtth);
+			
+			if(active){
 			/*将当前报文与规则链表进行匹配*/
-			list_for_each(tmp, &rules_head.list) {
-				node = list_entry(tmp, struct RULE_LIST_ST, list);
-				if(ip_check(&node->rule, iph) && mqtt_check(&node->rule, &packet_info)){
-					if(node->rule.log == YES){
-						write_log(&packet_info, node->rule.action);
+				list_for_each(tmp, &rules_head.list) {
+					node = list_entry(tmp, struct RULE_LIST_ST, list);
+					if(ip_check(&node->rule, iph) && port_check(&node->rule, tcph) && mqtt_check(&node->rule, &packet_info.mqtt)){
+						if(node->rule.log == YES){
+							write_log(&packet_info, node->rule.action);
+						}
+					
+						action = node->rule.action;
+					
+						break;
 					}
-					return node->rule.action;
 				}
 			}
 			
-			/*释放packet_info中deep联合体中指针所指的空间*/
-			mqtt_release(&packet_info);
+			if(action == PERMIT && packet_info.mqtt.fixed_header.mtype == CONNECT){
+				add_connect_node(&packet_info);
+				printk(KERN_INFO "<MF> DEBUG: add_connect_node \n");
+			}
 			
-			return DEFAULT; /*默认策略*/
+			else if(action == PERMIT && packet_info.mqtt.fixed_header.mtype == DISCONNECT){
+				del_connect_node(&packet_info);
+				printk(KERN_INFO "<MF> DEBUG: del_connect_node \n");
+			}
+			
+			else{
+				update_connect_list(&packet_info);
+				mqtt_release(&packet_info.mqtt);
+				printk(KERN_INFO "<MF> DEBUG: update_connect_node \n");
+			}
+			
+			return action; 
 		}
 		return NF_ACCEPT;
 	}
@@ -1090,17 +1544,17 @@ unsigned int mqtt_filter(void *priv,
 			struct sk_buff *skb,
 			const struct nf_hook_state *state)
 {
-	if(!active)
-		return NF_ACCEPT;
 	return check(skb);
 }
 
 /*mqtt过滤模块注册函数*/
 static int myfilter_init(void)
 { 
-	/*初始化规则链表*/
+	/*初始化规则链表和连接链表*/
 	rule_num = 0;
+	connect_num = 0;
 	INIT_LIST_HEAD(&rules_head.list);
+	init_hashTable();
 	
 	/*注册字符设备*/
 	printk(KERN_INFO "<MF> MOD_INIT: 正在注册字符设备驱动...\n");
@@ -1133,6 +1587,7 @@ static int myfilter_init(void)
 static void myfilter_exit(void){
 	
 	clear_rule_list();
+	del_hashTable();
 	
 	/*注销MOQTT过滤模块*/
 	printk(KERN_INFO "<MF> MOD_EXIT: 正在注销MQTT过滤模块...\n");

@@ -8,6 +8,13 @@ CommonRuleDialog::CommonRuleDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->stackedWidget->setEnabled(false);
+    if(ui->comboBox_connect_unf->currentText() == "0")
+        ui->lineEdit_connect_username->setDisabled(true);
+    if(ui->comboBox_connect_wf->currentText() == "0"){
+        ui->lineEdit_connect_will_topic->setDisabled(true);
+        ui->lineEdit_connect_will_message->setDisabled(true);
+    }
+
     ui->stackedWidget->setCurrentIndex(0);
 }
 
@@ -25,50 +32,18 @@ void CommonRuleDialog::setMode(int arg){
         ui->label_8->setText("位置(默认原位置)");
     }
 }
-void CommonRuleDialog::setSourceRule(QString str, int col){
-    QStringList strlist;
-    switch(col){
-    case 0:
-        ui->comboBox_common_mtype->setCurrentText(str);
-        if(str == "CONNECT")
-            ui->stackedWidget->setCurrentWidget(ui->page_connect);
-        else if(str == "PUBLISH")
-            ui->stackedWidget->setCurrentWidget(ui->page_publish);
-        else if(str == "SUBSCRIBE")
-            ui->stackedWidget->setCurrentWidget(ui->page_subscribe);
-        else if(str == "UNSUBSCRIBE")
-            ui->stackedWidget->setCurrentWidget(ui->page_unsubscribe);
-        break;
-    case 1:
-        ui->comboBox_common_action->setCurrentText(str);
-        break;
-    case 2:
-        ui->comboBox_common_log->setCurrentText(str);
-        break;
-    case 3:
-        strlist = str.split("/");
-        ui->lineEdit_common_saddr->setText(strlist[0]);
-        ui->lineEdit_common_smask->setText(strlist[1]);
-        break;
-    case 4:
-        strlist = str.split("/");
-        ui->lineEdit_common_daddr->setText(strlist[0]);
-        ui->lineEdit_common_dmask->setText(strlist[1]);
-        break;
-    default:
-        break;
-    }
 
-}
 
 void CommonRuleDialog::setSourceRule(struct RULE_ST &rule, int pos){
     ui->comboBox_common_mtype->setCurrentText(rule2mtype(rule.mtype));
     ui->comboBox_common_action->setCurrentText(rule2action(rule.action));
     ui->comboBox_common_log->setCurrentText(rule2log(rule.log));
-    ui->lineEdit_common_saddr->setText(rule2addr(rule.saddr));
-    ui->lineEdit_common_smask->setText(rule2mask(rule.smask));
-    ui->lineEdit_common_daddr->setText(rule2addr(rule.daddr));
-    ui->lineEdit_common_dmask->setText(rule2mask(rule.dmask));
+    ui->lineEdit_common_saddr->setText(rule2addr(rule.saddr) + "/" + rule2mask(rule.smask));
+    ui->lineEdit_common_sport->setText(rule2port(rule.sport));
+
+    ui->lineEdit_common_daddr->setText(rule2addr(rule.daddr) + "/" + rule2mask(rule.dmask));
+    ui->lineEdit_common_dport->setText(rule2port(rule.dport));
+
     ui->lineEdit_add_pos->setText(QString::number(pos));
 
     if(rule.enabled_deep == ENABLED){
@@ -83,6 +58,15 @@ void CommonRuleDialog::setSourceRule(struct RULE_ST &rule, int pos){
             ui->comboBox_connect_wqos->setCurrentText(QString::number((rule.deep.connect.flag & 0x18) >> 3));
             ui->comboBox_connect_wf->setCurrentText(QString::number((rule.deep.connect.flag & 0x04) >> 2));
             ui->comboBox_connect_cs->setCurrentText(QString::number((rule.deep.connect.flag & 0x02) >> 1));
+            if(rule.deep.connect.client_id != NULL)
+                ui->lineEdit_connect_clientid->setText(*(rule.deep.connect.client_id));
+            if(rule.deep.connect.username != NULL)
+                ui->lineEdit_connect_username->setText(*(rule.deep.connect.username));
+            if(rule.deep.connect.will_topic != NULL)
+                ui->lineEdit_connect_will_topic->setText(*(rule.deep.connect.will_topic));
+            if(rule.deep.connect.will_message != NULL)
+                ui->lineEdit_connect_will_message->setText(*(rule.deep.connect.will_message));
+
             break;
         case PUBLISH:
             ui->stackedWidget->setCurrentWidget(ui->page_publish);
@@ -133,10 +117,14 @@ void CommonRuleDialog::on_buttonBox_accepted()
     RULE_ST rule;
     int pos = 0;
 
-    rule.saddr  = addr2rule(ui->lineEdit_common_saddr->text());
-    rule.smask  = mask2rule(ui->lineEdit_common_smask->text());
-    rule.daddr  = addr2rule(ui->lineEdit_common_daddr->text());
-    rule.dmask  = mask2rule(ui->lineEdit_common_dmask->text());
+    addr2rule(ui->lineEdit_common_saddr->text(), rule.saddr, rule.smask);
+    rule.sport  = port2rule(ui->lineEdit_common_sport->text());
+
+    //qDebug() << rule2addr(rule.saddr) << rule2mask(rule.smask) << rule2port(rule.sport);
+
+    addr2rule(ui->lineEdit_common_daddr->text(), rule.daddr, rule.dmask);
+    rule.dport  = port2rule(ui->lineEdit_common_dport->text());
+
     rule.mtype  = mtype2rule(ui->comboBox_common_mtype->currentText());
     rule.log    = log2rule(ui->comboBox_common_log->currentText());
     rule.action = action2rule(ui->comboBox_common_action->currentText());
@@ -147,6 +135,23 @@ void CommonRuleDialog::on_buttonBox_accepted()
         switch(rule.mtype){
         case CONNECT:
             rule.deep.connect.flag = conflag2rule();
+
+            rule.deep.connect.client_id = NULL;
+            if(ui->lineEdit_connect_clientid->isEnabled() && ui->lineEdit_connect_clientid->text().isEmpty() == false)
+                rule.deep.connect.client_id = new QString(ui->lineEdit_connect_clientid->text());
+
+            rule.deep.connect.username = NULL;
+            if(ui->lineEdit_connect_username->isEnabled() && ui->lineEdit_connect_username->text().isEmpty() == false)
+                rule.deep.connect.username = new QString(ui->lineEdit_connect_username->text());
+
+            rule.deep.connect.will_topic = NULL;
+            if(ui->lineEdit_connect_will_topic->isEnabled() && ui->lineEdit_connect_will_topic->text().isEmpty() == false)
+                rule.deep.connect.will_topic = new QString(ui->lineEdit_connect_will_topic->text());
+
+            rule.deep.connect.will_message = NULL;
+            if(ui->lineEdit_connect_will_message->isEnabled() && ui->lineEdit_connect_will_message->text().isEmpty() == false)
+                rule.deep.connect.will_message = new QString(ui->lineEdit_connect_will_message->text());
+
             break;
         case PUBLISH:
             rule.deep.publish.flag = pubflag2rule();
@@ -260,4 +265,25 @@ void CommonRuleDialog::on_checkBox_clicked(bool checked)
         ui->stackedWidget->setCurrentWidget(ui->page_unsubscribe);
     else
         ui->stackedWidget->setCurrentWidget(ui->page_common);
+}
+
+void CommonRuleDialog::on_comboBox_connect_unf_currentIndexChanged(const QString &username_flag)
+{
+    if(username_flag == "1")
+        ui->lineEdit_connect_username->setEnabled(true);
+    else
+        ui->lineEdit_connect_username->setDisabled(true);
+}
+
+
+void CommonRuleDialog::on_comboBox_connect_wf_currentIndexChanged(const QString &will_flag)
+{
+    if(will_flag == "1"){
+        ui->lineEdit_connect_will_topic->setEnabled(true);
+        ui->lineEdit_connect_will_message->setEnabled(true);
+    }
+    else{
+        ui->lineEdit_connect_will_topic->setDisabled(true);
+        ui->lineEdit_connect_will_message->setDisabled(true);
+    }
 }

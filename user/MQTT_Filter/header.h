@@ -73,11 +73,15 @@
 #define MF_DELETE_RULE 	_IO(MF_MAGIC, 5)
 #define MF_CLEAR_RULE 	_IO(MF_MAGIC, 6)
 #define MF_GET_RULE 	_IO(MF_MAGIC, 7)
-#define MF_GET_LOG 		_IO(MF_MAGIC, 8)
+#define MF_GET_CONNECT  _IO(MF_MAGIC, 8)
 #define MF_SYS_STATE	_IO(MF_MAGIC, 9)
 
 struct CONNECT_ST{
     u_int8_t flag;
+    QString *client_id;
+    QString *username;
+    QString *will_topic;
+    QString *will_message;
 };
 
 struct PUBLISH_ST{
@@ -101,8 +105,10 @@ struct RULE_ST{		/*规则结构定义*/
     u_int8_t log;		/*是否记录日志*/
     u_int32_t saddr;	/*源地址*/
     u_int32_t smask;	/*源地址掩码*/
+    u_int16_t sport;	/*源端口*/
     u_int32_t daddr;	/*目的地址*/
     u_int32_t dmask;	/*目的地址掩码*/
+    u_int16_t dport;	/*目的端口*/
     u_int8_t enabled_deep;
     union{				/*特别考虑的四种报文的补充规则结构*/
         struct CONNECT_ST connect;

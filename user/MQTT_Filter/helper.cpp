@@ -17,10 +17,24 @@ QString rule2addr(u_int32_t addr){
     unsigned char *pchar = (unsigned char *)&addr;
     QString ret;
 
+    if(addr == ANY_ADDR)
+        return "ANY";
+
     ret = QString::number((int)pchar[0]) + "."
             + QString::number((int)pchar[1]) + "."
             + QString::number((int)pchar[2]) + "."
             + QString::number((int)pchar[3]);
+
+    return ret;
+}
+
+QString rule2port(u_int16_t port){
+    QString ret;
+
+    if(port == ANY_ADDR)
+        return "ANY";
+
+    ret =  QString::number(ntohs(port));
 
     return ret;
 }
@@ -113,46 +127,82 @@ QString rule2action(u_int8_t action){
 
 QString rule2conflag(u_int8_t cflag){
     QString ret;
-    ret = "UNF=" + QString::number((cflag & 0x80) >> 7)  + ", " +
-            "PF=" + QString::number((cflag & 0x40) >> 6) + ", " +
-            "WR=" + QString::number((cflag & 0x20) >> 5) + ", " +
-          "WQoS=" + QString::number((cflag & 0x18) >> 3) + ", " +
-            "WF=" + QString::number((cflag & 0x04) >> 2) + ", " +
-            "CS=" + QString::number((cflag & 0x02) >> 1);
+    ret = "UNF = " + QString::number((cflag & 0x80) >> 7)  + ",  " +
+            "PF = " + QString::number((cflag & 0x40) >> 6) + ",  " +
+            "WR = " + QString::number((cflag & 0x20) >> 5) + ",  " +
+          "WQoS = " + QString::number((cflag & 0x18) >> 3) + ",  " +
+            "WF = " + QString::number((cflag & 0x04) >> 2) + ",  " +
+            "CS = " + QString::number((cflag & 0x02) >> 1);
     return ret;
 }
 
 QString rule2pubflag(u_int8_t pflag){
     QString ret;
-    ret = "DUP=" + QString::number((pflag & 0x08) >> 3)  + ", " +
-          "QoS=" + QString::number((pflag & 0x06) >> 1) + ", " +
-       "RETAIN=" + QString::number((pflag & 0x01));
+    ret = "DUP = " + QString::number((pflag & 0x08) >> 3)  + ",  " +
+          "QoS = " + QString::number((pflag & 0x06) >> 1) + ",  " +
+       "RETAIN = " + QString::number((pflag & 0x01));
     return ret;
 }
 
 
-u_int32_t addr2rule(QString str_addr){
+void addr2rule(QString str_addr, u_int32_t &addr, u_int32_t &mask){
+
     u_int32_t ret = 0;
+    QStringList strlist;
+    QString mask_str;
 
     if(str_addr.isEmpty() || str_addr == "ANY" || str_addr == "any"){
-        return ANY_ADDR;
+        addr = ANY_ADDR;
+        mask = ANY_ADDR;
+        return;
     }
 
     str_addr.remove(QRegExp("\\s"));
-    QStringList strlist = str_addr.split(".");
-    if(strlist.length() != 4)
-        return ERR;
+
+    mask = 0xFFFFFFFF;
+
+    if(str_addr.indexOf("/") >= 0){
+        mask_str = str_addr.mid(str_addr.indexOf("/") + 1);
+        mask = mask2rule(mask_str);
+        str_addr = str_addr.mid(0, str_addr.indexOf("/"));
+    }
+
+
+    if(str_addr.indexOf("\\") >= 0){
+        mask_str = str_addr.mid(str_addr.indexOf("\\") + 1);
+        mask = mask2rule(mask_str);
+        str_addr = str_addr.mid(0, str_addr.indexOf("\\"));
+    }
+
+    //qDebug()<<str_addr;
+
+    strlist = str_addr.split(".");
+    if(strlist.length() != 4){
+        addr = ANY_ADDR;
+        mask = ANY_ADDR;
+        return;
+    }
 
     ret |= (strlist[0].toUInt());
     ret |= (strlist[1].toUInt() << 8);
     ret |= (strlist[2].toUInt() << 16);
     ret |= (strlist[3].toUInt() << 24);
 
-    return ret;
+    addr = ret;
+}
+
+u_int16_t port2rule(QString str_port){
+    u_int16_t ret;
+    if(str_port.isEmpty() || str_port == "ANY" || str_port == "0")
+        return ANY_ADDR;
+
+    ret = str_port.toUShort();
+
+    return htons(ret);
 }
 
 u_int32_t mask2rule(QString str_mask){
-    if(str_mask.isEmpty())
+    if(str_mask.isEmpty() || str_mask == "0")
         return 0;
 
     int n_mask = str_mask.toInt();

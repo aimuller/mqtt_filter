@@ -3,7 +3,6 @@
 cd ..
 MF_MAIN_DIR=$PWD
 
-
 #安装依赖项 libc.ko
 cd $MF_MAIN_DIR/kpcre/libc
 LS_MOD=$(lsmod | grep libc)

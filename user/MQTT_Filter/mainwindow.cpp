@@ -2,7 +2,8 @@
 #include "ui_mainwindow.h"
 #include "helper.h"
 
-#define DEVIDE "#"
+#define DEVIDE " % "
+#define ITEM_NULL "---"
 
 static char buf[BUF_SIZE];
 int update_kdate = 1;
@@ -29,14 +30,12 @@ MainWindow::MainWindow(QWidget *parent) :
     addCommonRuleDialog = new CommonRuleDialog(this);
     modCommonRuleDialog = new CommonRuleDialog(this);
     logTimer = new QTimer(this);
+    connectTimer = new QTimer(this);
 
     ui->tableWidget_rule->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
     ui->tableWidget_rule->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
     ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-
-    ui->tableWidget_rule->setMouseTracking(true);   //对鼠标进行监控，使得可以调用QtoolTip
-
-    //ui->tableWidget_rule->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->tableWidget_rule->setMouseTracking(true);   //对鼠标进行监控，使得可以调用QToolTip
 
     ui->tableWidget_rule->setColumnWidth(0, 120);//设置固定宽
     ui->tableWidget_rule->setColumnWidth(1, 70);//设置固定宽
@@ -45,13 +44,28 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget_rule->setColumnWidth(4, 160);//设置固定宽
     //ui->tableWidget_rule->setColumnWidth(5, 500);//设置固定宽
 
+    ui->tableWidget_connect->setSelectionBehavior(QAbstractItemView::SelectRows);     /*整行选中*/
+    ui->tableWidget_connect->horizontalHeader()->setStretchLastSection(true);   /*列宽度填满整个表格区域*/
+    //ui->tableWidget_connect->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->tableWidget_connect->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    ui->tableWidget_connect->setMouseTracking(true);   //对鼠标进行监控，使得可以调用QToolTip
+
+    ui->tableWidget_connect->setColumnWidth(0, 170);//设置固定宽
+    ui->tableWidget_connect->setColumnWidth(1, 170);//设置固定宽
+    ui->tableWidget_connect->setColumnWidth(2, 90);//设置固定宽
+    ui->tableWidget_connect->setColumnWidth(3, 90);//设置固定宽
+    ui->tableWidget_connect->setColumnWidth(4, 300);//设置固定宽
+    //ui->tableWidget_rule->setColumnWidth(5, 500);//设置固定宽
+
     logTimer->start(500);
+    connectTimer->start(500);
 
     connect(addCommonRuleDialog, SIGNAL(addCommonRuleSignal(struct RULE_ST, int)),
             this, SLOT(addCommonRule(struct RULE_ST, int)));
     connect(modCommonRuleDialog, SIGNAL(modCommonRuleSignal(struct RULE_ST, int)),
             this, SLOT(modCommonRule(struct RULE_ST, int)));
     connect(logTimer, SIGNAL(timeout()), this, SLOT(updateSystemLog()));
+    connect(connectTimer, SIGNAL(timeout()), this, SLOT(updateConnectList()));
 
 }
 
@@ -143,8 +157,10 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
     *ptr = rule.log; 	ptr += sizeof(u_int8_t);
     *((u_int32_t *)ptr) = (rule.saddr);	ptr += sizeof(u_int32_t);
     *((u_int32_t *)ptr) = (rule.smask);	ptr += sizeof(u_int32_t);
+    *((u_int16_t *)ptr) = (rule.sport);	ptr += sizeof(u_int16_t);
     *((u_int32_t *)ptr) = (rule.daddr);	ptr += sizeof(u_int32_t);
     *((u_int32_t *)ptr) = (rule.dmask);	ptr += sizeof(u_int32_t);
+    *((u_int16_t *)ptr) = (rule.dport);	ptr += sizeof(u_int16_t);
 
     *ptr = rule.enabled_deep; 	ptr += sizeof(u_int8_t);
 
@@ -153,6 +169,51 @@ void MainWindow::setRuleToBuffer(struct RULE_ST &rule, unsigned int pos){
         case CONNECT:
             *ptr = rule.deep.connect.flag;
             ptr += sizeof(u_int8_t);
+
+            if(rule.deep.connect.client_id != NULL){
+                ba = rule.deep.connect.client_id->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+
+            if(rule.deep.connect.username != NULL){
+                ba = rule.deep.connect.username->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+
+            if(rule.deep.connect.will_topic != NULL){
+                ba = rule.deep.connect.will_topic->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+
+            if(rule.deep.connect.will_message != NULL){
+                ba = rule.deep.connect.will_message->toLatin1();
+                pchar = ba.data();
+                strcpy((char *)ptr, pchar);
+                ptr += (strlen(pchar) + 1);
+            }
+            else{
+                *ptr = 0;
+                ptr += sizeof(u_int8_t);
+            }
+
             break;
 
         case PUBLISH:
@@ -233,15 +294,20 @@ void MainWindow::updateSystemLog(){
     log_size = logFile.size();
 
     if(logFile.open(QIODevice::ReadOnly | QIODevice::Text)){
-        ui->textBrowser->clear();
-        QString text = logFile.readAll();
-        ui->textBrowser->setText(text);
+        while(logFile.atEnd() == false){
+            QString line = logFile.readLine();
+            ui->textBrowser->append(line);
+        }
     }
     else{
         QMessageBox::critical(this, "错误", "无法打开log.txt！");
         logTimer->stop();
     }
     logFile.close();
+}
+
+void MainWindow::updateConnectList(){
+    getConnectFromKernel();
 }
 
 void MainWindow::modCommonRule(struct RULE_ST rule, int mod_pos)
@@ -262,8 +328,6 @@ void MainWindow::modCommonRule(struct RULE_ST rule, int mod_pos)
     getRuleFromKernel();
     showUserRuleList();
 }
-
-
 
 void MainWindow::showUserRuleList()
 {
@@ -293,8 +357,10 @@ void MainWindow::getRuleFromKernel(){
         rule.log = *ptr;	ptr += sizeof(u_int8_t);
         rule.saddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
         rule.smask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+        rule.sport = *((u_int16_t *)ptr); ptr += sizeof(u_int16_t);
         rule.daddr = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
         rule.dmask = *((u_int32_t *)ptr); ptr += sizeof(u_int32_t);
+        rule.dport = *((u_int16_t *)ptr); ptr += sizeof(u_int16_t);
         rule.enabled_deep = *ptr;  ptr += sizeof(u_int8_t);
 
         if(rule.enabled_deep == ENABLED){
@@ -302,6 +368,43 @@ void MainWindow::getRuleFromKernel(){
             case CONNECT:
                 rule.deep.connect.flag = *ptr;
                 ptr += sizeof(u_int8_t);
+
+                if(*ptr){
+                    rule.deep.connect.client_id = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.connect.client_id = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                if(*ptr){
+                    rule.deep.connect.username = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.connect.username = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                if(*ptr){
+                    rule.deep.connect.will_topic = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.connect.will_topic = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                if(*ptr){
+                    rule.deep.connect.will_message = new QString((char *)ptr);
+                    ptr += (strlen((char *)ptr) + 1);
+                }
+                else{
+                    rule.deep.connect.will_message = NULL;
+                    ptr += sizeof(u_int8_t);
+                }
+
                 break;
             case PUBLISH:
                 rule.deep.publish.flag = *ptr;
@@ -356,37 +459,120 @@ void MainWindow::getRuleFromKernel(){
     }
 }
 
+void MainWindow::getConnectFromKernel(){
+    unsigned int len = 0;
+    u_int8_t *ptr = (u_int8_t *)buf;
+
+
+    ioctl(fd, MF_GET_CONNECT, buf);
+    len = *((unsigned int *)ptr);
+
+    ptr += sizeof(unsigned int);
+
+    ui->tableWidget_connect->setRowCount(len);
+
+    for(unsigned int i = 0; i < len; i++){
+        QString str;
+
+        str = rule2addr(*((u_int32_t *)ptr));  ptr += sizeof(u_int32_t) ;
+        str += ":";
+        str += rule2port(*((u_int16_t *)ptr));  ptr += sizeof(u_int16_t) ;
+        ui->tableWidget_connect->setItem(i, 0, new QTableWidgetItem(str));
+
+        str = rule2addr(*((u_int32_t *)ptr));  ptr += sizeof(u_int32_t) ;
+        str += ":";
+        str += rule2port(*((u_int16_t *)ptr));  ptr += sizeof(u_int16_t) ;
+        ui->tableWidget_connect->setItem(i, 1, new QTableWidgetItem(str));
+
+        str = QString::number(uint(*ptr), 2);   ptr += sizeof(u_int8_t);
+        ui->tableWidget_connect->setItem(i, 2, new QTableWidgetItem(str));
+
+        str = QString::number(uint(*((u_int16_t *)ptr)));   ptr += sizeof(u_int16_t);
+        ui->tableWidget_connect->setItem(i, 3, new QTableWidgetItem(str));
+
+        if(*ptr){
+            ui->tableWidget_connect->setItem(i, 4, new QTableWidgetItem(QString((char *)ptr)));
+            ptr += (strlen((char *)ptr) + 1);
+        }
+        else{
+            ui->tableWidget_connect->setItem(i, 4, new QTableWidgetItem("/"));
+            ptr += sizeof(u_int8_t);
+        }
+
+        if(*ptr){
+            ui->tableWidget_connect->setItem(i, 5, new QTableWidgetItem(QString((char *)ptr)));
+            ptr += (strlen((char *)ptr) + 1);
+        }
+        else{
+            ui->tableWidget_connect->setItem(i, 5, new QTableWidgetItem("/"));
+            ptr += sizeof(u_int8_t);
+        }
+
+        if(*ptr){
+            ui->tableWidget_connect->setItem(i, 6, new QTableWidgetItem(QString((char *)ptr)));
+            ptr += (strlen((char *)ptr) + 1);
+        }
+        else{
+            ui->tableWidget_connect->setItem(i, 6, new QTableWidgetItem("/"));
+            ptr += sizeof(u_int8_t);
+        }
+
+        if(*ptr){
+            ui->tableWidget_connect->setItem(i, 7, new QTableWidgetItem(QString((char *)ptr)));
+            ptr += (strlen((char *)ptr) + 1);
+        }
+        else{
+            ui->tableWidget_connect->setItem(i, 7, new QTableWidgetItem("/"));
+            ptr += sizeof(u_int8_t);
+        }
+
+        for(int j = 0; j < ui->tableWidget_connect->columnCount(); j++){
+            QTableWidgetItem* pItem = ui->tableWidget_connect->item(i, j);
+            pItem->setFlags(pItem->flags() & (~Qt::ItemIsEditable));
+            pItem->setTextAlignment(Qt::AlignCenter);
+        }
+    }
+}
+
 void MainWindow::setRuleItem(struct RULE_ST *rule, int row){
     QString str = "/";
 
     ui->tableWidget_rule->setItem(row, 0, new QTableWidgetItem(rule2mtype(rule->mtype)));
     ui->tableWidget_rule->setItem(row, 1, new QTableWidgetItem(rule2action(rule->action)));
     ui->tableWidget_rule->setItem(row, 2, new QTableWidgetItem(rule2log(rule->log)));
-    ui->tableWidget_rule->setItem(row, 3, new QTableWidgetItem(rule2addr(rule->saddr) + "/" + rule2mask(rule->smask)));
-    ui->tableWidget_rule->setItem(row, 4, new QTableWidgetItem(rule2addr(rule->daddr) + "/" + rule2mask(rule->dmask)));
+    ui->tableWidget_rule->setItem(row, 3, new QTableWidgetItem(rule2addr(rule->saddr) + "/" + rule2mask(rule->smask) + " : " + rule2port(rule->sport)));
+    ui->tableWidget_rule->setItem(row, 4, new QTableWidgetItem(rule2addr(rule->daddr) + "/" + rule2mask(rule->dmask) + " : " + rule2port(rule->dport)));
 
     if(rule->enabled_deep == ENABLED){
         switch(rule->mtype){
         case CONNECT:
             str = rule2conflag(rule->deep.connect.flag);
+            if(rule->deep.connect.client_id != NULL)
+                str += ",  Client ID = \"" + *(rule->deep.connect.client_id) + "\"";
+            if(rule->deep.connect.username != NULL)
+                str += ",  User Name = \"" + *(rule->deep.connect.username) + "\"";
+            if(rule->deep.connect.will_topic != NULL)
+                str += ",  Will Topic = \"" + *(rule->deep.connect.will_topic) + "\"";
+            if(rule->deep.connect.will_message != NULL)
+                str += ",  Will Message = \"" + *(rule->deep.connect.will_message) + "\"";
             break;
         case PUBLISH:
             str = rule2pubflag(rule->deep.publish.flag);
             if(rule->deep.publish.topic != NULL)
-                str += ", Topic=\"" + *(rule->deep.publish.topic) + "\"";
+                str += ",  Topic = \"" + *(rule->deep.publish.topic) + "\"";
             if(rule->deep.publish.keyword != NULL)
-                str += ", Keyword=\"" + *(rule->deep.publish.keyword) + "\"";
+                str += ",  Keyword = \"" + *(rule->deep.publish.keyword) + "\"";
             break;
         case SUBSCRIBE:
             if(rule->deep.subscribe.topic_filter != NULL){
-                str = "TopicFilter=\"";
-                str += *(rule->deep.subscribe.topic_filter) + "\",  Requested QoS=";
+                str = "TopicFilter = \"";
+                str += *(rule->deep.subscribe.topic_filter) + "\",  Requested QoS = ";
                 str += QString::number(rule->deep.subscribe.rqos);
             }
             break;
         case UNSUBSCRIBE:
             if(rule->deep.unsubscribe.topic_filter != NULL){
-                str = "TopicFilter=\"";
+                str = "TopicFilter = \"";
                 str += *(rule->deep.unsubscribe.topic_filter) + "\"";
             }
             break;
@@ -427,6 +613,27 @@ void MainWindow::on_pushButton_del_rule_clicked()
 void MainWindow::free_qstring(int pos){
     if(rule_list[pos].enabled_deep == ENABLED){
         switch(rule_list[pos].mtype){
+        case CONNECT:
+            if(rule_list[pos].deep.connect.client_id != NULL){
+                delete rule_list[pos].deep.connect.client_id;
+                rule_list[pos].deep.connect.client_id = NULL;
+            }
+
+            if(rule_list[pos].deep.connect.username != NULL){
+                delete rule_list[pos].deep.connect.username;
+                rule_list[pos].deep.connect.username = NULL;
+            }
+
+            if(rule_list[pos].deep.connect.will_topic != NULL){
+                delete rule_list[pos].deep.connect.will_topic;
+                rule_list[pos].deep.connect.will_topic = NULL;
+            }
+
+            if(rule_list[pos].deep.connect.will_message != NULL){
+                delete rule_list[pos].deep.connect.will_message;
+                rule_list[pos].deep.connect.will_message = NULL;
+            }
+
         case PUBLISH:
             if(rule_list[pos].deep.publish.topic != NULL){
                 delete rule_list[pos].deep.publish.topic;
@@ -486,25 +693,51 @@ void MainWindow::on_action_export_rule_file_triggered()
             rule_str += rule2mtype(rule_list[i].mtype) + DEVIDE;
             rule_str += rule2action(rule_list[i].action) + DEVIDE;
             rule_str += rule2log(rule_list[i].log) + DEVIDE;
-            rule_str += rule2addr(rule_list[i].saddr) +  DEVIDE + rule2mask(rule_list[i].smask) + DEVIDE;
-            rule_str += rule2addr(rule_list[i].daddr) +  DEVIDE + rule2mask(rule_list[i].dmask) + DEVIDE;
+
+            rule_str += rule2addr(rule_list[i].saddr) +  "/" + rule2mask(rule_list[i].smask) + DEVIDE;
+            rule_str += rule2port(rule_list[i].sport) + DEVIDE;
+
+            rule_str += rule2addr(rule_list[i].daddr) +  "/" + rule2mask(rule_list[i].dmask) + DEVIDE;
+            rule_str += rule2mask(rule_list[i].dport) + DEVIDE;
+
             rule_str += QString::number(rule_list[i].enabled_deep, 2);
 
             if(rule_list[i].enabled_deep == ENABLED){
                 switch(rule_list[i].mtype){
                 case CONNECT:
                     rule_str += DEVIDE + QString::number(rule_list[i].deep.connect.flag, 2);
+
+                    if(rule_list[i].deep.connect.client_id != NULL)
+                        rule_str += DEVIDE + *(rule_list[i].deep.connect.client_id);
+                    else
+                        rule_str += DEVIDE + QString(ITEM_NULL);
+
+                    if(rule_list[i].deep.connect.username != NULL)
+                        rule_str += DEVIDE + *(rule_list[i].deep.connect.username);
+                    else
+                        rule_str += DEVIDE + QString(ITEM_NULL);
+
+                    if(rule_list[i].deep.connect.will_topic != NULL)
+                        rule_str += DEVIDE + *(rule_list[i].deep.connect.will_topic);
+                    else
+                        rule_str += DEVIDE + QString(ITEM_NULL);
+
+                    if(rule_list[i].deep.connect.will_message != NULL)
+                        rule_str += DEVIDE + *(rule_list[i].deep.connect.will_message);
+                    else
+                        rule_str += DEVIDE + QString(ITEM_NULL);
+
                     break;
                 case PUBLISH:
                     rule_str += DEVIDE + QString::number(rule_list[i].deep.publish.flag, 2);
                     if(rule_list[i].deep.publish.topic != NULL)
                         rule_str += DEVIDE + *(rule_list[i].deep.publish.topic);
                     else
-                        rule_str += DEVIDE + QString("---");
+                        rule_str += DEVIDE + QString(ITEM_NULL);
                     if(rule_list[i].deep.publish.keyword != NULL)
                         rule_str += DEVIDE + *(rule_list[i].deep.publish.keyword);
                     else
-                        rule_str += DEVIDE + QString("---");
+                        rule_str += DEVIDE + QString(ITEM_NULL);
                     break;
                 case SUBSCRIBE:
                     if(rule_list[i].deep.subscribe.topic_filter != NULL){
@@ -512,14 +745,14 @@ void MainWindow::on_action_export_rule_file_triggered()
                         rule_str += DEVIDE + QString::number(rule_list[i].deep.subscribe.rqos, 2);
                     }
                     else
-                        rule_str += DEVIDE + QString("---");
+                        rule_str += DEVIDE + QString(ITEM_NULL);
                     break;
                 case UNSUBSCRIBE:
                     if(rule_list[i].deep.unsubscribe.topic_filter != NULL){
                        rule_str += DEVIDE + *(rule_list[i].deep.unsubscribe.topic_filter);
                     }
                     else
-                        rule_str += DEVIDE + QString("---");
+                        rule_str += DEVIDE + QString(ITEM_NULL);
                     break;
                 default:
                     break;
@@ -564,59 +797,82 @@ void MainWindow::on_action_Import_rule_file_triggered()
             rule.mtype = mtype2rule(rule_items[0]);
             rule.action = action2rule(rule_items[1]);
             rule.log = log2rule(rule_items[2]);
-            rule.saddr = addr2rule(rule_items[3]);
-            rule.smask = mask2rule(rule_items[4]);
-            rule.daddr = addr2rule(rule_items[5]);
-            rule.dmask = mask2rule(rule_items[6]);
+            addr2rule(rule_items[3], rule.saddr, rule.smask);
+            rule.sport = port2rule(rule_items[4]);
+            addr2rule(rule_items[5], rule.daddr, rule.dmask);
+            rule.dport = port2rule(rule_items[6]);
             rule.enabled_deep = (u_int8_t)rule_items[7].toUInt(&OK, 2);
 
-            switch(rule.mtype){
-            case CONNECT:
-                rule.deep.connect.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
-                break;
-            case PUBLISH:
-                rule.deep.publish.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
+            if(rule.enabled_deep){
+                switch(rule.mtype){
+                case CONNECT:
+                    rule.deep.connect.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
+                    if(rule_items[9] == QString(ITEM_NULL))
+                        rule.deep.connect.client_id = NULL;
+                    else
+                        rule.deep.connect.client_id = new QString(rule_items[9]);
 
-                if(rule_items[9] == QString("---"))
-                    rule.deep.publish.topic = NULL;
-                else
-                    rule.deep.publish.topic = new QString(rule_items[9]);
-                if(rule_items[10] == QString("---")){
-                    rule.deep.publish.keyword = NULL;
-                }
-                else
-                    rule.deep.publish.keyword = new QString(rule_items[10]);
-                break;
+                    if(rule_items[10] == QString(ITEM_NULL))
+                        rule.deep.connect.username = NULL;
+                    else
+                        rule.deep.connect.username = new QString(rule_items[10]);
 
-            case SUBSCRIBE:
-                if(rule_items[8] == QString("---")){
-                    rule.deep.subscribe.topic_filter = NULL;
-                    rule.deep.subscribe.rqos = 0;
+                    if(rule_items[11] == QString(ITEM_NULL))
+                        rule.deep.connect.will_topic = NULL;
+                    else
+                        rule.deep.connect.will_topic = new QString(rule_items[11]);
+
+                    if(rule_items[12] == QString(ITEM_NULL))
+                        rule.deep.connect.will_message = NULL;
+                    else
+                        rule.deep.connect.will_message = new QString(rule_items[12]);
+
+                    break;
+                case PUBLISH:
+                    rule.deep.publish.flag = (u_int8_t)rule_items[8].toUInt(&OK, 2);
+
+                    if(rule_items[9] == QString(ITEM_NULL))
+                        rule.deep.publish.topic = NULL;
+                    else
+                        rule.deep.publish.topic = new QString(rule_items[9]);
+                    if(rule_items[10] == QString(ITEM_NULL)){
+                        rule.deep.publish.keyword = NULL;
+                    }
+                    else
+                        rule.deep.publish.keyword = new QString(rule_items[10]);
+                    break;
+
+                case SUBSCRIBE:
+                    if(rule_items[8] == QString(ITEM_NULL)){
+                        rule.deep.subscribe.topic_filter = NULL;
+                        rule.deep.subscribe.rqos = 0;
+                    }
+                    else{
+                        rule.deep.subscribe.topic_filter = new QString(rule_items[8]);
+                        rule.deep.subscribe.rqos = (u_int8_t)rule_items[9].toUInt(&OK, 2);
+                    }
+                    break;
+                case UNSUBSCRIBE:
+                    if(rule_items[8] == QString(ITEM_NULL))
+                        rule.deep.unsubscribe.topic_filter = NULL;
+                    else
+                        rule.deep.unsubscribe.topic_filter = new QString(rule_items[8]);
+                    break;
+                default:
+                    break;
                 }
-                else{
-                    rule.deep.subscribe.topic_filter = new QString(rule_items[8]);
-                    rule.deep.subscribe.rqos = (u_int8_t)rule_items[9].toUInt(&OK, 2);
-                }
-                break;
-            case UNSUBSCRIBE:
-                if(rule_items[8] == QString("---"))
-                    rule.deep.unsubscribe.topic_filter = NULL;
-                else
-                    rule.deep.unsubscribe.topic_filter = new QString(rule_items[8]);
-                break;
-            default:
-                break;
             }
             rule_list.append(rule);
         }
     }
     RuleFile.close();
-
     setRuleListToBuffer();
     ioctl(fd, MF_ADD_LIST, buf);
+
     getRuleFromKernel();
     showUserRuleList();
 }
+
 void MainWindow::setRuleListToBuffer(){
     QByteArray ba;
     char *pchar;
@@ -631,8 +887,10 @@ void MainWindow::setRuleListToBuffer(){
         *ptr = rule_list[i].log; 	ptr += sizeof(u_int8_t);
         *((u_int32_t *)ptr) = (rule_list[i].saddr);	ptr += sizeof(u_int32_t);
         *((u_int32_t *)ptr) = (rule_list[i].smask);	ptr += sizeof(u_int32_t);
+        *((u_int16_t *)ptr) = (rule_list[i].sport);	ptr += sizeof(u_int16_t);
         *((u_int32_t *)ptr) = (rule_list[i].daddr);	ptr += sizeof(u_int32_t);
         *((u_int32_t *)ptr) = (rule_list[i].dmask);	ptr += sizeof(u_int32_t);
+        *((u_int16_t *)ptr) = (rule_list[i].dport);	ptr += sizeof(u_int16_t);
         *ptr = rule_list[i].enabled_deep; ptr += sizeof(u_int8_t);
 
         if(rule_list[i].enabled_deep == ENABLED){
@@ -640,8 +898,52 @@ void MainWindow::setRuleListToBuffer(){
             case CONNECT:
                 *ptr = rule_list[i].deep.connect.flag;
                 ptr += sizeof(u_int8_t);
-                break;
 
+                if(rule_list[i].deep.connect.client_id != NULL){
+                    ba = rule_list[i].deep.connect.client_id->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                if(rule_list[i].deep.connect.username != NULL){
+                    ba = rule_list[i].deep.connect.username->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                if(rule_list[i].deep.connect.will_topic != NULL){
+                    ba = rule_list[i].deep.connect.will_topic->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                if(rule_list[i].deep.connect.will_message != NULL){
+                    ba = rule_list[i].deep.connect.will_message->toLatin1();
+                    pchar = ba.data();
+                    strcpy((char *)ptr, pchar);
+                    ptr += (strlen(pchar) + 1);
+                }
+                else{
+                    *ptr = 0;
+                    ptr += sizeof(u_int8_t);
+                }
+
+                break;
             case PUBLISH:
                 *ptr = rule_list[i].deep.publish.flag;
                 ptr += sizeof(u_int8_t);
@@ -713,7 +1015,6 @@ void MainWindow::on_tableWidget_rule_itemEntered(QTableWidgetItem *item)
     QToolTip::showText(QCursor::pos(), strlist.join("\n"));
 }
 
-
 void MainWindow::on_tableWidget_rule_doubleClicked(const QModelIndex &index)
 {
     QString str = ui->tableWidget_rule->item(index.row(),index.column())->text();
@@ -739,4 +1040,21 @@ void MainWindow::on_pushButton_clicked()
     else{
         QMessageBox::information(NULL, "错误", "删除日志文件失败！");
     }
+}
+
+void MainWindow::on_pushButton_update_connect_clicked()
+{
+    getConnectFromKernel();
+}
+
+void MainWindow::on_tableWidget_connect_itemEntered(QTableWidgetItem *item)
+{
+    QString str = item->text();
+    QStringList strlist;
+
+    for (int i = 0; i < str.length(); i += 64) {
+        strlist << str.mid(i, 64);
+    }
+
+    QToolTip::showText(QCursor::pos(), strlist.join("\n"));
 }

@@ -19,8 +19,8 @@
 
 QT_BEGIN_MOC_NAMESPACE
 struct qt_meta_stringdata_CommonRuleDialog_t {
-    QByteArrayData data[10];
-    char stringdata[158];
+    QByteArrayData data[13];
+    char stringdata[250];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -38,13 +38,18 @@ QT_MOC_LITERAL(5, 66, 21),
 QT_MOC_LITERAL(6, 88, 34),
 QT_MOC_LITERAL(7, 123, 5),
 QT_MOC_LITERAL(8, 129, 19),
-QT_MOC_LITERAL(9, 149, 7)
+QT_MOC_LITERAL(9, 149, 7),
+QT_MOC_LITERAL(10, 157, 43),
+QT_MOC_LITERAL(11, 201, 4),
+QT_MOC_LITERAL(12, 206, 42)
     },
     "CommonRuleDialog\0addCommonRuleSignal\0"
     "\0RULE_ST\0modCommonRuleSignal\0"
     "on_buttonBox_accepted\0"
     "on_comboBox_common_mtype_activated\0"
     "mtype\0on_checkBox_clicked\0checked\0"
+    "on_comboBox_connect_unf_currentIndexChanged\0"
+    "arg1\0on_comboBox_connect_wf_currentIndexChanged\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -54,7 +59,7 @@ static const uint qt_meta_data_CommonRuleDialog[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       5,   14, // methods
+       7,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -62,13 +67,15 @@ static const uint qt_meta_data_CommonRuleDialog[] = {
        2,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    2,   39,    2, 0x05,
-       4,    2,   44,    2, 0x05,
+       1,    2,   49,    2, 0x05,
+       4,    2,   54,    2, 0x05,
 
  // slots: name, argc, parameters, tag, flags
-       5,    0,   49,    2, 0x08,
-       6,    1,   50,    2, 0x08,
-       8,    1,   53,    2, 0x08,
+       5,    0,   59,    2, 0x08,
+       6,    1,   60,    2, 0x08,
+       8,    1,   63,    2, 0x08,
+      10,    1,   66,    2, 0x08,
+      12,    1,   69,    2, 0x08,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    2,    2,
@@ -78,6 +85,8 @@ static const uint qt_meta_data_CommonRuleDialog[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,    7,
     QMetaType::Void, QMetaType::Bool,    9,
+    QMetaType::Void, QMetaType::QString,   11,
+    QMetaType::Void, QMetaType::QString,   11,
 
        0        // eod
 };
@@ -92,6 +101,8 @@ void CommonRuleDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         case 2: _t->on_buttonBox_accepted(); break;
         case 3: _t->on_comboBox_common_mtype_activated((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         case 4: _t->on_checkBox_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 5: _t->on_comboBox_connect_unf_currentIndexChanged((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 6: _t->on_comboBox_connect_wf_currentIndexChanged((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -137,13 +148,13 @@ int CommonRuleDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 5)
+        if (_id < 7)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 5;
+        _id -= 7;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 5)
+        if (_id < 7)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 5;
+        _id -= 7;
     }
     return _id;
 }
