@@ -110,11 +110,11 @@ struct RULE_ST{		/*规则结构定义*/
     u_int32_t dmask;	/*目的地址掩码*/
     u_int16_t dport;	/*目的端口*/
     u_int8_t enabled_deep;
-    union{				/*特别考虑的四种报文的补充规则结构*/
-        struct CONNECT_ST connect;
-        struct PUBLISH_ST publish;
-        struct SUBSCRIBE_ST subscribe;
-        struct UNSUBSCRIBE_ST unsubscribe;
+    union MQTT_RULE_UNION{				/*特别考虑的四种报文的补充规则结构*/
+        struct CONNECT_RULE_ST connect;
+        struct PUBLISH_RULE_ST publish;
+        struct SUBSCRIBE_RULE_ST subscribe;
+        struct UNSUBSCRIBE_RULE_ST unsubscribe;
     }deep;
 
 };

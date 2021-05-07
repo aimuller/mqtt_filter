@@ -1463,6 +1463,57 @@ static void write_log(struct PACKET_ST *packet_info, u_int8_t action){
 	printk(KERN_INFO "%s\n", log);
 }
 
+/*判断当前报文是否为MQTT报文*/
+static int is_mqtt_protocol(struct iphdr *iph, struct tcphdr *tcph, u_int8_t *mqtth){
+	unsigned int offset, remaining_len, len;
+	u_int8_t mtype, level, *ptr;
+	char *protocol_name;
+	struct CONNECT_LIST_ST *hnode;
+	u_int32_t key;
+	
+
+	/*
+	//通过端口来判断是否是MQTT协议
+	if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT)
+		return YES;
+	else 
+		return NO;
+	*/		
+	
+	
+	key = iph->saddr ^ iph->daddr ^ tcph->dest ^ tcph->source;
+	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
+		//遍历节点
+		hlist_for_each_entry(hnode, &hashTable[key % HASH_MAX], list){
+			if(hnode->key == key){	//状态表中找到当前连接
+				return YES;
+			}
+		}
+	}
+	
+	ptr = mqtth;	/*ptr指向固定报头*/
+	mtype = *ptr & 0xF0;
+	ptr++; 		/*让ptr指向mqtt固定报头剩余长度字段*/
+	
+	if(mtype == CONNECT){
+		/*取出剩余长度, 并将剩余长度所占字节数存放在offset中*/
+		remaining_len = mqtt_remaining_len(ptr, &offset);
+		ptr += offset;	/*ptr偏移offset个字节，指向可变报头*/
+	
+		protocol_name = NULL;	/*取出协议名*/
+		len = utf8_to_str(&protocol_name, ptr);
+		ptr += len;
+		level = *ptr;
+		
+		/* "MQIsdp" 是v3.1版本(协议级别为3)的协议名，"MQTT" 是v3.1.1版本(协议级别为4)的协议名 */
+		if((strcmp(protocol_name, "MQTT") == 0 && level == 4) || (strcmp(protocol_name, "MQIsdp") == 0 && level == 3))
+			return YES;
+	}
+	
+	
+	return NO;
+}
+
 /*规则check函数*/
 static unsigned int check(struct sk_buff *skb)
 {
@@ -1481,16 +1532,15 @@ static unsigned int check(struct sk_buff *skb)
 									/*用户数据，应用层协议和用户数据不一定会有*/
 	if(iph -> protocol == IPPROTO_TCP){
 		tcph = tcp_hdr(skb);	/*获取TCP头*/
-				
-		/*若是不包含应用层，则当做普通的TCP报文，不进行过滤*/
-		if((u_int8_t *)tcph + tcph->doff * 4 == tail)
-			return NF_ACCEPT;
-
-		/*若是包含应用层，则通过TCP头端口判断是否为MQTT报文(MQTT_PORT = 1883) */
-		if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT){
 		
+		mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取应用层报文开始的位置, 这里直接使用mqtth指代*/
+		
+		if(mqtth == tail)		/*若是不包含应用层数据，则当做普通的TCP报文，不进行过滤*/
+			return NF_ACCEPT;
+		
+		/*判断是否为MQTT报文*/
+		if(is_mqtt_protocol(iph, tcph, mqtth) == YES){
 			//printk("<MF> %x:%d ==> %x:%d\n",ntohl(iph->saddr), ntohs(tcph->source), ntohl(iph->daddr), ntohs(tcph->dest));
-			mqtth = (u_int8_t *)tcph + tcph -> doff * 4;	/*获取MQTT报文开始的位置*/
 			
 			/*填充packet_info信息, 并对MQTT Packet进行深入分析，并将结果存放到packet_info*/
 			packet_info.saddr = iph -> saddr;

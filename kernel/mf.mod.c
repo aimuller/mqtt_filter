@@ -59,4 +59,4 @@ __attribute__((section(".modinfo"))) =
 "depends=libpcre2-8";
 
 
-MODULE_INFO(srcversion, "06FFFE00CE9CFB2423BE6B3");
+MODULE_INFO(srcversion, "58199FB1C1A32B79FDC7EB9");

@@ -88,7 +88,7 @@
 
 /*IOCTL控制命令定义*/
 #define MF_MAGIC 'x'
-#define FW_MAX_NR 9
+#define MF_MAX_NR 9
 #define MF_SYS_OPEN		_IO(MF_MAGIC, 1)
 #define MF_SYS_CLOSE 	_IO(MF_MAGIC, 2)
 #define MF_ADD_RULE 	_IO(MF_MAGIC, 3)
@@ -149,32 +149,30 @@ struct RULE_ST{		/*规则结构定义*/
     u_int8_t mtype;		/*MQTT报文的类型*/
     u_int8_t action;	/*动作*/
     u_int8_t log;		/*是否记录日志*/
-    u_int32_t saddr;	/*源地址*/
-    u_int32_t smask;	/*源地址掩码*/
+    u_int32_t saddr, smask;	/*源地址和掩码*/
     u_int16_t sport;	/*源端口*/
-    u_int32_t daddr;	/*目的地址*/
-    u_int32_t dmask;	/*目的地址掩码*/
+    u_int32_t daddr, dmask;	/*目的地址和掩码*/
     u_int16_t dport;	/*目的端口*/
     u_int8_t enabled_deep;	/*是否启用深入过滤规则项*/
-    union MQTT_UNION{	/*需要深入过滤的报文规则项*/
-		struct CONNECT_ST{	/*CONNECT报文规则项*/
+    union MQTT_RULE_UNION{	/*需要深入过滤的报文规则项*/
+		struct CONNECT_RULE_ST{	/*CONNECT报文规则项*/
 			u_int8_t flag;		/*连接标志*/
 			char *client_id;	/*客户端标识符*/
 			char *username;		/*用户名*/
 			char *will_topic;	/*遗嘱主题*/
 			char *will_message;	/*遗嘱消息*/
 		}connect;
-		struct PUBLISH_ST{	/*PUBLISH报文规则项*/
+		struct PUBLISH_RULE_ST{	/*PUBLISH报文规则项*/
 			u_int8_t flag;	/*报文标志*/
 			char *topic;	/*主题过滤器*/
 			char *keyword;	/*过滤关键字*/
 		}publish;
-		struct SUBSCRIBE_ST{	/*SUBSCRIBE报文规则项*/
+		struct SUBSCRIBE_RULE_ST{	/*SUBSCRIBE报文规则项*/
 			char *topic_filter;		/*主题过滤器*/
 			u_int16_t filter_len;	
 			u_int8_t rqos;			/*要求服务质量*/
 		}subscribe;
-		struct UNSUBSCRIBE_ST{	/*UNSUBSCRIBE报文规则项*/
+		struct UNSUBSCRIBE_RULE_ST{	/*UNSUBSCRIBE报文规则项*/
 			char *topic_filter;		/*主题过滤器*/
 			u_int16_t filter_len;	/**/
 		}unsubscribe;
