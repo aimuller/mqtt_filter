@@ -910,18 +910,22 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 		if(topic[0] == '+' || topic[0] == '#'){
 			return TOPIC_MATCH_INVAL;
 		}
-		if(sub[0] != topic[0] || topic[0] == 0){ /* Check for wildcard matches */
+		
+		/* 当前位置的sub和topic字符不相等 */
+		if(sub[0] != topic[0] || topic[0] == 0){
 			if(sub[0] == '+'){
-				/* Check for bad "+foo" or "a/+foo" subscription */
+				/* 单层通配符'+'前一个字符必须是层级分割符'/' */
 				if(spos > 0 && sub[-1] != '/'){
 					return TOPIC_MATCH_INVAL;
 				}
-				/* Check for bad "foo+" or "foo+/a" subscription */
+				/* 单层通配符'+'后一个字符必须是层级分割符'/' */
 				if(sub[1] != 0 && sub[1] != '/'){
 					return TOPIC_MATCH_INVAL;
 				}
 				spos++;
 				sub++;
+				
+				/* 单层通配符'+', 一直匹配到层级符'/' */
 				while(topic[0] != 0 && topic[0] != '/'){
 					if(topic[0] == '+' || topic[0] == '#'){
 						return TOPIC_MATCH_INVAL;
@@ -933,14 +937,15 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 					return TOPIC_MATCH_VAILD;
 				}
 			}else if(sub[0] == '#'){
-				/* Check for bad "foo#" subscription */
+				/* 多层通配符'#'前一个字符必须是层级分割符'/' */
 				if(spos > 0 && sub[-1] != '/'){
 					return TOPIC_MATCH_INVAL;
 				}
-				/* Check for # not the final character of the sub, e.g. "#foo" */
+				/* 多层通配符'#'必须是sub中的最后一个字符 */
 				if(sub[1] != 0){
 					return TOPIC_MATCH_INVAL;
 				}else{
+					/* 多层通配符'#', 一直匹配到字符串结束 */
 					while(topic[0] != 0){
 						if(topic[0] == '+' || topic[0] == '#'){
 							return TOPIC_MATCH_INVAL;
@@ -951,7 +956,7 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 					return TOPIC_MATCH_VAILD;
 				}
 			}else{
-				/* Check for e.g. foo/bar matching foo/+/# */
+				/* 特殊考虑的一种情况：foo/+/# */
 				if(topic[0] == 0
 						&& spos > 0
 						&& sub[-1] == '+'
@@ -962,7 +967,7 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 					return TOPIC_MATCH_VAILD;
 				}
 
-				/* There is no match at this point, but is the sub invalid? */
+				/* 此时已经匹配失败了，下面用于检查sub是否是合法的主题过滤器 */
 				while(sub[0] != 0){
 					if(sub[0] == '#' && sub[1] != 0){
 						return TOPIC_MATCH_INVAL;
@@ -971,13 +976,13 @@ static int topic_matches(const char *sub, const char *topic, int *result)
 					sub++;
 				}
 
-				/* Valid input, but no match */
+				/* 合法的主题过滤器，但是匹配不成功 */
 				return TOPIC_MATCH_VAILD;
 			}
-		}else{
-			/* sub[spos] == topic[tpos] */
+		}else{	/* 当前位置的sub和topic字符相等 */
+			
 			if(topic[1] == 0){
-				/* Check for e.g. foo matching foo/# */
+				/* 特殊处理，topic结束，但sub后面还有字符 */
 				if(sub[1] == '/'
 						&& sub[2] == '#'
 						&& sub[3] == 0){
@@ -1149,7 +1154,7 @@ static int mqtt_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
 		if(rule->enabled_deep == ENABLED){
 			switch(rule->mtype){
 			case CONNECT:
-				printk("<MF> DEBUG: protocol_name: %s, level: %d, connect_flags: %x, keep_alive: %d, will_topic: %s, will_message: %s, username: %s, password: %s, client_id: %s\n", \
+				/*printk("<MF> DEBUG: protocol_name: %s, level: %d, connect_flags: %x, keep_alive: %d, will_topic: %s, will_message: %s, username: %s, password: %s, client_id: %s\n", \
 						mqtt_packet->variable_header.connect.protocol_name, \
 						mqtt_packet->variable_header.connect.level, \
 						mqtt_packet->variable_header.connect.connect_flags, \
@@ -1158,7 +1163,7 @@ static int mqtt_check(struct RULE_ST *rule, struct MQTT_INFO_ST *mqtt_packet){
 						mqtt_packet->payload.connect.will_message, \
 						mqtt_packet->payload.connect.username, \
 						mqtt_packet->payload.connect.password, \
-						mqtt_packet->payload.connect.client_id); 
+						mqtt_packet->payload.connect.client_id); */
 				return mqtt_connect_check(rule, mqtt_packet);
 			case PUBLISH:
 				/* printk("<MF> DEBUG: publish_flags: %x, topic: %s, packet_identifier: %x, message: %s\n",\
@@ -1471,7 +1476,6 @@ static int is_mqtt_protocol(struct iphdr *iph, struct tcphdr *tcph, u_int8_t *mq
 	struct CONNECT_LIST_ST *hnode;
 	u_int32_t key;
 	
-
 	/*
 	//通过端口来判断是否是MQTT协议
 	if(ntohs(tcph->dest) == MQTT_PORT || ntohs(tcph->source) == MQTT_PORT)
@@ -1485,8 +1489,14 @@ static int is_mqtt_protocol(struct iphdr *iph, struct tcphdr *tcph, u_int8_t *mq
 	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
 		//遍历节点
 		hlist_for_each_entry(hnode, &hashTable[key % HASH_MAX], list){
-			if(hnode->key == key){	//状态表中找到当前连接
-				return YES;
+			if(hnode->key == key){	//状态表中找到当前key
+				//进一步确认会话信息
+				if(hnode->packet.saddr == iph->saddr \
+					&& hnode->packet.daddr == iph->daddr \
+					&& hnode->packet.sport == tcph->source \
+					&& hnode->packet.dport == tcph->dest) \
+					
+					return YES;
 			}
 		}
 	}
@@ -1567,18 +1577,18 @@ static unsigned int check(struct sk_buff *skb)
 			
 			if(action == PERMIT && packet_info.mqtt.fixed_header.mtype == CONNECT){
 				add_connect_node(&packet_info);
-				printk(KERN_INFO "<MF> DEBUG: add_connect_node \n");
+				//printk(KERN_INFO "<MF> DEBUG: add_connect_node \n");
 			}
 			
 			else if(action == PERMIT && packet_info.mqtt.fixed_header.mtype == DISCONNECT){
 				del_connect_node(&packet_info);
-				printk(KERN_INFO "<MF> DEBUG: del_connect_node \n");
+				//printk(KERN_INFO "<MF> DEBUG: del_connect_node \n");
 			}
 			
 			else{
 				update_connect_list(&packet_info);
 				mqtt_release(&packet_info.mqtt);
-				printk(KERN_INFO "<MF> DEBUG: update_connect_node \n");
+				//printk(KERN_INFO "<MF> DEBUG: update_connect_node \n");
 			}
 			
 			return action; 
