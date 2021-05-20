@@ -22,13 +22,19 @@ struct cdev cdev;	/*描述字符设备*/
 static u_int8_t buf[BUF_SIZE];
 static char log[LOG_LEN];
 
-/*通过file_operations结构来定义字符设备驱动提供的接口函数*/
-static struct file_operations mf_fops = {  
-	.owner = THIS_MODULE,
-	.open = mf_open,
-	.unlocked_ioctl = mf_ioctl,
-	.release = mf_release, 
-};
+u_int32_t get_jhash_key(u_int32_t saddr, u_int16_t sport, u_int32_t daddr, u_int16_t dport){
+	u_int8_t data[12], *ptr = data;
+	u_int32_t key;
+	
+	*((u_int32_t *)ptr) = saddr;	ptr += sizeof(u_int32_t);
+	*((u_int16_t *)ptr) = sport;	ptr += sizeof(u_int16_t);
+	*((u_int32_t *)ptr) = daddr;	ptr += sizeof(u_int32_t);
+	*((u_int16_t *)ptr) = dport;	ptr += sizeof(u_int16_t);
+	
+	key = jhash(data, sizeof(data), 0);
+	
+	return key;
+}
 
 /*mqtt类型字符串转换函数*/
 char *mtype_str(u_int8_t mtype){
@@ -110,6 +116,15 @@ char *ip_str(unsigned int in, int idx){
     sprintf(ipstr[idx], "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
     return ipstr[idx];
 }
+
+/*通过file_operations结构来定义字符设备驱动提供的接口函数*/
+static struct file_operations mf_fops = {  
+	.owner = THIS_MODULE,
+	.open = mf_open,
+	.unlocked_ioctl = mf_ioctl,
+	.release = mf_release, 
+};
+
 
 /*字符设备驱动open函数*/
 static int mf_open(struct inode *inode, struct file *file)  
@@ -684,7 +699,7 @@ static void add_connect_node(struct PACKET_ST *packet_info){
 	u_int32_t key;
 	
 	timeout = (unsigned int)(packet_info->mqtt.variable_header.connect.keep_alive * 3 / 2);
-	key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	key = get_jhash_key(packet_info->saddr, packet_info->sport, packet_info->daddr, packet_info->dport);
 	
 	hnode = (struct CONNECT_LIST_ST *)kmalloc(sizeof(struct CONNECT_LIST_ST), GFP_KERNEL);
 	
@@ -707,7 +722,8 @@ static void del_connect_node(struct PACKET_ST *packet_info){
 	struct CONNECT_LIST_ST *hnode;
 	u_int32_t key;
 	
-	key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	//key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	key = get_jhash_key(packet_info->saddr, packet_info->sport, packet_info->daddr, packet_info->dport);
 	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
 		//遍历节点
 		hlist_for_each_entry(hnode, &hashTable[key % HASH_MAX], list){
@@ -730,8 +746,9 @@ static void update_connect_list(struct PACKET_ST *packet_info){
 	
 	if(connect_num <= 0)
 		return;
-	
-	key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+		
+	//key = packet_info->saddr ^ packet_info->daddr ^ packet_info->sport ^ packet_info->dport;
+	key = get_jhash_key(packet_info->saddr, packet_info->sport, packet_info->daddr, packet_info->dport);
 	
 	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
 		//遍历节点
@@ -1485,7 +1502,8 @@ static int is_mqtt_protocol(struct iphdr *iph, struct tcphdr *tcph, u_int8_t *mq
 	*/		
 	
 	
-	key = iph->saddr ^ iph->daddr ^ tcph->dest ^ tcph->source;
+	//key = iph->saddr ^ iph->daddr ^ tcph->dest ^ tcph->source;
+	key = get_jhash_key(iph->saddr,tcph->source, iph->daddr, tcph->dest);
 	if(hlist_empty(&hashTable[key % HASH_MAX]) == 0){  //桶非空
 		//遍历节点
 		hlist_for_each_entry(hnode, &hashTable[key % HASH_MAX], list){
