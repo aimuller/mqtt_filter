@@ -1,7 +1,8 @@
 # 基于物联网MQTT协议的报文过滤控制系统
 
-## 项目地址
-    https://github.com/aimuller/mqtt_filter
+## 项目说明
+    该项目是本人的毕业设计课题项目
+    项目地址：https://github.com/aimuller/mqtt_filter
 
 ## 课题要求
 
@@ -15,11 +16,27 @@
     seedUbuntu虚拟机，版本16.04，32bit
 
     虚拟机资源可以从：https://seedsecuritylabs.org/labsetup.html 获取
+    
+### 测试主机环境
+    主机	    版本                        地址	            作用
+    主机A	    SEEDUbuntu-16.04-32bit      192.168.222.128	    MQTT客户端
+    主机B	    SEEDUbuntu-16.04-32bit      192.168.222.130	    MQTT客户端
+    主机C	    SEEDUbuntu-16.04-32bit	    192.168.222.131 	MQTT服务器
+    
+### 测试MQTT环境
+    身份	     安装软件	 版本	            安装主机
+    客户端 	MQTT.fx	    version 1.7.1	 主机A
+    客户端	    MQTT.fx	    version 1.7.1	 主机B
+    服务器	    mosquito	version 1.4.8	 主机C
+
+
 
 ## 重要文件说明
     |-- mqtt_filter
-        |-- data文件夹（存放系统运行时产生的数据文件）
+            |-- data文件夹（存放系统运行时产生的数据文件）
             |-- log.txt（日志文件）
+            |-- ...
+        |-- image文件夹（存放系统运行照片）
             |-- ...
         |-- kernel文件夹（存放系统内核模块代码）
             |-- mqtt_filter_mod.c（开发netfilter模块的内核源码）
