@@ -21,7 +21,7 @@
     主机	    版本                        地址	            作用
     主机A	    SEEDUbuntu-16.04-32bit      192.168.222.128	    MQTT客户端
     主机B	    SEEDUbuntu-16.04-32bit      192.168.222.130	    MQTT客户端
-    主机C	    SEEDUbuntu-16.04-32bit	    192.168.222.131 	MQTT服务器
+    主机C	    SEEDUbuntu-16.04-32bit      192.168.222.131     MQTT服务器
     
 ### 测试MQTT环境
     身份	     安装软件	 版本	            安装主机
