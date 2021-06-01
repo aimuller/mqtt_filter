@@ -24,7 +24,7 @@
     主机C	    SEEDUbuntu-16.04-32bit      192.168.222.131     MQTT服务器
     
 ### 测试MQTT环境
-    身份	     安装软件    版本	            安装主机
+    身份       安装软件    版本             安装主机
     客户端     MQTT.fx     version 1.7.1    主机A
     客户端     MQTT.fx     version 1.7.1    主机B
     服务器     mosquito    version 1.4.8    主机C
