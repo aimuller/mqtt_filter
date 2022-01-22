@@ -1,7 +1,6 @@
 # 基于物联网MQTT协议的报文过滤控制系统
 
 ## 项目说明
-    该项目是本人的毕业设计课题项目
     项目地址：https://github.com/aimuller/mqtt_filter
 
 ## 课题要求
